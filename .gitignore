@@ -45,3 +45,9 @@ prisma/dev.db-journal
 
 # temp files
 *.log
+
+# MCP config (contains API tokens)
+.mcp.json
+
+# Claude workspace
+.claude/
