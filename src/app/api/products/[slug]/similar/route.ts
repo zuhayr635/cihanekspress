@@ -7,7 +7,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const { slug } = await params
   const product = await db.product.findUnique({
     where: { slug },
-    select: { id: true, categoryId: true },
+    select: {
+      id: true,
+      categories: { select: { categoryId: true }, take: 1 },
+    },
   })
   if (!product) return NextResponse.json([])
 
@@ -40,13 +43,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   linkedIds.add(product.id)
 
   const needed = 8 - linkedProducts.length
+  const firstCategoryId = product.categories[0]?.categoryId
 
-  const sameCat = product.categoryId
+  const sameCat = firstCategoryId
     ? await db.product.findMany({
         where: {
-          categoryId: product.categoryId,
           status: "PUBLISHED",
           id: { notIn: Array.from(linkedIds) },
+          categories: { some: { categoryId: firstCategoryId } },
         },
         select: {
           id: true, name: true, slug: true, priceUsd: true, priceTl: true,
