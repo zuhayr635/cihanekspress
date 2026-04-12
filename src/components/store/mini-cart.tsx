@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useSession } from "next-auth/react"
-import { ShoppingCart, Trash2, Loader2, MessageCircle } from "lucide-react"
+import { ShoppingCart, Trash2, Loader2, MessageCircle, Plus, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -17,13 +17,14 @@ import {
 } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { type CartData, fetchCart, removeCartItem, formatPrice } from "@/lib/cart"
+import { type CartData, fetchCart, removeCartItem, updateCartItem, formatPrice } from "@/lib/cart"
 
 export function MiniCart() {
   const { data: session } = useSession()
   const [cart, setCart] = useState<CartData | null>(null)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [updating, setUpdating] = useState<string | null>(null)
 
   const loadCart = useCallback(async () => {
     if (!session?.user) return
@@ -59,19 +60,41 @@ export function MiniCart() {
     }
   }
 
+  const handleUpdateQuantity = async (itemId: string, newQty: number) => {
+    if (newQty < 1) return
+    setUpdating(itemId)
+    try {
+      await updateCartItem(itemId, newQty)
+      await loadCart()
+      window.dispatchEvent(new CustomEvent("cart-updated"))
+    } catch {
+      toast.error("Güncelleme başarısız")
+    } finally {
+      setUpdating(null)
+    }
+  }
+
   const itemCount = cart?.items.length ?? 0
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <button className="relative inline-flex items-center justify-center rounded-md p-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground" />
+          <button
+            className="relative inline-flex items-center justify-center rounded-lg p-2 transition-colors"
+            style={{ color: '#6B6560' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--market-primary)')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#6B6560')}
+          />
         }
       >
         <ShoppingCart className="h-5 w-5" />
         <span className="sr-only">Sepet</span>
         {itemCount > 0 && (
-          <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center p-0 text-[10px]">
+          <Badge
+            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center p-0 text-[10px]"
+            style={{ backgroundColor: 'var(--market-primary)', color: '#fff', border: 'none' }}
+          >
             {itemCount}
           </Badge>
         )}
@@ -123,9 +146,28 @@ export function MiniCart() {
                           {Object.values(item.variation.combination).join(", ")}
                         </p>
                       )}
-                      <p className="text-xs">
-                        {item.quantity} x {formatPrice(item.unitPriceTl, "TL")}
+                      <p className="text-[10px] text-muted-foreground">
+                        {formatPrice(item.unitPriceTl, "TL")} / adet
                       </p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1 || updating === item.id}
+                          className="flex h-5 w-5 items-center justify-center rounded border text-muted-foreground hover:border-foreground hover:text-foreground disabled:opacity-40"
+                        >
+                          <Minus className="h-2.5 w-2.5" />
+                        </button>
+                        <span className="w-5 text-center text-xs font-medium">
+                          {updating === item.id ? <Loader2 className="mx-auto h-2.5 w-2.5 animate-spin" /> : item.quantity}
+                        </span>
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          disabled={updating === item.id}
+                          className="flex h-5 w-5 items-center justify-center rounded border text-muted-foreground hover:border-foreground hover:text-foreground disabled:opacity-40"
+                        >
+                          <Plus className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
                     </div>
                     <div className="flex flex-col items-end justify-between">
                       <button

@@ -222,24 +222,35 @@ export function VariationSelector({
                   const imgSrc = productValueImages[valObj?.id ?? ""] || valObj?.image
 
                   return (
-                    <button
-                      key={valueName}
-                      onClick={() => handleSelect(vType.name, valueName)}
-                      disabled={!isAvailable && !isSelected}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-none border px-3 py-1.5 text-sm font-medium transition-all",
-                        isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-foreground hover:border-primary/50",
-                        !isAvailable && !isSelected && "opacity-40 cursor-not-allowed line-through"
-                      )}
-                    >
+                    <div key={valueName} className="relative group">
+                      <button
+                        onClick={() => handleSelect(vType.name, valueName)}
+                        disabled={!isAvailable && !isSelected}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-none border px-3 py-1.5 text-sm font-medium transition-all",
+                          isSelected
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/50",
+                          !isAvailable && !isSelected && "opacity-40 cursor-not-allowed line-through"
+                        )}
+                      >
+                        {imgSrc && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={imgSrc} alt={valueName} className="size-5 rounded object-cover" />
+                        )}
+                        {valueName}
+                      </button>
                       {imgSrc && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={imgSrc} alt={valueName} className="size-5 rounded object-cover" />
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-[200px] h-[200px]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={imgSrc}
+                            alt={valueName}
+                            className="w-full h-full rounded-xl object-cover shadow-xl border-2 border-white"
+                          />
+                        </div>
                       )}
-                      {valueName}
-                    </button>
+                    </div>
                   )
                 })}
               </div>

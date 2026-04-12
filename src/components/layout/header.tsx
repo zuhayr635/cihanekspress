@@ -287,35 +287,6 @@ export function Header({
           </div>
         </div>
 
-        {/* Categories nav bar */}
-        {categories.length > 0 && (
-          <div className="hidden border-b md:block" style={{ borderColor: 'rgba(255,102,0,0.15)', backgroundColor: 'rgba(0,0,0,0.15)' }}>
-            <div className="mx-auto flex h-10 max-w-7xl items-center gap-1 overflow-x-auto px-6">
-              <Link
-                href="/urunler"
-                className="flex-shrink-0 rounded-md px-3 py-1 text-xs font-bold transition-colors"
-                style={{ color: '#9A9488' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,102,0,0.15)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#9A9488'; (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }}
-              >
-                Tümü
-              </Link>
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/urunler?kategori=${cat.slug}`}
-                  className="flex-shrink-0 rounded-md px-3 py-1 text-xs font-bold transition-colors"
-                  style={{ color: '#9A9488' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,102,0,0.15)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#9A9488'; (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }}
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Mobile search */}
         {searchOpen && (
           <div className="border-b px-6 py-3 md:hidden" style={{ borderColor: 'rgba(255,102,0,0.15)', backgroundColor: '#111111' }}>
