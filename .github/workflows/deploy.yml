@@ -1,0 +1,25 @@
+name: Deploy to Coolify
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Trigger Coolify Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trigger Coolify Webhook
+        run: |
+          curl --silent --show-error --fail \
+            -X GET \
+            "${{ secrets.COOLIFY_WEBHOOK_URL }}&token=${{ secrets.COOLIFY_WEBHOOK_TOKEN }}" \
+            -H "Accept: application/json"
+
+      - name: Deploy triggered
+        run: echo "Deploy başarıyla tetiklendi!"
