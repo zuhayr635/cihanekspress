@@ -12,8 +12,6 @@ import { registerSchema, type RegisterInput } from "@/lib/validations/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Card,
   CardContent,
@@ -22,26 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
-interface City {
-  id: number
-  name: string
-  plateCode: string
-}
-
-interface District {
-  id: number
-  name: string
-  cityId: number
-}
-
-const SECURITY_QUESTIONS = [
-  "Annenizin kızlık soyadı nedir?",
-  "İlk evcil hayvanınızın adı nedir?",
-  "İlk okulunuzun adı nedir?",
-  "En sevdiğiniz film nedir?",
-  "Doğduğunuz şehir neresidir?",
-]
 
 interface Captcha {
   token: string
@@ -52,9 +30,6 @@ interface Captcha {
 export function RegisterForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [cities, setCities] = useState<City[]>([])
-  const [districts, setDistricts] = useState<District[]>([])
-  const [loadingDistricts, setLoadingDistricts] = useState(false)
   const [captcha, setCaptcha] = useState<Captcha | null>(null)
   const [captchaAnswer, setCaptchaAnswer] = useState("")
   const [captchaError, setCaptchaError] = useState("")
@@ -63,38 +38,17 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm<RegisterInput>({
-    resolver: async (values, context, options) => {
-      // Sanitize undefined values to empty strings before Zod validation
-      const sanitized = { ...values }
-      for (const key of Object.keys(sanitized) as (keyof typeof sanitized)[]) {
-        if (sanitized[key] === undefined || sanitized[key] === null) {
-          (sanitized as Record<string, unknown>)[key] = key === "kvkkConsent" ? false : ""
-        }
-      }
-      return zodResolver(registerSchema)(sanitized, context, options)
-    },
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
       surname: "",
       email: "",
-      phone: "",
-      cityId: "",
-      districtId: "",
-      address: "",
       password: "",
       passwordConfirm: "",
-      securityQuestion: "",
-      securityAnswer: "",
-      kvkkConsent: false as unknown as true,
     },
   })
-
-  const watchCityId = watch("cityId", "")
-  const watchKvkk = watch("kvkkConsent")
 
   const fetchCaptcha = useCallback(async () => {
     const res = await fetch("/api/captcha")
@@ -107,34 +61,8 @@ export function RegisterForm() {
   }, [])
 
   useEffect(() => {
-    fetch("/api/cities")
-      .then((res) => res.json())
-      .then((data) => setCities(data))
-      .catch(() => toast.error("Şehirler yüklenirken hata oluştu"))
     fetchCaptcha()
   }, [fetchCaptcha])
-
-  const fetchDistricts = useCallback((cityId: string) => {
-    if (!cityId) {
-      setDistricts([])
-      return
-    }
-    setLoadingDistricts(true)
-    fetch(`/api/cities/${cityId}/districts`)
-      .then((res) => res.json())
-      .then((data) => setDistricts(data))
-      .catch(() => toast.error("İlçeler yüklenirken hata oluştu"))
-      .finally(() => setLoadingDistricts(false))
-  }, [])
-
-  useEffect(() => {
-    if (watchCityId) {
-      setValue("districtId", "")
-      fetchDistricts(watchCityId)
-    } else {
-      setDistricts([])
-    }
-  }, [watchCityId, fetchDistricts, setValue])
 
   const onSubmit = async (data: RegisterInput) => {
     if (!captcha) {
@@ -186,15 +114,14 @@ export function RegisterForm() {
   }
 
   return (
-    <Card className="w-full max-w-2xl shadow-lg">
+    <Card className="w-full max-w-md shadow-lg">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">Kayıt Ol</CardTitle>
         <CardDescription>Yeni bir hesap oluşturun</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Name and Surname */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Ad</Label>
               <Input
@@ -223,7 +150,6 @@ export function RegisterForm() {
             </div>
           </div>
 
-          {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="reg-email">E-posta</Label>
             <Input
@@ -240,87 +166,6 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Phone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefon</Label>
-            <div className="flex">
-              <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-input bg-muted text-sm text-muted-foreground">
-                +90
-              </span>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="5XX XXX XX XX"
-                {...register("phone")}
-                aria-invalid={!!errors.phone}
-                className="h-10 rounded-l-none"
-              />
-            </div>
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
-            )}
-          </div>
-
-          {/* City and District */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="cityId">Şehir</Label>
-              <select
-                id="cityId"
-                {...register("cityId")}
-                aria-invalid={!!errors.cityId}
-                className="flex h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30"
-              >
-                <option value="">Şehir seçiniz</option>
-                {cities.map((city) => (
-                  <option key={city.id} value={String(city.id)}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
-              {errors.cityId && (
-                <p className="text-sm text-destructive">{errors.cityId.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="districtId">İlçe</Label>
-              <select
-                id="districtId"
-                {...register("districtId")}
-                aria-invalid={!!errors.districtId}
-                disabled={!watchCityId || loadingDistricts}
-                className="flex h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30"
-              >
-                <option value="">
-                  {loadingDistricts ? "Yükleniyor..." : "İlçe seçiniz"}
-                </option>
-                {districts.map((district) => (
-                  <option key={district.id} value={String(district.id)}>
-                    {district.name}
-                  </option>
-                ))}
-              </select>
-              {errors.districtId && (
-                <p className="text-sm text-destructive">{errors.districtId.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="space-y-2">
-            <Label htmlFor="address">Adres</Label>
-            <Textarea
-              id="address"
-              placeholder="Açık adresinizi giriniz"
-              {...register("address")}
-              aria-invalid={!!errors.address}
-            />
-            {errors.address && (
-              <p className="text-sm text-destructive">{errors.address.message}</p>
-            )}
-          </div>
-
-          {/* Password */}
           <div className="space-y-2">
             <Label htmlFor="reg-password">Şifre</Label>
             <Input
@@ -337,7 +182,6 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Password Confirm */}
           <div className="space-y-2">
             <Label htmlFor="passwordConfirm">Şifre Tekrar</Label>
             <Input
@@ -354,43 +198,7 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Security Question */}
-          <div className="space-y-2">
-            <Label htmlFor="securityQuestion">Güvenlik Sorusu</Label>
-            <select
-              id="securityQuestion"
-              {...register("securityQuestion")}
-              aria-invalid={!!errors.securityQuestion}
-              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30"
-            >
-              <option value="">Güvenlik sorusu seçiniz</option>
-              {SECURITY_QUESTIONS.map((q) => (
-                <option key={q} value={q}>
-                  {q}
-                </option>
-              ))}
-            </select>
-            {errors.securityQuestion && (
-              <p className="text-sm text-destructive">{errors.securityQuestion.message}</p>
-            )}
-          </div>
-
-          {/* Security Answer */}
-          <div className="space-y-2">
-            <Label htmlFor="securityAnswer">Güvenlik Cevabı</Label>
-            <Input
-              id="securityAnswer"
-              placeholder="Cevabınızı giriniz"
-              {...register("securityAnswer")}
-              aria-invalid={!!errors.securityAnswer}
-              className="h-10"
-            />
-            {errors.securityAnswer && (
-              <p className="text-sm text-destructive">{errors.securityAnswer.message}</p>
-            )}
-          </div>
-
-          {/* Honeypot — botlar doldurur, insanlar görmez */}
+          {/* Honeypot */}
           <input
             ref={honeypotRef}
             type="text"
@@ -432,45 +240,11 @@ export function RegisterForm() {
             {captchaError && <p className="text-sm text-destructive">{captchaError}</p>}
           </div>
 
-          {/* KVKK Consent */}
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="kvkkConsent"
-                checked={watchKvkk === true}
-                onCheckedChange={(checked) => {
-                  setValue("kvkkConsent", checked === true ? true : false as unknown as true, {
-                    shouldValidate: true,
-                  })
-                }}
-                className="mt-0.5"
-              />
-              <Label htmlFor="kvkkConsent" className="text-sm font-normal leading-snug cursor-pointer">
-                <Link
-                  href="/kvkk"
-                  target="_blank"
-                  className="text-primary hover:underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  KVKK Aydinlatma Metni
-                </Link>
-                &apos;ni okudum ve kabul ediyorum.
-              </Label>
-            </div>
-            {errors.kvkkConsent && (
-              <p className="text-sm text-destructive">{errors.kvkkConsent.message}</p>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-10"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full h-10" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Kayit yapiliyor...
+                Kayıt yapılıyor...
               </>
             ) : (
               "Kayıt Ol"
@@ -480,9 +254,9 @@ export function RegisterForm() {
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
-          Zaten hesabiniz var mi?{" "}
+          Zaten hesabınız var mı?{" "}
           <Link href="/giris" className="text-primary font-medium hover:underline">
-            Giris Yap
+            Giriş Yap
           </Link>
         </p>
       </CardFooter>

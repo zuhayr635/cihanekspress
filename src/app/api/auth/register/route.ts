@@ -56,13 +56,7 @@ export async function POST(req: Request) {
         name: data.name,
         surname: data.surname,
         email: data.email,
-        phone: data.phone,
-        cityId: parseInt(data.cityId),
-        districtId: parseInt(data.districtId),
-        address: data.address,
         passwordHash,
-        securityQuestion: data.securityQuestion,
-        securityAnswer: data.securityAnswer,
       },
     })
 

@@ -15,7 +15,7 @@ model User {
   name              String
   surname           String
   email             String     @unique
-  phone             String
+  phone             String?
   passwordHash      String
   cityId            Int?
   districtId        Int?
