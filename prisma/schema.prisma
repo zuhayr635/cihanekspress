@@ -84,6 +84,7 @@ model Product {
   lowStockThreshold Int             @default(3)
   isFeatured       Boolean          @default(false)
   digitalFileUrl   String?
+  videoUrl         String?
   weight           Float?
   dimensions       String?
   attributesJson   String?          @default("[]") // JSON: [{ "name": "Beden", "options": ["S", "M", "L"] }]

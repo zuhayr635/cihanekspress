@@ -183,6 +183,11 @@ export default function ProductCard({ product }: ProductCardProps) {
               1/24 MİKRO
             </span>
           )}
+          {(product as any).variants?.length > 0 && (
+            <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[9px] font-bold rounded tracking-wide shadow-2xs">
+              {(product as any).variants.length} Seçenek
+            </span>
+          )}
         </div>
 
         {/* Garaj Uyumluluk Etiketi */}

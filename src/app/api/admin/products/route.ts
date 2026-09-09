@@ -16,9 +16,12 @@ export async function POST(req: Request) {
       description,
       shortDescription,
       images,
+      videoUrl,
       type,
       basePrice,
       salePrice,
+      costPrice,
+      compatibleModels,
       sku,
       stockQuantity,
       isFeatured,
@@ -38,16 +41,25 @@ export async function POST(req: Request) {
         .replace(/[^a-z0-9]/g, "-")
         .replace(/-+/g, "-") + `-${Date.now().toString().slice(-4)}`;
 
+    const imagesJson = Array.isArray(images)
+      ? JSON.stringify(images)
+      : typeof images === "string"
+      ? images
+      : "[]";
+
     const product = await prisma.product.create({
       data: {
         title,
         slug: finalSlug,
         description: description || "",
         shortDescription: shortDescription || null,
-        images: JSON.stringify(images || []),
+        images: imagesJson,
+        videoUrl: videoUrl || null,
         type: type || "SIMPLE",
         basePrice: Number(basePrice),
         salePrice: salePrice ? Number(salePrice) : null,
+        costPrice: costPrice ? Number(costPrice) : null,
+        compatibleModels: compatibleModels ? (typeof compatibleModels === "string" ? compatibleModels : JSON.stringify(compatibleModels)) : "[]",
         sku: sku || null,
         stockQuantity: Number(stockQuantity) || 10,
         isFeatured: Boolean(isFeatured),
@@ -56,23 +68,30 @@ export async function POST(req: Request) {
       },
     });
 
-    // Varyasyonları ekle
+    // Fotoğraflı Varyasyonları ekle
     if (variants && Array.isArray(variants) && variants.length > 0) {
       for (const v of variants) {
+        if (!v.name) continue;
         await prisma.productVariant.create({
           data: {
             productId: product.id,
             name: v.name,
             sku: v.sku || null,
             price: Number(v.price) || Number(basePrice),
-            stock: Number(v.stock) || 5,
-            attributes: JSON.stringify(v.attributes || {}),
+            stock: Number(v.stock) ?? 5,
+            image: v.image || null,
+            attributes: typeof v.attributes === "string" ? v.attributes : JSON.stringify(v.attributes || {}),
           },
         });
       }
     }
 
-    return NextResponse.json({ success: true, product });
+    const fullProduct = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: { variants: true, category: true },
+    });
+
+    return NextResponse.json({ success: true, product: fullProduct });
   } catch (err) {
     console.error("Product create error:", err);
     return NextResponse.json({ error: "Ürün kaydedilemedi" }, { status: 500 });
@@ -93,18 +112,29 @@ export async function PUT(req: Request) {
       description,
       shortDescription,
       images,
+      videoUrl,
       basePrice,
       salePrice,
       costPrice,
       compatibleModels,
+      sku,
       stockQuantity,
       isFeatured,
       categoryId,
+      variants,
     } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Ürün ID gereklidir" }, { status: 400 });
     }
+
+    const imagesJson = images !== undefined
+      ? Array.isArray(images)
+        ? JSON.stringify(images)
+        : typeof images === "string"
+        ? images
+        : undefined
+      : undefined;
 
     const updated = await prisma.product.update({
       where: { id },
@@ -112,18 +142,47 @@ export async function PUT(req: Request) {
         title,
         description,
         shortDescription,
-        images: images ? JSON.stringify(images) : undefined,
+        images: imagesJson,
+        videoUrl: videoUrl !== undefined ? (videoUrl || null) : undefined,
         basePrice: basePrice ? Number(basePrice) : undefined,
         salePrice: salePrice !== undefined ? (salePrice ? Number(salePrice) : null) : undefined,
         costPrice: costPrice !== undefined ? (costPrice ? Number(costPrice) : null) : undefined,
         compatibleModels: compatibleModels !== undefined ? (typeof compatibleModels === "string" ? compatibleModels : JSON.stringify(compatibleModels)) : undefined,
+        sku: sku !== undefined ? sku : undefined,
         stockQuantity: stockQuantity !== undefined ? Number(stockQuantity) : undefined,
         isFeatured: isFeatured !== undefined ? Boolean(isFeatured) : undefined,
         categoryId: categoryId || undefined,
       },
     });
 
-    return NextResponse.json({ success: true, product: updated });
+    // Fotoğraflı Varyasyonları Senkronize Et
+    if (variants && Array.isArray(variants)) {
+      await prisma.productVariant.deleteMany({
+        where: { productId: id },
+      });
+
+      for (const v of variants) {
+        if (!v.name) continue;
+        await prisma.productVariant.create({
+          data: {
+            productId: id,
+            name: v.name,
+            sku: v.sku || null,
+            price: Number(v.price) || Number(basePrice || updated.basePrice),
+            stock: Number(v.stock) ?? 5,
+            image: v.image || null,
+            attributes: typeof v.attributes === "string" ? v.attributes : JSON.stringify(v.attributes || {}),
+          },
+        });
+      }
+    }
+
+    const fullProduct = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true, category: true },
+    });
+
+    return NextResponse.json({ success: true, product: fullProduct });
   } catch (err) {
     console.error("Product update error:", err);
     return NextResponse.json({ error: "Ürün güncellenemedi" }, { status: 500 });

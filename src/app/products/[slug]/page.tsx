@@ -21,6 +21,8 @@ import {
   Wrench,
   Cpu,
   KeyRound,
+  Play,
+  Video,
 } from "lucide-react";
 
 interface VariantItem {
@@ -29,6 +31,7 @@ interface VariantItem {
   sku: string | null;
   price: number;
   stock: number;
+  image?: string | null;
   attributes: string; // JSON
 }
 
@@ -47,6 +50,7 @@ interface ProductData {
   description: string;
   shortDescription: string | null;
   images: string;
+  videoUrl?: string | null;
   type: string;
   basePrice: number;
   salePrice: number | null;
@@ -56,6 +60,19 @@ interface ProductData {
   category: { id: string; name: string } | null;
   variants: VariantItem[];
   reviews: ReviewItem[];
+}
+
+function getEmbedVideoUrl(url: string): string | null {
+  if (!url) return null;
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
+  }
+  const vimeoMatch = url.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|video\/|)(\d+)/);
+  if (vimeoMatch && vimeoMatch[3]) {
+    return `https://player.vimeo.com/video/${vimeoMatch[3]}?autoplay=1`;
+  }
+  return url;
 }
 
 export default function ProductDetailPage({
@@ -70,6 +87,7 @@ export default function ProductDetailPage({
   const [related, setRelated] = useState<ProductData[]>([]);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [selectedVariant, setSelectedVariant] = useState<VariantItem | null>(null);
+  const [activeMediaType, setActiveMediaType] = useState<"image" | "video">("image");
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,7 +114,11 @@ export default function ProductDetailPage({
           }
           if (images.length > 0) setSelectedImage(images[0]);
           if (data.product.variants && data.product.variants.length > 0) {
-            setSelectedVariant(data.product.variants[0]);
+            const firstVariant = data.product.variants[0];
+            setSelectedVariant(firstVariant);
+            if (firstVariant.image) {
+              setSelectedImage(firstVariant.image);
+            }
           }
         }
         if (data.relatedProducts) {
@@ -214,41 +236,84 @@ export default function ProductDetailPage({
 
       {/* Üst Ürün Grid (Galeri ve Detay) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
-        {/* Sol Kolon: Görsel Galerisi (7 Kolon) */}
+        {/* Sol Kolon: Görsel Galerisi & Video Oynatıcı (7 Kolon) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-3/4 w-full bg-slate-50 rounded-xs overflow-hidden border border-slate-200">
-            <Image
-              src={selectedImage || images[0]}
-              alt={product.title}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover object-center"
-            />
+          <div className="relative aspect-3/4 w-full bg-slate-900 rounded-xs overflow-hidden border border-slate-200">
+            {activeMediaType === "video" && product.videoUrl ? (
+              getEmbedVideoUrl(product.videoUrl)?.includes("youtube") || getEmbedVideoUrl(product.videoUrl)?.includes("vimeo") ? (
+                <iframe
+                  src={getEmbedVideoUrl(product.videoUrl)!}
+                  title={`${product.title} Test & Tanıtım Videosu`}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  src={product.videoUrl}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-cover"
+                />
+              )
+            ) : (
+              <Image
+                src={selectedImage || images[0]}
+                alt={product.title}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 60vw"
+                className="object-cover object-center"
+              />
+            )}
             {product.isFeatured && (
-              <span className="absolute top-4 left-4 px-3 py-1 bg-slate-950 text-white text-[10px] font-mono tracking-widest uppercase font-bold rounded-xs flex items-center gap-1.5 shadow-sm">
+              <span className="absolute top-4 left-4 px-3 py-1 bg-slate-950 text-white text-[10px] font-mono tracking-widest uppercase font-bold rounded-xs flex items-center gap-1.5 shadow-sm z-10">
                 <Sparkles className="w-3 h-3 text-orange-400" />
                 Özel Crawler Projesi
               </span>
             )}
           </div>
 
-          {/* Küçük Resimler (Thumbnails) */}
-          {images.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
+          {/* Küçük Resimler (Thumbnails) & Video Butonu */}
+          {(images.length > 1 || product.videoUrl) && (
+            <div className="flex gap-3 overflow-x-auto pb-2 items-center">
               {images.map((img, i) => (
                 <button
                   key={i}
-                  onClick={() => setSelectedImage(img)}
-                  className={`relative w-20 h-24 bg-slate-50 rounded-xs overflow-hidden border transition-all flex-shrink-0 ${
-                    selectedImage === img
-                      ? "border-slate-950 ring-1 ring-slate-950"
+                  type="button"
+                  onClick={() => {
+                    setSelectedImage(img);
+                    setActiveMediaType("image");
+                  }}
+                  className={`relative w-20 h-24 bg-slate-50 rounded-xs overflow-hidden border transition-all flex-shrink-0 cursor-pointer ${
+                    activeMediaType === "image" && selectedImage === img
+                      ? "border-[#F27A1A] ring-2 ring-[#F27A1A]/50"
                       : "border-slate-200 opacity-70 hover:opacity-100"
                   }`}
                 >
                   <Image src={img} alt={`Önizleme ${i + 1}`} fill className="object-cover" />
                 </button>
               ))}
+
+              {product.videoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setActiveMediaType("video")}
+                  className={`relative w-20 h-24 bg-slate-950 text-white rounded-xs overflow-hidden border flex flex-col items-center justify-center gap-1.5 transition-all flex-shrink-0 cursor-pointer ${
+                    activeMediaType === "video"
+                      ? "border-[#F27A1A] ring-2 ring-[#F27A1A]"
+                      : "border-slate-800 opacity-80 hover:opacity-100 hover:border-slate-600"
+                  }`}
+                  title="Parkur ve Test Videosunu Oynat"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[#F27A1A] text-white flex items-center justify-center shadow-sm">
+                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                  </div>
+                  <span className="text-[9px] font-mono font-bold tracking-wider uppercase text-slate-200">
+                    Video İzle
+                  </span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -319,31 +384,52 @@ export default function ProductDetailPage({
               </div>
             )}
 
-            {/* VARYANT SEÇİCİ (Beden / Renk / Aks Tipi) */}
+            {/* VARYANT SEÇİCİ (Fotoğraflı Seçenekler) */}
             {product.variants && product.variants.length > 0 && (
               <div className="space-y-3 pt-2">
-                <label className="block text-xs font-mono uppercase tracking-wider text-slate-950 font-bold">
-                  Seçenek / Varyasyon
-                </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-950 font-bold">
+                    Seçenek / Varyasyon
+                  </label>
+                  {selectedVariant && (
+                    <span className="text-xs text-[#F27A1A] font-bold font-mono">
+                      Seçilen: {selectedVariant.name}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2.5">
                   {product.variants.map((variant) => {
                     const isSelected = selectedVariant?.id === variant.id;
                     return (
                       <button
                         key={variant.id}
-                        onClick={() => setSelectedVariant(variant)}
-                        className={`px-4 py-2.5 text-xs font-mono font-bold tracking-wide rounded-xs border transition-all ${
+                        type="button"
+                        onClick={() => {
+                          setSelectedVariant(variant);
+                          if (variant.image) {
+                            setSelectedImage(variant.image);
+                            setActiveMediaType("image");
+                          }
+                        }}
+                        className={`p-2.5 text-xs font-mono font-bold tracking-wide rounded-xl border transition-all flex items-center gap-2.5 cursor-pointer ${
                           isSelected
-                            ? "border-slate-950 bg-slate-950 text-white shadow-xs"
-                            : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"
+                            ? "border-slate-950 bg-slate-950 text-white shadow-xs ring-1 ring-slate-950"
+                            : "border-slate-200 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50"
                         }`}
                       >
-                        {variant.name}
-                        {isSalesAllowed && variant.price !== product.basePrice && (
-                          <span className="ml-1 text-[10px] opacity-80">
-                            ({variant.price.toLocaleString("tr-TR")} ₺)
-                          </span>
+                        {variant.image && (
+                          <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-300/60">
+                            <Image src={variant.image} alt={variant.name} fill className="object-cover" />
+                          </div>
                         )}
+                        <div className="text-left">
+                          <div>{variant.name}</div>
+                          {isSalesAllowed && variant.price !== product.basePrice && (
+                            <div className={`text-[10px] ${isSelected ? "text-orange-300" : "text-[#F27A1A]"}`}>
+                              {variant.price.toLocaleString("tr-TR")} ₺
+                            </div>
+                          )}
+                        </div>
                       </button>
                     );
                   })}

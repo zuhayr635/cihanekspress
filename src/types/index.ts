@@ -63,3 +63,34 @@ export interface VipSessionData {
   discountPercent?: number;
   note?: string;
 }
+
+export interface ProductVariantItem {
+  id?: string;
+  name: string;
+  sku?: string | null;
+  price: number;
+  stock: number;
+  image?: string | null;
+  attributes?: string;
+}
+
+export interface ProductItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  shortDescription?: string | null;
+  images: string; // JSON string array
+  videoUrl?: string | null;
+  type?: string;
+  basePrice: number;
+  salePrice?: number | null;
+  costPrice?: number | null;
+  sku?: string | null;
+  stockQuantity: number;
+  isFeatured?: boolean;
+  compatibleModels?: string | null;
+  categoryId?: string | null;
+  category?: { id: string; name: string; slug?: string } | null;
+  variants?: ProductVariantItem[];
+}

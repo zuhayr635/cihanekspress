@@ -55,6 +55,9 @@ import {
   CheckSquare,
   Star,
   ShieldOff,
+  Play,
+  Video,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -98,6 +101,8 @@ export default function AdminDashboardPage() {
   const [importCsvText, setImportCsvText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [showOnlyLowStock, setShowOnlyLowStock] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // IP Bloklama & VIP Radar
   const [newBlockIp, setNewBlockIp] = useState("");
@@ -355,38 +360,83 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Ürün Düzenleme Kaydet (Uyumluluk & COGS Maliyet Dahil)
+  const handleUploadImageFile = async (file: File): Promise<string | null> => {
+    try {
+      setIsUploadingImage(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        return data.url;
+      }
+      showNotify("error", data.error || "Görsel yüklenemedi.");
+      return null;
+    } catch {
+      showNotify("error", "Görsel yükleme hatası.");
+      return null;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Ürün Ekleme & Düzenleme Kaydet (Görseller, Video ve Fotoğraflı Varyasyonlar Dahil)
   const handleSaveProductEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
     setIsSavingProduct(true);
     try {
-      const res = await fetch("/api/admin/products", {
-        method: "PUT",
+      const isNew = !editingProduct.id;
+      const url = "/api/admin/products";
+      const method = isNew ? "POST" : "PUT";
+
+      let rawImages = editingProduct.images;
+      if (typeof rawImages === "string") {
+        try {
+          rawImages = JSON.parse(rawImages);
+        } catch {
+          rawImages = rawImages ? [rawImages] : [];
+        }
+      }
+
+      const payload: any = {
+        title: editingProduct.title,
+        description: editingProduct.description || "",
+        shortDescription: editingProduct.shortDescription || null,
+        basePrice: Number(editingProduct.basePrice),
+        salePrice: editingProduct.salePrice ? Number(editingProduct.salePrice) : null,
+        costPrice: editingProduct.costPrice ? Number(editingProduct.costPrice) : null,
+        compatibleModels: typeof editingProduct.compatibleModels === "string" && !editingProduct.compatibleModels.trim().startsWith("[")
+          ? JSON.stringify(editingProduct.compatibleModels.split(",").map((s: string) => s.trim()).filter(Boolean))
+          : editingProduct.compatibleModels,
+        stockQuantity: Number(editingProduct.stockQuantity),
+        sku: editingProduct.sku || null,
+        isFeatured: Boolean(editingProduct.isFeatured),
+        categoryId: editingProduct.categoryId || null,
+        images: Array.isArray(rawImages) ? rawImages : [],
+        videoUrl: editingProduct.videoUrl || null,
+        variants: Array.isArray(editingProduct.variants) ? editingProduct.variants : [],
+      };
+
+      if (!isNew) {
+        payload.id = editingProduct.id;
+      }
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editingProduct.id,
-          title: editingProduct.title,
-          description: editingProduct.description,
-          shortDescription: editingProduct.shortDescription,
-          basePrice: Number(editingProduct.basePrice),
-          salePrice: editingProduct.salePrice ? Number(editingProduct.salePrice) : null,
-          costPrice: editingProduct.costPrice ? Number(editingProduct.costPrice) : null,
-          compatibleModels: typeof editingProduct.compatibleModels === "string" && !editingProduct.compatibleModels.trim().startsWith("[")
-            ? JSON.stringify(editingProduct.compatibleModels.split(",").map((s: string) => s.trim()).filter(Boolean))
-            : editingProduct.compatibleModels,
-          stockQuantity: Number(editingProduct.stockQuantity),
-          isFeatured: Boolean(editingProduct.isFeatured),
-          categoryId: editingProduct.categoryId || null,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
-        showNotify("success", `"${editingProduct.title}" başarıyla güncellendi!`);
+        showNotify("success", isNew ? `"${editingProduct.title}" başarıyla oluşturuldu!` : `"${editingProduct.title}" başarıyla güncellendi!`);
         setEditingProduct(null);
         refreshAllData();
       } else {
-        showNotify("error", data.error || "Ürün güncellenemedi.");
+        showNotify("error", data.error || "İşlem gerçekleştirilemedi.");
       }
     } catch {
       showNotify("error", "Bağlantı hatası oluştu.");
@@ -2126,6 +2176,34 @@ export default function AdminDashboardPage() {
                     <span>Tedarikçi Formu</span>
                   </button>
 
+                  {/* Yeni Ürün Ekle Butonu */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingProduct({
+                        id: "",
+                        title: "",
+                        description: "",
+                        shortDescription: "",
+                        basePrice: "",
+                        salePrice: null,
+                        costPrice: null,
+                        stockQuantity: 10,
+                        sku: "",
+                        images: [],
+                        videoUrl: "",
+                        compatibleModels: "",
+                        isFeatured: false,
+                        categoryId: categories[0]?.id || "",
+                        variants: [],
+                      });
+                    }}
+                    className="px-3.5 py-1.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Yeni Ürün Ekle</span>
+                  </button>
+
                   {/* Toplu Ürün İçe Aktarma (CSV) */}
                   <button
                     type="button"
@@ -2247,7 +2325,20 @@ export default function AdminDashboardPage() {
                       <div className="flex items-center gap-2 self-end sm:self-center">
                         <button
                           type="button"
-                          onClick={() => setEditingProduct({ ...p })}
+                          onClick={() => {
+                            let pImages: string[] = [];
+                            try {
+                              pImages = typeof p.images === "string" ? JSON.parse(p.images) : (p.images || []);
+                            } catch {
+                              pImages = p.images ? [p.images] : [];
+                            }
+                            setEditingProduct({
+                              ...p,
+                              images: Array.isArray(pImages) ? pImages : [],
+                              videoUrl: p.videoUrl || "",
+                              variants: p.variants ? p.variants.map((v: any) => ({ ...v })) : [],
+                            });
+                          }}
                           className="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-[#F27A1A] border border-orange-200/80 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -2946,21 +3037,23 @@ export default function AdminDashboardPage() {
         </main>
       </div>
 
-      {/* ÜRÜN DÜZENLEME MODALI */}
+      {/* ÜRÜN DÜZENLEME & EKLEME MODALI */}
       {editingProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto space-y-6">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto space-y-6">
             {/* Modal Başlık */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#F27A1A] border border-orange-100 flex items-center justify-center">
-                  <Edit3 className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#F27A1A] border border-orange-100 flex items-center justify-center">
+                  <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                    Ürün Bilgilerini Düzenle
+                    {editingProduct.id ? "Ürün Bilgilerini Düzenle" : "Yeni Parça / Araç Ekle"}
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">ID: {editingProduct.id}</p>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    {editingProduct.id ? `ID: ${editingProduct.id}` : "Yeni Ürün Tanımlama & Vitrine Alma"}
+                  </p>
                 </div>
               </div>
               <button
@@ -2973,33 +3066,56 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSaveProductEdit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Ürün Başlığı
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editingProduct.title || ""}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] focus:ring-2 focus:ring-orange-100 font-medium text-slate-900"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <form onSubmit={handleSaveProductEdit} className="space-y-5">
+              {/* Başlık ve Kategori */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Ürün Başlığı *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: Traxxas TRX-4 Defender 1/10 Crawler"
+                    value={editingProduct.title || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] focus:ring-2 focus:ring-orange-100 font-medium text-slate-900"
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Taban Fiyat (TL)
+                    Kategori / Ölçek
+                  </label>
+                  <select
+                    value={editingProduct.categoryId || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, categoryId: e.target.value || null })}
+                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
+                  >
+                    <option value="">Kategorisiz</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Fiyatlar, Stok ve Maliyet Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Taban Fiyat (TL) *
                   </label>
                   <input
                     type="number"
                     required
                     min={0}
                     step="any"
+                    placeholder="32500"
                     value={editingProduct.basePrice ?? ""}
                     onChange={(e) => setEditingProduct({ ...editingProduct, basePrice: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
                   />
                 </div>
 
@@ -3011,31 +3127,31 @@ export default function AdminDashboardPage() {
                     type="number"
                     min={0}
                     step="any"
-                    placeholder="Boş bırakılabilir"
+                    placeholder="Opsiyonel"
                     value={editingProduct.salePrice ?? ""}
                     onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value ? Number(e.target.value) : null })}
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Alış Maliyeti / COGS (TL)
+                    Alış Maliyeti (₺)
                   </label>
                   <input
                     type="number"
                     min={0}
                     step="any"
-                    placeholder="Maliyet"
+                    placeholder="COGS"
                     value={editingProduct.costPrice ?? ""}
                     onChange={(e) => setEditingProduct({ ...editingProduct, costPrice: e.target.value ? Number(e.target.value) : null })}
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Stok Adedi
+                    Stok Adedi *
                   </label>
                   <input
                     type="number"
@@ -3043,18 +3159,32 @@ export default function AdminDashboardPage() {
                     min={0}
                     value={editingProduct.stockQuantity ?? 0}
                     onChange={(e) => setEditingProduct({ ...editingProduct, stockQuantity: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                  />
+                </div>
+
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    SKU / Barkod
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="TRX4-01"
+                    value={editingProduct.sku || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-mono text-slate-700"
                   />
                 </div>
               </div>
 
+              {/* Uyumlu Şasi Modelleri */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Uyumlu Crawler / Şasi Modelleri (Virgülle ayırarak yazın)
                 </label>
                 <input
                   type="text"
-                  placeholder="Örn: TRX-4, SCX10 III, SCX24, CC-01, Enduro"
+                  placeholder="TRX-4, SCX10 III, SCX24, CC-01, Enduro, Element RC"
                   value={
                     typeof editingProduct.compatibleModels === "string" && editingProduct.compatibleModels.startsWith("[")
                       ? (() => {
@@ -3070,16 +3200,348 @@ export default function AdminDashboardPage() {
                   className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Müşteri vitrinde şasi filtrelediğinde yeşil uyumluluk rozeti gösterilir.
+                  Müşteri vitrinde kendi crawler modelini filtrelediğinde yeşil uyumluluk rozeti aktif olur.
                 </p>
               </div>
 
+              {/* BÖLÜM 1: ÇOKLU ÜRÜN GÖRSELLERİ (UPLOAD & URL) */}
+              <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-orange-100 text-[#F27A1A] flex items-center justify-center">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        Ürün Fotoğraf Galerisi
+                      </span>
+                      <p className="text-[10px] text-slate-500">
+                        İlk fotoğraf vitrinde kapak görseli olarak kullanılır.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold bg-white text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200">
+                    {(Array.isArray(editingProduct.images) ? editingProduct.images.length : 0)} Fotoğraf
+                  </span>
+                </div>
+
+                {/* Görsel Thumbnails Şeridi */}
+                <div className="flex flex-wrap gap-3 min-h-[76px] p-3 bg-white border border-slate-200/80 rounded-xl items-center">
+                  {Array.isArray(editingProduct.images) && editingProduct.images.length > 0 ? (
+                    editingProduct.images.map((img: string, idx: number) => (
+                      <div
+                        key={idx}
+                        className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group flex-shrink-0 shadow-2xs"
+                      >
+                        <img src={img} alt={`Görsel ${idx + 1}`} className="w-full h-full object-cover" />
+                        {idx === 0 && (
+                          <span className="absolute bottom-0 inset-x-0 bg-[#F27A1A] text-white text-[8px] font-bold text-center py-0.5 tracking-wider uppercase z-10">
+                            Kapak
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-20">
+                          {idx !== 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const imgs = [...editingProduct.images];
+                                const [moved] = imgs.splice(idx, 1);
+                                imgs.unshift(moved);
+                                setEditingProduct({ ...editingProduct, images: imgs });
+                              }}
+                              title="Kapak Resmi Yap"
+                              className="p-1 bg-white text-slate-900 rounded hover:bg-orange-50 hover:text-[#F27A1A] text-[10px] font-bold cursor-pointer"
+                            >
+                              ★
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const imgs = [...editingProduct.images];
+                              imgs.splice(idx, 1);
+                              setEditingProduct({ ...editingProduct, images: imgs });
+                            }}
+                            title="Görseli Sil"
+                            className="p-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-[10px] cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 italic py-2 px-1">
+                      Henüz görsel eklenmedi. Bilgisayarınızdan fotoğraf yükleyin veya link yapıştırın.
+                    </p>
+                  )}
+                </div>
+
+                {/* Yükleme ve URL Ekleme Butonları */}
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                  <label className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors flex-shrink-0">
+                    <Upload className="w-3.5 h-3.5 text-orange-400" />
+                    <span>{isUploadingImage ? "Yükleniyor..." : "Bilgisayardan Fotoğraf Yükle"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      disabled={isUploadingImage}
+                      onChange={async (e) => {
+                        const files = e.target.files;
+                        if (!files || files.length === 0) return;
+                        for (let i = 0; i < files.length; i++) {
+                          const url = await handleUploadImageFile(files[i]);
+                          if (url) {
+                            setEditingProduct((prev: any) => {
+                              const curr = Array.isArray(prev.images) ? [...prev.images] : [];
+                              return { ...prev, images: [...curr, url] };
+                            });
+                          }
+                        }
+                      }}
+                    />
+                  </label>
+
+                  <div className="flex items-center gap-1.5 w-full">
+                    <input
+                      type="url"
+                      placeholder="Veya harici görsel URL'i yapıştırın (https://...)"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-800 placeholder:text-slate-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!newImageUrl.trim()) return;
+                        const curr = Array.isArray(editingProduct.images) ? [...editingProduct.images] : [];
+                        setEditingProduct({ ...editingProduct, images: [...curr, newImageUrl.trim()] });
+                        setNewImageUrl("");
+                      }}
+                      className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-[#F27A1A] font-bold text-xs rounded-xl transition-colors flex-shrink-0 cursor-pointer"
+                    >
+                      Görsel Ekle
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* BÖLÜM 2: VİDEO BAĞLANTISI (YOUTUBE / VIMEO / MP4) */}
+              <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                      <Video className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        Tanıtım & Parkur Videosu Linki
+                      </span>
+                      <p className="text-[10px] text-slate-500">
+                        YouTube, Vimeo veya doğrudan MP4 bağlantısı tanımlayın.
+                      </p>
+                    </div>
+                  </div>
+                  {editingProduct.videoUrl && (editingProduct.videoUrl.includes("youtube.com") || editingProduct.videoUrl.includes("youtu.be")) && (
+                    <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 font-mono">
+                      <Play className="w-2.5 h-2.5 fill-current" /> YouTube Algılandı
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Örn: https://www.youtube.com/watch?v=sU3Kq8_xxxx veya https://youtu.be/..."
+                  value={editingProduct.videoUrl || ""}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, videoUrl: e.target.value })}
+                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900 placeholder:text-slate-400"
+                />
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Video eklendiğinde vitrindeki ürün galerisinde <strong>&quot;Video İzle&quot;</strong> butonu çıkar ve müşteri gömülü oynatıcı üzerinden arazi test sürüşünü izleyebilir.
+                </p>
+              </div>
+
+              {/* BÖLÜM 3: FOTOĞRAFLI VARYASYON YÖNETİCİSİ */}
+              <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                      <Sliders className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        Fotoğraflı Varyasyon Sistemi
+                      </span>
+                      <p className="text-[10px] text-slate-500">
+                        Farklı renk gövdeler, portal akslı şasiler veya ölçekler için fotoğraf ve fiyat tanımlayın.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentVariants = Array.isArray(editingProduct.variants) ? [...editingProduct.variants] : [];
+                      setEditingProduct({
+                        ...editingProduct,
+                        variants: [
+                          ...currentVariants,
+                          {
+                            id: `var-${Date.now()}`,
+                            name: "",
+                            price: Number(editingProduct.basePrice) || 0,
+                            stock: 5,
+                            sku: "",
+                            image: "",
+                          },
+                        ],
+                      });
+                    }}
+                    className="px-3 py-1.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Varyasyon Ekle</span>
+                  </button>
+                </div>
+
+                {Array.isArray(editingProduct.variants) && editingProduct.variants.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {editingProduct.variants.map((v: any, vIdx: number) => (
+                      <div
+                        key={vIdx}
+                        className="p-3 bg-white border border-slate-200/80 rounded-xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center gap-3"
+                      >
+                        {/* Fotoğraf Yükleme / Önizleme */}
+                        <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0 group flex items-center justify-center">
+                          {v.image ? (
+                            <>
+                              <img src={v.image} alt={v.name || "Varyasyon"} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...editingProduct.variants];
+                                  updated[vIdx] = { ...updated[vIdx], image: null };
+                                  setEditingProduct({ ...editingProduct, variants: updated });
+                                }}
+                                className="absolute inset-0 bg-black/60 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                title="Fotoğrafı Kaldır"
+                              >
+                                ✕ Sil
+                              </button>
+                            </>
+                          ) : (
+                            <label className="w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-[#F27A1A] cursor-pointer hover:bg-orange-50/50 transition-colors">
+                              <ImageIcon className="w-4 h-4" />
+                              <span className="text-[8px] font-bold mt-0.5">Foto</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const url = await handleUploadImageFile(file);
+                                    if (url) {
+                                      const updated = [...editingProduct.variants];
+                                      updated[vIdx] = { ...updated[vIdx], image: url };
+                                      setEditingProduct({ ...editingProduct, variants: updated });
+                                    }
+                                  }
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
+
+                        {/* Bilgiler Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 flex-1 w-full">
+                          <div className="sm:col-span-1">
+                            <input
+                              type="text"
+                              required
+                              placeholder="Varyasyon Adı (Örn: Mat Siyah)"
+                              value={v.name || ""}
+                              onChange={(e) => {
+                                const updated = [...editingProduct.variants];
+                                updated[vIdx] = { ...updated[vIdx], name: e.target.value };
+                                setEditingProduct({ ...editingProduct, variants: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#F27A1A] font-semibold text-slate-900"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="number"
+                              min={0}
+                              step="any"
+                              placeholder="Fiyat (TL)"
+                              value={v.price ?? ""}
+                              onChange={(e) => {
+                                const updated = [...editingProduct.variants];
+                                updated[vIdx] = { ...updated[vIdx], price: Number(e.target.value) };
+                                setEditingProduct({ ...editingProduct, variants: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="number"
+                              min={0}
+                              placeholder="Stok"
+                              value={v.stock ?? ""}
+                              onChange={(e) => {
+                                const updated = [...editingProduct.variants];
+                                updated[vIdx] = { ...updated[vIdx], stock: Number(e.target.value) };
+                                setEditingProduct({ ...editingProduct, variants: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#F27A1A] font-medium text-slate-800"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              placeholder="SKU"
+                              value={v.sku || ""}
+                              onChange={(e) => {
+                                const updated = [...editingProduct.variants];
+                                updated[vIdx] = { ...updated[vIdx], sku: e.target.value };
+                                setEditingProduct({ ...editingProduct, variants: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#F27A1A] font-mono text-slate-600"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = [...editingProduct.variants];
+                                updated.splice(vIdx, 1);
+                                setEditingProduct({ ...editingProduct, variants: updated });
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+                              title="Varyasyonu Sil"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic py-2 px-1">
+                    Bu ürün için henüz varyasyon eklenmedi. (Örn: Farklı renk gövdeler, portal akslı versiyonlar vb.)
+                  </p>
+                )}
+              </div>
+
+              {/* Açıklamalar */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Kısa Açıklama (Vitrin Özeti)
                 </label>
                 <input
                   type="text"
+                  placeholder="Kısa vitrin açıklaması..."
                   value={editingProduct.shortDescription || ""}
                   onChange={(e) => setEditingProduct({ ...editingProduct, shortDescription: e.target.value })}
                   className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
@@ -3092,13 +3554,15 @@ export default function AdminDashboardPage() {
                 </label>
                 <textarea
                   rows={4}
+                  placeholder="Teknik detaylar, parça özellikleri, montaj bilgileri..."
                   value={editingProduct.description || ""}
                   onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
                   className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900 leading-relaxed resize-y"
                 />
               </div>
 
-              <div className="pt-2">
+              {/* Öne Çıkarılan Checkbox */}
+              <div className="pt-1">
                 <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-800 cursor-pointer">
                   <input
                     type="checkbox"
@@ -3110,6 +3574,7 @@ export default function AdminDashboardPage() {
                 </label>
               </div>
 
+              {/* Modal Butonları */}
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
@@ -3123,7 +3588,11 @@ export default function AdminDashboardPage() {
                   disabled={isSavingProduct}
                   className="px-6 py-2.5 bg-[#F27A1A] hover:bg-[#E06A0A] active:bg-[#C85B03] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {isSavingProduct ? <span>Kaydediliyor...</span> : <span>Değişiklikleri Kaydet</span>}
+                  {isSavingProduct ? (
+                    <span>Kaydediliyor...</span>
+                  ) : (
+                    <span>{editingProduct.id ? "Değişiklikleri Kaydet" : "Ürünü Oluştur & Yayınla"}</span>
+                  )}
                 </button>
               </div>
             </form>
