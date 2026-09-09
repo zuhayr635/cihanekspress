@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Package, Sparkles, Check, ShoppingBag, ArrowRight } from "lucide-react";
+import { Package, Sparkles, Check, ShoppingBag, ArrowRight, Lock, KeyRound } from "lucide-react";
 import { useModules } from "@/lib/useModules";
 import { useCart } from "@/lib/cart-context";
 
@@ -63,7 +63,7 @@ const BUNDLES: Bundle[] = [
 
 export default function BundlesPage() {
   const { isModuleActive } = useModules();
-  const { addItem, setIsCartOpen } = useCart();
+  const { addItem, setIsCartOpen, isSalesAllowed, setIsVipModalOpen } = useCart();
   const [addedId, setAddedId] = useState<string | null>(null);
 
   if (!isModuleActive("bundle_deals")) {
@@ -79,6 +79,11 @@ export default function BundlesPage() {
   }
 
   const handleAddBundle = (bundle: Bundle) => {
+    if (!isSalesAllowed) {
+      setIsVipModalOpen(true);
+      return;
+    }
+
     addItem(
       {
         id: bundle.id,
@@ -161,40 +166,62 @@ export default function BundlesPage() {
 
                 {/* Fiyat ve Sepet Butonu */}
                 <div className="mt-6 pt-4">
-                  <div className="flex items-baseline justify-between mb-3 font-mono">
-                    <span className="text-xs text-slate-400 line-through">
-                      {bundle.originalPrice.toLocaleString("tr-TR")} ₺
-                    </span>
-                    <div className="text-right">
-                      <span className="text-2xl font-black text-slate-950">
-                        {bundle.bundlePrice.toLocaleString("tr-TR")} ₺
+                  {isSalesAllowed ? (
+                    <div className="flex items-baseline justify-between mb-3 font-mono">
+                      <span className="text-xs text-slate-400 line-through">
+                        {bundle.originalPrice.toLocaleString("tr-TR")} ₺
                       </span>
-                      <span className="block text-[10px] text-emerald-700 font-semibold">
-                        ({savings.toLocaleString("tr-TR")} ₺ Cebinizde Kalır)
-                      </span>
+                      <div className="text-right">
+                        <span className="text-2xl font-black text-slate-950">
+                          {bundle.bundlePrice.toLocaleString("tr-TR")} ₺
+                        </span>
+                        <span className="block text-[10px] text-emerald-700 font-semibold">
+                          ({savings.toLocaleString("tr-TR")} ₺ Cebinizde Kalır)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="mb-3">
+                      <span className="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mb-1">
+                        Atölye Paket Sergisi
+                      </span>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-2.5 py-1.5 rounded-md">
+                        <Lock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <span>Fiyat İçin Davetiye Kodu Gerekir</span>
+                      </div>
+                    </div>
+                  )}
 
-                  <button
-                    onClick={() => handleAddBundle(bundle)}
-                    className={`w-full py-3 rounded-xs font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${
-                      isAdded
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-950 hover:bg-slate-900 text-white"
-                    }`}
-                  >
-                    {isAdded ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        <span>Sepete Eklendi!</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingBag className="w-4 h-4" />
-                        <span>Paketi İndirimle Sepete Ekle</span>
-                      </>
-                    )}
-                  </button>
+                  {isSalesAllowed ? (
+                    <button
+                      onClick={() => handleAddBundle(bundle)}
+                      className={`w-full py-3 rounded-xs font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${
+                        isAdded
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-950 hover:bg-slate-900 text-white"
+                      }`}
+                    >
+                      {isAdded ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Sepete Eklendi!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="w-4 h-4" />
+                          <span>Paketi İndirimle Sepete Ekle</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setIsVipModalOpen(true)}
+                      className="w-full py-3 rounded-xs font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-900 text-white transition-all shadow-sm"
+                    >
+                      <KeyRound className="w-4 h-4 text-amber-400" />
+                      <span>Paket Fiyatı İçin Davetiye Kodu Gir</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

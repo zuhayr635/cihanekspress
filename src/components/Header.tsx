@@ -19,18 +19,24 @@ import {
   Wrench,
   KeyRound,
   ShieldAlert,
+  Lock,
 } from "lucide-react";
 import VehicleSelector from "@/components/VehicleSelector";
+import VipModal from "@/components/VipModal";
 
 export default function Header() {
-  const { itemCount, setIsCartOpen, storeSettings, subtotal, vipSession, refreshVipStatus } = useCart();
+  const {
+    itemCount,
+    setIsCartOpen,
+    storeSettings,
+    subtotal,
+    vipSession,
+    isSalesAllowed,
+    setIsVipModalOpen,
+  } = useCart();
   const { isModuleActive } = useModules();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [vipModalOpen, setVipModalOpen] = useState(false);
-  const [tokenInput, setTokenInput] = useState("");
-  const [tokenError, setTokenError] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,54 +47,46 @@ export default function Header() {
     }
   };
 
-  const handleVerifyToken = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsVerifying(true);
-    setTokenError("");
-
-    try {
-      const res = await fetch("/api/vip/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: tokenInput.trim() }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setTokenError(data.error || "Geçersiz veya süresi dolmuş davetiye kodu.");
-      } else {
-        await refreshVipStatus();
-        setVipModalOpen(false);
-        setTokenInput("");
-      }
-    } catch {
-      setTokenError("Bağlantı hatası oluştu.");
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   const whatsappPhone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
 
   return (
     <>
+      <VipModal />
+
       {/* 1. KAT: Trendyol Üst Mikro Bar */}
       <div className="bg-[#F8F8F8] text-slate-500 text-[11px] border-b border-slate-200 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="text-slate-600 font-medium">
-              Türkiye&apos;nin RC Rock Crawler & CNC Parça Pazaryeri
+              Türkiye&apos;nin RC Rock Crawler & CNC Parça Kataloğu
             </span>
             <span className="text-slate-300">|</span>
-            <span className="text-emerald-700 font-semibold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Atölye Çalışma & Danışma Kataloğu
-            </span>
+
+            {isSalesAllowed ? (
+              <span className="text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                👑 VIP Kulüp Üyeliği Aktif {vipSession.discountPercent ? `(%${vipSession.discountPercent} İndirim)` : ""}
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-amber-600" />
+                  Atölye Sergi Kataloğu (Fiyat & Satış İçin VIP Davetiyesi Zorunludur)
+                </span>
+                <button
+                  onClick={() => setIsVipModalOpen(true)}
+                  className="text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2 py-0.5 rounded flex items-center gap-1 font-bold transition-colors text-[10px]"
+                >
+                  <KeyRound className="w-3 h-3 text-amber-700" />
+                  <span>VIP Davetiye Kodu Gir</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-5 text-slate-600">
             <a
-              href={`https://wa.me/${whatsappPhone}?text=Merhaba%20Cihan%20Usta,%20par%C3%A7a%20ve%20ara%C3%A7%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
+              href={`https://wa.me/${whatsappPhone}?text=Merhaba%20Cihan%20Usta,%20katalog%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#F27A1A] transition-colors flex items-center gap-1.5 font-medium"
@@ -153,7 +151,7 @@ export default function Header() {
               <span className="text-xs font-semibold text-slate-400 ml-0.5">.com</span>
             </div>
             <p className="text-[9px] font-bold tracking-wider text-slate-400 -mt-1 uppercase">
-              RC SCALE CRAWLER ATELIER
+              RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU
             </p>
           </Link>
 
@@ -178,11 +176,32 @@ export default function Header() {
             </button>
           </form>
 
-          {/* Sağ Aksiyonlar: Giriş Yap, Favorilerim, Sepetim */}
-          <div className="flex items-center gap-2 sm:gap-6">
+          {/* Sağ Aksiyonlar: Davetiye Butonu, Giriş Yap, Favorilerim, Sepetim */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            
+            {/* Davetiye Kodu Butonu (Davetsiz Ziyaretçiler İçin Öne Çıkarılmış) */}
+            {!isSalesAllowed ? (
+              <button
+                onClick={() => setIsVipModalOpen(true)}
+                className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-black py-1.5 px-2.5 sm:px-3 rounded-md text-xs font-bold transition-all shadow-xs"
+                title="VIP Davetiye Kodunuzu girerek fiyatları ve sipariş yetkisini açın"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Davetiye Kodu</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsVipModalOpen(true)}
+                className="flex items-center gap-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 py-1.5 px-2.5 sm:px-3 rounded-md text-xs font-bold transition-all shadow-xs"
+                title="VIP oturumunuz aktiftir"
+              >
+                <span>👑 VIP Üye</span>
+              </button>
+            )}
+
             <Link
               href="/admin/login"
-              className="flex items-center gap-2 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1.5 sm:px-2 rounded-md group"
+              className="flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group"
             >
               <User className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
               <div className="hidden xl:flex flex-col text-left">
@@ -193,7 +212,7 @@ export default function Header() {
 
             <Link
               href="/topluluk"
-              className="flex items-center gap-2 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1.5 sm:px-2 rounded-md group relative"
+              className="flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group relative"
             >
               <Heart className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
               <div className="hidden xl:flex flex-col text-left">
@@ -203,7 +222,13 @@ export default function Header() {
             </Link>
 
             <button
-              onClick={() => setIsCartOpen(true)}
+              onClick={() => {
+                if (!isSalesAllowed && itemCount === 0) {
+                  setIsVipModalOpen(true);
+                } else {
+                  setIsCartOpen(true);
+                }
+              }}
               className="flex items-center gap-2 bg-[#FFF3E8] hover:bg-[#FFE8D6] text-slate-900 border border-[#F27A1A]/30 hover:border-[#F27A1A] py-2 px-3 sm:px-3.5 rounded-md transition-all group relative"
             >
               <div className="relative">
@@ -217,7 +242,11 @@ export default function Header() {
               <div className="flex flex-col text-left">
                 <span className="text-xs font-bold text-slate-900 leading-tight">Sepetim</span>
                 <span className="text-[10px] font-semibold text-[#F27A1A] hidden sm:inline">
-                  {itemCount > 0 ? `${subtotal.toLocaleString("tr-TR")} ₺` : "0 Ürün"}
+                  {isSalesAllowed
+                    ? itemCount > 0
+                      ? `${subtotal.toLocaleString("tr-TR")} ₺`
+                      : "0 Ürün"
+                    : "Katalog Modu"}
                 </span>
               </div>
             </button>
@@ -263,6 +292,23 @@ export default function Header() {
         {/* Mobil Menü Dropdown */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-slate-200 bg-white p-4 space-y-3 text-xs font-semibold">
+            {!isSalesAllowed ? (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsVipModalOpen(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider font-bold bg-amber-500 text-black rounded-md shadow-xs"
+              >
+                <KeyRound className="w-4 h-4" />
+                VIP Davetiye Kodu Gir (Fiyatları Aç)
+              </button>
+            ) : (
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md text-center text-xs font-bold">
+                👑 VIP Kulüp Oturumu Aktif
+              </div>
+            )}
+
             <Link
               href="/#vitrin"
               onClick={() => setMobileMenuOpen(false)}
@@ -368,18 +414,7 @@ export default function Header() {
             >
               📖 Sistem Rehberi (Nasıl Çalışır?)
             </Link>
-            {!vipSession.isVip && storeSettings?.storeMode !== "PUBLIC_SALE" && (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setVipModalOpen(true);
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider font-bold bg-[#F27A1A] text-white rounded-md"
-              >
-                <KeyRound className="w-4 h-4" />
-                Davetiye Kodu Gir
-              </button>
-            )}
+
             <div className="pt-2 border-t border-slate-200">
               <Link
                 href="/admin"
@@ -392,62 +427,6 @@ export default function Header() {
           </div>
         )}
       </header>
-
-      {/* Davetiye Kodu Modal */}
-      {vipModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white border border-slate-200 w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl relative text-slate-900">
-            <button
-              onClick={() => setVipModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="text-center space-y-2 mb-6">
-              <div className="w-12 h-12 mx-auto rounded-full bg-orange-50 border border-orange-200 flex items-center justify-center text-[#F27A1A]">
-                <KeyRound className="w-6 h-6 stroke-[1.5]" />
-              </div>
-              <h3 className="text-xl text-slate-950 font-black tracking-tight uppercase">
-                RC Kulüp VIP Davetiyesi
-              </h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                Yöneticinin size tahsis ettiği davetiye kodunu girerek özel crawler araçlarının ve parçaların sipariş yetkisini açabilirsiniz.
-              </p>
-            </div>
-
-            <form onSubmit={handleVerifyToken} className="space-y-4">
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-slate-600 font-bold mb-1.5">
-                  Davetiye Kodu (Token)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Örn: vip-crawler-2026"
-                  value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:outline-none focus:border-[#F27A1A] font-mono"
-                />
-              </div>
-
-              {tokenError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md">
-                  {tokenError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isVerifying}
-                className="w-full py-3 bg-[#F27A1A] text-white text-xs uppercase tracking-wider font-bold rounded-md hover:bg-[#E06A0A] transition-colors disabled:opacity-50 shadow-md"
-              >
-                {isVerifying ? "Doğrulanıyor..." : "VIP Girişini Başlat"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   );
 }

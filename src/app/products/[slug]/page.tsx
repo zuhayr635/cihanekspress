@@ -20,6 +20,7 @@ import {
   Minus,
   Wrench,
   Cpu,
+  KeyRound,
 } from "lucide-react";
 
 interface VariantItem {
@@ -63,7 +64,7 @@ export default function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
-  const { addItem, vipSession, storeSettings } = useCart();
+  const { addItem, vipSession, storeSettings, setIsVipModalOpen } = useCart();
 
   const [product, setProduct] = useState<ProductData | null>(null);
   const [related, setRelated] = useState<ProductData[]>([]);
@@ -270,34 +271,53 @@ export default function ProductDetailPage({
               )}
             </div>
 
-            {/* FİYAT BÖLÜMÜ (ATÖLYE REFERANS DEĞERİ) */}
-            <div className="p-5 bg-slate-50 border border-slate-200 rounded-xs space-y-2">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block mb-1">
-                  Atölye Referans Değeri (Malzeme & İmalat)
-                </span>
-                <div className="flex items-baseline gap-3">
-                  <span className="font-mono text-3xl sm:text-4xl text-slate-950 font-black">
-                    {finalPrice.toLocaleString("tr-TR")} ₺
+            {/* FİYAT BÖLÜMÜ (ATÖLYE REFERANS DEĞERİ / DAVETİYE KORUMASI) */}
+            {isSalesAllowed ? (
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-xs space-y-2">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block mb-1">
+                    Atölye Referans Değeri (Malzeme & İmalat)
                   </span>
-                  {(vipDiscount > 0 || product.salePrice) && (
-                    <>
-                      <span className="text-base text-slate-400 line-through font-mono">
-                        {currentPrice.toLocaleString("tr-TR")} ₺
-                      </span>
-                      {vipDiscount > 0 && (
-                        <span className="px-2 py-0.5 bg-orange-600 text-white text-[10px] font-mono font-bold tracking-wider rounded-xs">
-                          % {vipDiscount} Kulüp İndirimi
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-mono text-3xl sm:text-4xl text-slate-950 font-black">
+                      {finalPrice.toLocaleString("tr-TR")} ₺
+                    </span>
+                    {(vipDiscount > 0 || product.salePrice) && (
+                      <>
+                        <span className="text-base text-slate-400 line-through font-mono">
+                          {currentPrice.toLocaleString("tr-TR")} ₺
                         </span>
-                      )}
-                    </>
-                  )}
+                        {vipDiscount > 0 && (
+                          <span className="px-2 py-0.5 bg-orange-600 text-white text-[10px] font-mono font-bold tracking-wider rounded-xs">
+                            % {vipDiscount} Kulüp İndirimi
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 font-sans mt-1.5 leading-relaxed font-normal">
+                    Bu çalışma hobi atölyesi özel üretimidir. Siparişler doğrudan atölye istişaresi, özel montaj ve teslimat mutabakatı ile hazırlanır.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600 font-sans mt-1.5 leading-relaxed font-normal">
-                  Bu çalışma hobi atölyesi özel üretimidir. Siparişler doğrudan atölye istişaresi, özel montaj ve teslimat mutabakatı ile hazırlanır.
-                </p>
               </div>
-            </div>
+            ) : (
+              <div className="p-5 bg-amber-50/70 border border-amber-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                  <Lock className="w-4 h-4 text-amber-600" />
+                  <span>Özel Hobi & Atölye Çalışma Kataloğu</span>
+                </div>
+                <p className="text-xs text-amber-900/80 leading-relaxed font-sans font-normal">
+                  Bu çalışma ve parçalar bir atölye sergisidir. Sitemizde halka açık ticari satış yapılmamaktadır. Parça tedariği ve referans fiyat detayları yalnızca yöneticinin onayladığı <strong>VIP Davetiye Koduna</strong> sahip kulüp üyelerine açılmaktadır.
+                </p>
+                <button
+                  onClick={() => setIsVipModalOpen(true)}
+                  className="w-full py-3 bg-[#F27A1A] hover:bg-[#E06A0A] text-white text-xs font-bold uppercase tracking-wider rounded-md flex items-center justify-center gap-2 transition-colors shadow-sm"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  <span>VIP Davetiye Kodunu Gir & Fiyatları Gör</span>
+                </button>
+              </div>
+            )}
 
             {/* VARYANT SEÇİCİ (Beden / Renk / Aks Tipi) */}
             {product.variants && product.variants.length > 0 && (
@@ -319,7 +339,7 @@ export default function ProductDetailPage({
                         }`}
                       >
                         {variant.name}
-                        {variant.price !== product.basePrice && (
+                        {isSalesAllowed && variant.price !== product.basePrice && (
                           <span className="ml-1 text-[10px] opacity-80">
                             ({variant.price.toLocaleString("tr-TR")} ₺)
                           </span>
@@ -367,13 +387,23 @@ export default function ProductDetailPage({
                   </button>
                 </div>
 
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 py-3.5 bg-slate-950 hover:bg-slate-900 border border-slate-950 text-white text-xs font-mono uppercase tracking-widest font-bold rounded-xs transition-all flex items-center justify-center gap-2 shadow-xs"
-                >
-                  <Wrench className="w-4 h-4 text-orange-400" />
-                  <span>Talep Listesine Ekle</span>
-                </button>
+                {isSalesAllowed ? (
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 py-3.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white text-xs uppercase tracking-wider font-bold rounded-md transition-all flex items-center justify-center gap-2 shadow-xs"
+                  >
+                    <Wrench className="w-4 h-4 text-white" />
+                    <span>Talep Listesine Ekle</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsVipModalOpen(true)}
+                    className="flex-1 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs uppercase tracking-wider font-bold rounded-md transition-all flex items-center justify-center gap-2 shadow-xs"
+                  >
+                    <KeyRound className="w-4 h-4 text-amber-400" />
+                    <span>Fiyat & Sipariş İçin Davetiye Kodu Girin</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -386,7 +416,7 @@ export default function ProductDetailPage({
                 className="w-full flex items-center justify-center gap-2.5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono uppercase tracking-widest font-black rounded-xs transition-all shadow-md shadow-emerald-600/20 group"
               >
                 <MessageCircle className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                <span>WhatsApp İle Hemen Sipariş Ver & Danış</span>
+                <span>{isSalesAllowed ? "WhatsApp İle Hemen Sipariş Ver & Danış" : "WhatsApp İle Atölye Bilgisi Al (Katalog)"}</span>
               </a>
             </div>
 

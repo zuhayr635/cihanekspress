@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingCart, Check, MessageCircle, Star, Truck } from "lucide-react";
+import { Heart, ShoppingCart, Check, MessageCircle, Star, Truck, Lock, KeyRound } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
 interface ProductCardProps {
@@ -24,7 +24,14 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addItem, vipSession, storeSettings, selectedVehicle } = useCart();
+  const {
+    addItem,
+    vipSession,
+    storeSettings,
+    selectedVehicle,
+    isSalesAllowed,
+    setIsVipModalOpen,
+  } = useCart();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
 
@@ -77,6 +84,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isSalesAllowed) {
+      setIsVipModalOpen(true);
+      return;
+    }
+
     addItem({
       id: product.id,
       productId: product.id,
@@ -91,7 +104,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   // WhatsApp Sipariş / Danışma Linki
   const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
-  const whatsAppMsg = `Merhaba Cihan Usta, Trendyol vitrindeki *${product.title}* hakkında bilgi almak ve sipariş vermek istiyorum. (Ref: #${product.sku || product.slug}, Fiyat: ${finalPrice.toLocaleString("tr-TR")} TL)`;
+  const whatsAppMsg = isSalesAllowed
+    ? `Merhaba Cihan Usta, Trendyol vitrindeki *${product.title}* hakkında bilgi almak ve sipariş vermek istiyorum. (Ref: #${product.sku || product.slug}, Fiyat: ${finalPrice.toLocaleString("tr-TR")} TL)`
+    : `Merhaba Cihan Usta, *${product.title}* atölye sergisi ve model hakkında teknik bilgi almak istiyorum. (Katalog No: #${product.sku || product.slug})`;
   const directWhatsAppUrl = `https://wa.me/${phone}?text=${encodeURIComponent(whatsAppMsg)}`;
 
   // Değerlendirme puanı simülasyonu (Trendyol tarzı 4.7 - 5.0)
@@ -142,9 +157,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             HIZLI TESLİMAT
           </span>
 
-          {hasDiscount && (
+          {isSalesAllowed && hasDiscount && (
             <span className="px-1.5 py-0.5 bg-rose-600 text-white text-[9px] font-black rounded shadow-xs">
               %{discountPercent} İNDİRİM
+            </span>
+          )}
+
+          {!isSalesAllowed && (
+            <span className="px-1.5 py-0.5 bg-amber-500 text-black text-[9px] font-bold rounded shadow-xs flex items-center gap-1">
+              <Lock className="w-2.5 h-2.5" />
+              KATALOG
             </span>
           )}
 
@@ -196,43 +218,79 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
 
-          {/* Fiyat Bloğu */}
-          <div className="pt-1">
-            {hasDiscount && (
-              <span className="text-[11px] text-slate-400 line-through block font-medium">
-                {product.basePrice.toLocaleString("tr-TR")} TL
-              </span>
+          {/* Fiyat Bloğu (Davetiyesiz Ziyaretçiler İçin Gizli) */}
+          <div className="pt-1 min-h-[46px] flex flex-col justify-center">
+            {isSalesAllowed ? (
+              <>
+                {hasDiscount && (
+                  <span className="text-[11px] text-slate-400 line-through block font-medium">
+                    {product.basePrice.toLocaleString("tr-TR")} TL
+                  </span>
+                )}
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-base sm:text-lg font-black text-[#F27A1A] tracking-tight">
+                    {finalPrice.toLocaleString("tr-TR")} TL
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div>
+                <span className="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider leading-none mb-1">
+                  Atölye Sergi Kataloğu
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsVipModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-2 py-1 rounded-md transition-colors w-full text-left"
+                  title="Fiyatları görmek için tıklayın"
+                >
+                  <Lock className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                  <span className="truncate">Fiyat İçin Davetiye Girin</span>
+                </button>
+              </div>
             )}
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-base sm:text-lg font-black text-[#F27A1A] tracking-tight">
-                {finalPrice.toLocaleString("tr-TR")} TL
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Butonlar: Trendyol Sepete Ekle + WhatsApp Danışma */}
+        {/* Butonlar: Davetiye Kodu Gir VEYA Sepete Ekle + WhatsApp */}
         <div className="pt-2 space-y-1.5">
-          <button
-            onClick={handleAddToCart}
-            className={`w-full py-2 px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] ${
-              isAdded
-                ? "bg-emerald-600 text-white"
-                : "bg-[#F27A1A] hover:bg-[#E06A0A] text-white"
-            }`}
-          >
-            {isAdded ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>Sepete Eklendi</span>
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-3.5 h-3.5" />
-                <span>Sepete Ekle</span>
-              </>
-            )}
-          </button>
+          {isSalesAllowed ? (
+            <button
+              onClick={handleAddToCart}
+              className={`w-full py-2 px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] ${
+                isAdded
+                  ? "bg-emerald-600 text-white"
+                  : "bg-[#F27A1A] hover:bg-[#E06A0A] text-white"
+              }`}
+            >
+              {isAdded ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Sepete Eklendi</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  <span>Sepete Ekle</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsVipModalOpen(true);
+              }}
+              className="w-full py-2 px-3 rounded-md text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98]"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+              <span>Davetiye Kodu Gir</span>
+            </button>
+          )}
 
           <a
             href={directWhatsAppUrl}
@@ -241,7 +299,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="w-full py-1 px-2 rounded-md text-[10px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 transition-colors flex items-center justify-center gap-1"
           >
             <MessageCircle className="w-3 h-3 text-emerald-600" />
-            <span>WhatsApp ile Sor & Sipariş Ver</span>
+            <span>{isSalesAllowed ? "WhatsApp ile Sor & Sipariş Ver" : "WhatsApp ile Bilgi Al"}</span>
           </a>
         </div>
       </div>

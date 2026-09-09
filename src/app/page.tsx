@@ -22,6 +22,8 @@ import {
   ChevronLeft,
   Award,
   CheckCircle2,
+  Lock,
+  KeyRound,
 } from "lucide-react";
 
 interface ProductItem {
@@ -115,7 +117,7 @@ const HERO_BANNERS = [
 ];
 
 export default function HomePage() {
-  const { storeSettings } = useCart();
+  const { storeSettings, isSalesAllowed, setIsVipModalOpen, vipSession } = useCart();
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -254,6 +256,34 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* KATALOG VE HUKUKİ BİLGİLENDİRME BANTI */}
+      {!isSalesAllowed && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-amber-50/90 border border-amber-200/90 rounded-xl p-3.5 sm:p-4 text-xs text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-amber-200/60 flex items-center justify-center text-amber-800 flex-shrink-0">
+                <Shield className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="font-bold block text-slate-900 text-sm">
+                  RC Modelcilik & Hobi Atölyesi Çalışma Kataloğu
+                </span>
+                <span className="text-amber-900/80 text-[11px] font-normal leading-snug">
+                  Sitemiz halka açık perakende e-ticaret satışı yapmamaktadır. Yalnızca atölye sergi kataloğudur. Fiyatları görmek ve talep oluşturabilmek için <strong>VIP Davetiye Kodu</strong> zorunludur.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsVipModalOpen(true)}
+              className="px-4 py-2 bg-[#F27A1A] hover:bg-[#E06A0A] text-white font-bold text-xs rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 shadow-xs self-end sm:self-center"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Davetiye Kodu Gir</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2. KAT: TRENDYOL HERO KAMPANYA BANNERLARI */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -278,13 +308,23 @@ export default function HomePage() {
                     {banner.subtitle}
                   </p>
                   <div className="pt-2 flex items-center gap-3">
-                    <a
-                      href={banner.target}
-                      className="px-6 py-3 bg-white text-[#F27A1A] font-bold text-xs sm:text-sm uppercase tracking-wider rounded-md hover:bg-slate-100 transition-all shadow-md flex items-center gap-2"
-                    >
-                      <span>{banner.linkText}</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </a>
+                    {isSalesAllowed ? (
+                      <a
+                        href={banner.target}
+                        className="px-6 py-3 bg-white text-[#F27A1A] font-bold text-xs sm:text-sm uppercase tracking-wider rounded-md hover:bg-slate-100 transition-all shadow-md flex items-center gap-2"
+                      >
+                        <span>{banner.linkText}</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => setIsVipModalOpen(true)}
+                        className="px-6 py-3 bg-white text-[#F27A1A] font-bold text-xs sm:text-sm uppercase tracking-wider rounded-md hover:bg-slate-100 transition-all shadow-md flex items-center gap-2"
+                      >
+                        <KeyRound className="w-4 h-4 text-[#F27A1A]" />
+                        <span>Davetiye Kodu Gir</span>
+                      </button>
+                    )}
                     <a
                       href={`https://wa.me/${phone}?text=Merhaba%20Cihan%20Usta,%20sitedeki%20kampanya%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
                       target="_blank"
@@ -391,14 +431,18 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg sm:text-xl font-black tracking-tight uppercase">
-                    ⚡ SÜPER FIRSATLAR
+                    ⚡ {isSalesAllowed ? "SÜPER FIRSATLAR" : "ÖZEL KULÜP SERGİSİ"}
                   </h2>
-                  <span className="px-2 py-0.5 bg-rose-600 text-[10px] font-black uppercase rounded shadow-xs">
-                    GÜNÜN İNDİRİMLERİ
+                  <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded shadow-xs ${
+                    isSalesAllowed ? "bg-rose-600 text-white" : "bg-slate-900 text-amber-300"
+                  }`}>
+                    {isSalesAllowed ? "GÜNÜN İNDİRİMLERİ" : "DAVETİYELİ ERİŞİM"}
                   </span>
                 </div>
                 <p className="text-xs text-white/90">
-                  Sınırlı sayıda masif pirinç ve CNC şasi paketleri stoklarla sınırlıdır.
+                  {isSalesAllowed
+                    ? "Sınırlı sayıda masif pirinç ve CNC şasi paketleri stoklarla sınırlıdır."
+                    : "Özel şasi ve pirinç modifikasyon parçaları. Fiyatları görmek için VIP davetiye kodu zorunludur."}
                 </p>
               </div>
             </div>

@@ -15,6 +15,8 @@ import {
   Wrench,
   ShieldCheck,
   FileText,
+  Lock,
+  KeyRound,
 } from "lucide-react";
 
 export default function CartDrawer() {
@@ -33,6 +35,8 @@ export default function CartDrawer() {
     applyCoupon,
     removeCoupon,
     storeSettings,
+    isSalesAllowed,
+    setIsVipModalOpen,
   } = useCart();
 
   const [couponCode, setCouponCode] = useState("");
@@ -251,59 +255,85 @@ export default function CartDrawer() {
                 </p>
               )}
 
-              {/* Fiyat Detayları (Atölye Referans Değeri) */}
-              <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-200 pt-3 font-mono">
-                <div className="flex justify-between">
-                  <span>Parça / Malzeme Toplamı</span>
-                  <span className="text-slate-900 font-bold">{subtotal.toLocaleString("tr-TR")} ₺</span>
-                </div>
+              {/* Fiyat Detayları veya Davetiye Koruması */}
+              {isSalesAllowed ? (
+                <>
+                  <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-200 pt-3 font-mono">
+                    <div className="flex justify-between">
+                      <span>Parça / Malzeme Toplamı</span>
+                      <span className="text-slate-900 font-bold">{subtotal.toLocaleString("tr-TR")} ₺</span>
+                    </div>
 
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-orange-600 font-bold">
-                    <span>
-                      {discountPercent > 0 ? `Kulüp İndirimi (%${discountPercent})` : "Özel İndirim"}
-                    </span>
-                    <span>-{discountAmount.toLocaleString("tr-TR")} ₺</span>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-orange-600 font-bold">
+                        <span>
+                          {discountPercent > 0 ? `Kulüp İndirimi (%${discountPercent})` : "Özel İndirim"}
+                        </span>
+                        <span>-{discountAmount.toLocaleString("tr-TR")} ₺</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between">
+                      <span>Atölye Teslim & Kargo</span>
+                      <span className="text-emerald-600 font-bold">
+                        {shippingFee === 0 ? "Atölye İkramı (Ücretsiz)" : `${shippingFee} ₺`}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-sm font-bold text-slate-950 border-t border-slate-200 pt-2.5">
+                      <span className="text-slate-950">Atölye Referans Tutarı</span>
+                      <span className="text-base text-slate-950 font-black">
+                        {total.toLocaleString("tr-TR")} ₺
+                      </span>
+                    </div>
                   </div>
-                )}
 
-                <div className="flex justify-between">
-                  <span>Atölye Teslim & Kargo</span>
-                  <span className="text-emerald-600 font-bold">
-                    {shippingFee === 0 ? "Atölye İkramı (Ücretsiz)" : `${shippingFee} ₺`}
-                  </span>
+                  {/* Butonlar: 1. WhatsApp Doğrudan Sipariş (Öncelikli), 2. Atölye Rezervasyon Formu */}
+                  <div className="space-y-2.5 pt-1">
+                    <a
+                      href={getWhatsAppOrderUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs uppercase tracking-widest font-mono font-black rounded-xs transition-all shadow-md shadow-emerald-600/20 group"
+                    >
+                      <MessageCircle className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
+                      <span>WhatsApp ile Siparişi Atölyeye İlet</span>
+                    </a>
+
+                    <Link
+                      href="/checkout"
+                      onClick={() => setIsCartOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-white hover:bg-slate-100 border border-slate-300 hover:border-slate-400 text-slate-800 hover:text-slate-950 text-xs uppercase tracking-widest font-mono font-bold rounded-xs transition-all group shadow-xs"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-slate-600" />
+                      <span>Atölye Rezervasyon & İletişim Formu</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="border-t border-slate-200 pt-3 space-y-3">
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-amber-950">
+                      <Lock className="w-4 h-4 text-amber-600" />
+                      <span>Katalog Modu (Fiyatlar Korumalıdır)</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed font-sans">
+                      Sitemiz halka açık perakende satış yapmamaktadır. Fiyatları görmek ve talep iletmek için VIP davetiye kodunuzu giriniz.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setIsCartOpen(false);
+                        setIsVipModalOpen(true);
+                      }}
+                      className="w-full py-2.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white font-bold text-xs uppercase tracking-wider rounded-md flex items-center justify-center gap-2 transition-colors shadow-xs"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                      <span>VIP Davetiye Kodu Gir</span>
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex justify-between text-sm font-bold text-slate-950 border-t border-slate-200 pt-2.5">
-                  <span className="text-slate-950">Atölye Referans Tutarı</span>
-                  <span className="text-base text-slate-950 font-black">
-                    {total.toLocaleString("tr-TR")} ₺
-                  </span>
-                </div>
-              </div>
-
-              {/* Butonlar: 1. WhatsApp Doğrudan Sipariş (Öncelikli), 2. Atölye Rezervasyon Formu */}
-              <div className="space-y-2.5 pt-1">
-                <a
-                  href={getWhatsAppOrderUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs uppercase tracking-widest font-mono font-black rounded-xs transition-all shadow-md shadow-emerald-600/20 group"
-                >
-                  <MessageCircle className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>WhatsApp ile Siparişi Atölyeye İlet</span>
-                </a>
-
-                <Link
-                  href="/checkout"
-                  onClick={() => setIsCartOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-white hover:bg-slate-100 border border-slate-300 hover:border-slate-400 text-slate-800 hover:text-slate-950 text-xs uppercase tracking-widest font-mono font-bold rounded-xs transition-all group shadow-xs"
-                >
-                  <FileText className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Atölye Rezervasyon & İletişim Formu</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
+              )}
             </div>
           )}
         </div>

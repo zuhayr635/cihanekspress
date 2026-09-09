@@ -25,6 +25,9 @@ interface CartContextType {
   refreshVipStatus: () => Promise<void>;
   selectedVehicle: string | null;
   setSelectedVehicle: (v: string | null) => void;
+  isVipModalOpen: boolean;
+  setIsVipModalOpen: (open: boolean) => void;
+  isSalesAllowed: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -37,6 +40,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [vipSession, setVipSession] = useState<VipSessionData>({ isVip: false });
   const [storeSettings, setStoreSettings] = useState<StoreSettingsData | null>(null);
   const [selectedVehicle, setSelectedVehicleState] = useState<string | null>(null);
+  const [isVipModalOpen, setIsVipModalOpen] = useState(false);
+
+  const isSalesAllowed =
+    storeSettings?.storeMode === "PUBLIC_SALE" ||
+    vipSession.isVip;
 
   const setSelectedVehicle = (v: string | null) => {
     setSelectedVehicleState(v);
@@ -197,6 +205,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         refreshVipStatus,
         selectedVehicle,
         setSelectedVehicle,
+        isVipModalOpen,
+        setIsVipModalOpen,
+        isSalesAllowed,
       }}
     >
       {children}

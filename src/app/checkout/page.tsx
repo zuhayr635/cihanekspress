@@ -16,6 +16,8 @@ import {
   Clock,
   Sparkles,
   FileText,
+  Lock,
+  KeyRound,
 } from "lucide-react";
 
 export default function CheckoutPage() {
@@ -30,6 +32,8 @@ export default function CheckoutPage() {
     appliedCoupon,
     clearCart,
     storeSettings,
+    isSalesAllowed,
+    setIsVipModalOpen,
   } = useCart();
 
   // Form State
@@ -50,6 +54,41 @@ export default function CheckoutPage() {
 
   const assemblyFee = includeAssemblyService ? 750 : 0;
   const finalOrderTotal = total + assemblyFee;
+
+  if (!isSalesAllowed) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-24 text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mx-auto">
+          <Lock className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-950 uppercase">
+            VIP Davetiye Girişi Zorunludur
+          </h2>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            cihanekspress.com bir RC crawler atölye sergi kataloğudur. Halka açık ticari e-ticaret satışı yapılmamaktadır. Sipariş oluşturabilmek ve fiyatları görebilmek için yöneticinin tahsis ettiği <strong>VIP Davetiye Kodunu</strong> girmeniz gerekmektedir.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsVipModalOpen(true)}
+          className="w-full py-3.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white text-xs uppercase tracking-wider font-bold rounded-lg transition-colors shadow-md flex items-center justify-center gap-2"
+        >
+          <KeyRound className="w-4 h-4" />
+          <span>VIP Davetiye Kodunu Gir</span>
+        </button>
+
+        <div>
+          <Link
+            href="/"
+            className="inline-block text-xs text-slate-500 hover:text-slate-800 font-semibold"
+          >
+            ← Kataloğa Geri Dön
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
