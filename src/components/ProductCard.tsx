@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Cpu, MessageCircle, Wrench } from "lucide-react";
+import { Heart, ShoppingCart, Check, MessageCircle, Star, Truck } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
 interface ProductCardProps {
@@ -24,7 +24,9 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { vipSession, storeSettings, selectedVehicle } = useCart();
+  const { addItem, vipSession, storeSettings, selectedVehicle } = useCart();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
   let imageList: string[] = [];
   try {
@@ -36,27 +38,26 @@ export default function ProductCard({ product }: ProductCardProps) {
     imageList[0] ||
     "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=800&q=80";
 
-  // Fiyat ve Atölye Referans Değeri
+  // Fiyat hesaplama
   const rawPrice = product.salePrice || product.basePrice;
   const vipDiscount = vipSession.discountPercent || 0;
   const finalPrice = vipDiscount > 0 ? rawPrice * (1 - vipDiscount / 100) : rawPrice;
+  const hasDiscount = product.basePrice > finalPrice;
+  const discountPercent = hasDiscount
+    ? Math.round(((product.basePrice - finalPrice) / product.basePrice) * 100)
+    : 0;
 
-  // Crawler Teknik Rozetlerini Çıkar
+  // Marka & Ölçek tespiti
   const isMicro =
     product.title.includes("1/24") ||
     (product.shortDescription && product.shortDescription.includes("1/24"));
-  const scaleTag = isMicro ? "1/24 MINI" : "1/10 PRO";
-
-  const fitmentTag =
-    product.title.includes("TRX-4") || product.description.includes("TRX-4")
-      ? "TRX-4 / SCX10"
-      : product.title.includes("SCX24")
-      ? "SCX24 COMPATIBLE"
-      : "ÖZEL ŞASİ FIT";
-
-  const isBrass =
-    product.title.toLowerCase().includes("pirinç") ||
-    product.title.toLowerCase().includes("brass");
+  const brandName = product.title.includes("TRX")
+    ? "TRAXXAS"
+    : product.title.includes("SCX")
+    ? "AXIAL"
+    : product.title.toLowerCase().includes("pirinç") || product.title.toLowerCase().includes("brass")
+    ? "BRASS LAB"
+    : "CIHANPOL";
 
   // Garaj Araç Uyumluluk Kontrolü
   let isVehicleCompatible = true;
@@ -72,152 +73,177 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }
 
-  // WhatsApp Doğrudan Sipariş / Bilgi Linki
-  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567";
-  const whatsAppMsg = `Merhaba Cihan Usta, katalogdaki *${product.title}* projesi hakkında bilgi almak ve atölye siparişi oluşturmak istiyorum. (Referans No: #${product.sku || product.slug})`;
+  // Sepete Ekle Aksiyonu
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      productId: product.id,
+      title: product.title,
+      price: finalPrice,
+      image: mainImage,
+      maxStock: 99,
+    });
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1800);
+  };
+
+  // WhatsApp Sipariş / Danışma Linki
+  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
+  const whatsAppMsg = `Merhaba Cihan Usta, Trendyol vitrindeki *${product.title}* hakkında bilgi almak ve sipariş vermek istiyorum. (Ref: #${product.sku || product.slug}, Fiyat: ${finalPrice.toLocaleString("tr-TR")} TL)`;
   const directWhatsAppUrl = `https://wa.me/${phone}?text=${encodeURIComponent(whatsAppMsg)}`;
 
+  // Değerlendirme puanı simülasyonu (Trendyol tarzı 4.7 - 5.0)
+  const rating = 4.8 + ((product.title.length % 3) * 0.1);
+  const reviewCount = 24 + ((product.title.length * 7) % 180);
+
   return (
-    <div className="group relative flex flex-col bg-white border border-slate-200 hover:border-slate-400 rounded-xs overflow-hidden transition-all duration-300 hover:shadow-md">
+    <div className="group relative flex flex-col bg-white rounded-lg border border-slate-200 hover:border-[#F27A1A]/60 hover:shadow-lg transition-all duration-300 overflow-hidden">
       {/* Görsel Alanı */}
-      <Link
-        href={`/products/${product.slug}`}
-        className="relative aspect-4/3 sm:aspect-3/4 w-full bg-slate-50 overflow-hidden block border-b border-slate-100"
-      >
-        <Image
-          src={mainImage}
-          alt={product.title}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out z-10"
-        />
+      <div className="relative aspect-[1/1] w-full bg-[#FAFAFA] overflow-hidden p-2 flex items-center justify-center">
+        <Link href={`/products/${product.slug}`} className="relative w-full h-full block">
+          <Image
+            src={mainImage}
+            alt={product.title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-contain p-2 group-hover:scale-105 transition-transform duration-300 ease-out"
+          />
+        </Link>
 
-        {/* Üst Rozetler */}
-        <div className="absolute top-3 left-3 z-20 flex flex-wrap gap-1.5 max-w-[85%]">
-          <span className="px-2 py-0.5 bg-slate-950 text-white text-[9px] font-mono tracking-wider uppercase font-bold rounded-xs shadow-xs">
-            {scaleTag}
+        {/* Favori Butonu (Trendyol Sağ Üst Kalp) */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsFavorite(!isFavorite);
+          }}
+          className="absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm hover:shadow flex items-center justify-center transition-transform active:scale-90"
+          title="Favorilere Ekle"
+        >
+          <Heart
+            className={`w-4 h-4 transition-colors ${
+              isFavorite
+                ? "fill-red-500 text-red-500"
+                : "text-slate-400 group-hover:text-slate-600"
+            }`}
+          />
+        </button>
+
+        {/* Trendyol Rozetleri (Sol Üst) */}
+        <div className="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1 items-start">
+          <span className="px-1.5 py-0.5 bg-[#0BC15C] text-white text-[9px] font-bold rounded shadow-xs flex items-center gap-1">
+            <Truck className="w-2.5 h-2.5" />
+            KARGO BEDAVA
           </span>
 
-          <span className="px-2 py-0.5 bg-white/95 border border-slate-200 text-slate-700 text-[9px] font-mono tracking-wider uppercase rounded-xs">
-            {fitmentTag}
+          <span className="px-1.5 py-0.5 bg-[#F27A1A] text-white text-[9px] font-bold rounded shadow-xs">
+            HIZLI TESLİMAT
           </span>
 
-          {isBrass && (
-            <span className="px-2 py-0.5 bg-orange-600 text-white text-[9px] font-mono font-bold uppercase rounded-xs shadow-xs">
-              +AĞIR PİRİNÇ CNC
+          {hasDiscount && (
+            <span className="px-1.5 py-0.5 bg-rose-600 text-white text-[9px] font-black rounded shadow-xs">
+              %{discountPercent} İNDİRİM
             </span>
           )}
 
-          {vipSession.isVip && vipDiscount > 0 && (
-            <span className="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-mono tracking-wider uppercase font-bold rounded-xs">
-              -%{vipDiscount} KULÜP
+          {isMicro && (
+            <span className="px-1.5 py-0.5 bg-slate-900 text-white text-[9px] font-mono font-bold rounded">
+              1/24 MİKRO
             </span>
           )}
         </div>
 
-        {/* Sağ Alt Atölye Durum Rozeti */}
-        <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-white/90 border border-slate-200 text-slate-700 text-[9px] font-mono tracking-wider uppercase rounded-xs flex items-center gap-1.5 backdrop-blur-xs">
-          <Wrench className="w-3 h-3 text-orange-600" />
-          <span>Atölye İmalatı</span>
-        </div>
-      </Link>
-
-      {/* Ürün Bilgisi */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 bg-white">
-        <div>
-          {/* Kategori ve SKU */}
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 border-b border-slate-100 pb-2 mb-2">
-            <span className="text-orange-600 font-bold uppercase tracking-wider flex items-center gap-1">
-              <Cpu className="w-3 h-3 text-orange-600" />
-              {product.category?.name?.split(" ")[0] || "CRAWLER PROJE"}
-            </span>
-            {product.sku && (
-              <span className="text-slate-400 tracking-wider">#{product.sku}</span>
+        {/* Garaj Uyumluluk Etiketi */}
+        {selectedVehicle && (
+          <div className="absolute bottom-2 left-2 z-20">
+            {isVehicleCompatible ? (
+              <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-[9px] font-semibold rounded">
+                ✓ {selectedVehicle} Uyumlu
+              </span>
+            ) : (
+              <span className="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 text-[9px] font-semibold rounded">
+                ⚠️ Uyumsuz
+              </span>
             )}
           </div>
+        )}
+      </div>
 
-          {/* Garaj Araç Uyumluluk Rozeti */}
-          {selectedVehicle && (
-            <div className="mb-2">
-              {isVehicleCompatible ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-300 text-emerald-800 text-[9px] font-mono font-bold uppercase rounded-xs">
-                  ✓ {selectedVehicle} ile Uyumlu
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 text-[9px] font-mono font-bold uppercase rounded-xs">
-                  ⚠️ {selectedVehicle} İçin Uyumsuz
-                </span>
-              )}
-            </div>
-          )}
-
+      {/* Ürün Detayları */}
+      <div className="p-3 flex-1 flex flex-col justify-between space-y-2 bg-white">
+        <div className="space-y-1.5">
+          {/* Başlık (Trendyol Kalın Marka + Başlık) */}
           <Link href={`/products/${product.slug}`} className="block">
-            <h3 className="font-mono text-xs sm:text-sm text-slate-900 font-bold group-hover:text-orange-600 transition-colors line-clamp-2 uppercase leading-snug">
+            <h3 className="text-xs sm:text-[13px] text-slate-800 group-hover:text-[#F27A1A] transition-colors line-clamp-2 leading-snug">
+              <strong className="font-bold text-slate-950 mr-1 uppercase">
+                {brandName}
+              </strong>
               {product.title}
             </h3>
           </Link>
 
-          {product.shortDescription && (
-            <p className="text-[11px] text-slate-500 mt-2 line-clamp-2 leading-relaxed font-normal">
-              {product.shortDescription}
-            </p>
-          )}
-        </div>
+          {/* Yıldız Değerlendirme & Yorum Sayısı */}
+          <div className="flex items-center gap-1 text-[11px] text-slate-500">
+            <span className="font-bold text-amber-500 flex items-center">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline mr-0.5" />
+              {rating.toFixed(1)}
+            </span>
+            <span className="text-slate-400">({reviewCount})</span>
+            <span className="text-[9px] bg-orange-50 text-[#F27A1A] font-semibold px-1 rounded ml-auto">
+              Çok Satan
+            </span>
+          </div>
 
-        {/* Fiyat ve Hızlı Sipariş / İnceleme Aksiyonları */}
-        <div className="pt-3 border-t border-slate-100 space-y-3">
-          <div className="flex items-end justify-between">
-            <div className="flex flex-col">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">
-                Atölye Referans Değeri
+          {/* Fiyat Bloğu */}
+          <div className="pt-1">
+            {hasDiscount && (
+              <span className="text-[11px] text-slate-400 line-through block font-medium">
+                {product.basePrice.toLocaleString("tr-TR")} TL
               </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-sm sm:text-base font-mono font-black text-slate-950">
-                  {finalPrice.toLocaleString("tr-TR")} ₺
-                </span>
-                {(vipDiscount > 0 || product.salePrice) && (
-                  <span className="text-[10px] text-slate-400 line-through font-mono">
-                    {product.basePrice.toLocaleString("tr-TR")} ₺
-                  </span>
-                )}
-              </div>
+            )}
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base sm:text-lg font-black text-[#F27A1A] tracking-tight">
+                {finalPrice.toLocaleString("tr-TR")} TL
+              </span>
             </div>
-
-            <Link
-              href={`/products/${product.slug}`}
-              className="inline-flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 hover:text-orange-600 transition-colors"
-            >
-              <span>Detaylar</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-orange-600" />
-            </Link>
-          </div>
-
-          {/* İkili Buton: 1. WhatsApp Hızlı Sipariş, 2. Detaylı İncele */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <a
-              href={directWhatsAppUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white border border-emerald-300 hover:border-emerald-600 text-[10px] font-mono uppercase font-bold tracking-wider rounded-xs transition-all shadow-xs"
-              title="WhatsApp üzerinden atölye ile görüşün"
-            >
-              <MessageCircle className="w-3.5 h-3.5 fill-current" />
-              <span>WhatsApp</span>
-            </a>
-
-            <Link
-              href={`/products/${product.slug}`}
-              className="w-full flex items-center justify-center gap-1 py-2.5 bg-slate-950 hover:bg-slate-800 text-white border border-slate-950 text-[10px] font-mono uppercase font-bold tracking-wider rounded-xs transition-all shadow-xs"
-            >
-              <span>İncele</span>
-            </Link>
           </div>
         </div>
-      </div>
 
-      {/* Alt İnce Çizgi */}
-      <div className="h-0.5 w-full bg-slate-100 flex">
-        <div className="w-1/4 h-full bg-orange-600 group-hover:w-full transition-all duration-500" />
+        {/* Butonlar: Trendyol Sepete Ekle + WhatsApp Danışma */}
+        <div className="pt-2 space-y-1.5">
+          <button
+            onClick={handleAddToCart}
+            className={`w-full py-2 px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] ${
+              isAdded
+                ? "bg-emerald-600 text-white"
+                : "bg-[#F27A1A] hover:bg-[#E06A0A] text-white"
+            }`}
+          >
+            {isAdded ? (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                <span>Sepete Eklendi</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-3.5 h-3.5" />
+                <span>Sepete Ekle</span>
+              </>
+            )}
+          </button>
+
+          <a
+            href={directWhatsAppUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-1 px-2 rounded-md text-[10px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 transition-colors flex items-center justify-center gap-1"
+          >
+            <MessageCircle className="w-3 h-3 text-emerald-600" />
+            <span>WhatsApp ile Sor & Sipariş Ver</span>
+          </a>
+        </div>
       </div>
     </div>
   );

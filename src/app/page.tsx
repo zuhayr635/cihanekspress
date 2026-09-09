@@ -15,12 +15,13 @@ import {
   Zap,
   Cpu,
   Search,
-  Compass,
-  Layers,
-  Award,
-  ChevronRight,
-  Check,
+  Truck,
   Sparkles,
+  Timer,
+  ChevronRight,
+  ChevronLeft,
+  Award,
+  CheckCircle2,
 } from "lucide-react";
 
 interface ProductItem {
@@ -42,17 +43,111 @@ interface CategoryItem {
   slug: string;
 }
 
+// Trendyol Story Daireleri (Hızlı Kategori Butonları)
+const STORY_CATEGORIES = [
+  {
+    name: "1/10 Şasi",
+    tag: "1/10",
+    image: "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80",
+    badge: "Fırsat",
+  },
+  {
+    name: "Pirinç Aks",
+    tag: "Pirinç",
+    image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80",
+    badge: "Çok Satan",
+  },
+  {
+    name: "FOC Motor",
+    tag: "Motor",
+    image: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    name: "TRX-4 Parça",
+    tag: "TRX-4",
+    image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    name: "SCX24 Mini",
+    tag: "1/24",
+    image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    name: "3D Özel Baskı",
+    href: "/3d-baski",
+    image: "https://images.unsplash.com/photo-1615906655593-ad0386982a0f?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    name: "Paket Fırsatı",
+    href: "/paketler",
+    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=300&q=80",
+    badge: "%30",
+  },
+  {
+    name: "Rig Sihirbazı",
+    anchor: "#rig-builder",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&q=80",
+  },
+];
+
+// Trendyol Vitrin Kampanya Bannerları
+const HERO_BANNERS = [
+  {
+    id: 1,
+    title: "KAYA TIRMANIŞI SEZONU BAŞLADI",
+    subtitle: "TRX-4 & Capra Şasilerde Yüksek Torklu Masif CNC Pirinç Ağırlık Yükseltmeleri",
+    tag: "AYNI GÜN KARGO · ATÖLYE TESTLİ",
+    bgGradient: "from-[#F27A1A] via-[#E06A0A] to-[#C95300]",
+    image: "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=1200&q=85",
+    linkText: "Fırsatları Yakala",
+    target: "#vitrin",
+  },
+  {
+    id: 2,
+    title: "60° DİK TIRMANIŞ GARANTİSİ",
+    subtitle: "Düşük CoG Ağırlık Merkezi ve FOC Akıllı Fırçasız Motor ile Takla Atmaya Son",
+    tag: "PROFESYONEL RC SETUP",
+    bgGradient: "from-slate-900 via-slate-800 to-slate-950",
+    image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=85",
+    linkText: "Rig Sihirbazını Aç",
+    target: "#rig-builder",
+  },
+];
+
 export default function HomePage() {
-  const { vipSession, storeSettings } = useCart();
+  const { storeSettings } = useCart();
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [activeTab, setActiveTab] = useState<"all" | "deals" | "top" | "micro">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedScale, setSelectedScale] = useState<"all" | "1/10" | "1/24">("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [bannerIndex, setBannerIndex] = useState(0);
 
-  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567";
+  // Trendyol Geri Sayım Sayacı (Flaş İndirimler)
+  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 28, seconds: 45 });
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
+        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return { hours: 6, minutes: 0, seconds: 0 };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Banner otomatik kaydırma
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % HERO_BANNERS.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Veri yükleme
   useEffect(() => {
     async function loadData() {
       try {
@@ -70,6 +165,9 @@ export default function HomePage() {
     loadData();
   }, [selectedCategory]);
 
+  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
+
+  // Filtreleme
   const filteredProducts = products.filter((p) => {
     const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
@@ -78,263 +176,399 @@ export default function HomePage() {
       (p.shortDescription && p.shortDescription.toLowerCase().includes(q)) ||
       p.description.toLowerCase().includes(q);
 
-    const matchesScale =
-      selectedScale === "all" ||
-      p.title.includes(selectedScale) ||
-      (p.shortDescription && p.shortDescription.includes(selectedScale)) ||
-      p.description.includes(selectedScale);
-
-    return matchesSearch && matchesScale;
+    if (activeTab === "deals") {
+      return matchesSearch && (p.salePrice || p.basePrice > 10000);
+    }
+    if (activeTab === "top") {
+      return matchesSearch && (p.isFeatured || p.title.toLowerCase().includes("şasi"));
+    }
+    if (activeTab === "micro") {
+      return matchesSearch && (p.title.includes("1/24") || p.title.includes("SCX24"));
+    }
+    return matchesSearch;
   });
 
+  const flashDealProducts = products.slice(0, 4);
+
   return (
-    <div className="space-y-16 sm:space-y-24 pb-24 bg-[#F8FAFC] text-[#0F172A] selection:bg-orange-500 selection:text-white">
+    <div className="space-y-6 sm:space-y-8 pb-20 bg-[#F4F5F7] text-[#1E242C]">
       
-      {/* 1. HERO BÖLÜMÜ (Daylight Titanium & Clean Prototyping Lab) */}
-      <section className="relative min-h-[85vh] flex items-center justify-center bg-white border-b border-slate-200 lab-grid overflow-hidden pt-12 sm:pt-0">
-        
-        {/* Hero Köşe Telemetri İşaretleri */}
-        <div className="hidden xl:block absolute top-10 left-10 text-[11px] font-mono text-slate-400 space-y-1 border-l-2 border-orange-600 pl-3">
-          <p className="text-slate-900 font-bold tracking-wider">// ATELIER LAT: 39°55'N · ALT: 1850M</p>
-          <p className="tracking-wide">CHASSIS LAB // CNC BILLET & SCALE WORKS</p>
-          <p className="text-slate-500">PORTAL CLEARANCE: +18.5MM HEAVY BRASS</p>
-        </div>
+      {/* 1. KAT: TRENDYOL STORY / KATEGORİ DAİRELERİ */}
+      <div className="bg-white border-b border-slate-200 py-3.5 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2 scrollbar-none">
+            {STORY_CATEGORIES.map((cat, idx) => {
+              const content = (
+                <div className="flex flex-col items-center gap-1.5 min-w-[70px] sm:min-w-[84px] group cursor-pointer">
+                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-[#F27A1A] to-amber-300 group-hover:scale-105 transition-transform duration-200 shadow-xs">
+                    <div className="relative w-full h-full rounded-full overflow-hidden bg-white border border-white">
+                      <Image
+                        src={cat.image}
+                        alt={cat.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    {cat.badge && (
+                      <span className="absolute -top-1 -right-1 bg-[#F27A1A] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-full border border-white shadow-xs">
+                        {cat.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 group-hover:text-[#F27A1A] transition-colors text-center truncate max-w-[80px]">
+                    {cat.name}
+                  </span>
+                </div>
+              );
 
-        <div className="hidden xl:block absolute top-10 right-10 text-[11px] font-mono text-slate-400 text-right space-y-1 border-r-2 border-orange-600 pr-3">
-          <p className="text-slate-900 font-bold tracking-wider">WEIGHT BIAS: %64 FRONT / %36 REAR //</p>
-          <p className="tracking-wide">STATUS: ATELIER ORDER QUEUE ACTIVE</p>
-          <p className="text-slate-500">CNC 6061-T6 BILLET & SOLID YELLOW BRASS</p>
+              if (cat.href) {
+                return (
+                  <Link key={idx} href={cat.href}>
+                    {content}
+                  </Link>
+                );
+              }
+              if (cat.anchor) {
+                return (
+                  <a key={idx} href={cat.anchor}>
+                    {content}
+                  </a>
+                );
+              }
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (cat.tag) {
+                      setSearchQuery(cat.tag);
+                      const el = document.getElementById("vitrin");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                >
+                  {content}
+                </button>
+              );
+            })}
+          </div>
         </div>
+      </div>
 
-        {/* Hero Ana İçerik */}
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-8 py-16 sm:py-24">
+      {/* 2. KAT: TRENDYOL HERO KAMPANYA BANNERLARI */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 border border-slate-200 bg-slate-50 rounded-xs text-[11px] tracking-widest uppercase text-slate-700 font-mono">
-            <span className="w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
-            <span>1/10 & 1/24 Scale Crawler Lab</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-6xl md:text-7xl tracking-tight font-black uppercase text-slate-950 leading-[1.05]">
-            AĞIR METAL VE <br />
-            <span className="text-orange-600">CNC MİKRON</span> KALİBRASYONU
-          </h1>
-
-          <p className="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
-            Seri üretim kalıp plastik araçlar yerine; masif sarı pirinç ağırlık blokları, 7075 sertleştirilmiş uçak alüminyumu ve eğim parkurlarında milimetrik dengelenen profesyonel kaya tırmanıcı şasileri. Çevrim içi perakende satış yapılmaz; her proje usta ile doğrudan istişare edilir.
-          </p>
-
-          {/* Eylem Butonları */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-bold uppercase tracking-wider">
-            <a
-              href="#garaj"
-              className="w-full sm:w-auto px-8 py-4 bg-slate-950 hover:bg-slate-800 text-white transition-all rounded-xs flex items-center justify-center gap-2 group shadow-sm"
-            >
-              <span>KATALOĞU İNCELE</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </a>
-
-            <a
-              href={`https://wa.me/${phone}?text=Merhaba%20Cihan%20Usta,%20%C3%B6zel%20crawler%20projeleri%20hakk%C4%B1nda%20dan%C4%B1%C5%9Fmak%20istiyorum.`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto px-8 py-4 border border-emerald-600 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white transition-all rounded-xs flex items-center justify-center gap-2 group shadow-xs"
-            >
-              <MessageCircle className="w-4 h-4 fill-current" />
-              <span>WHATSAPP'TAN PROJENİ DANIŞ</span>
-            </a>
-
-            <a
-              href="#rig-builder"
-              className="w-full sm:w-auto px-6 py-4 border border-slate-200 bg-white text-slate-800 hover:border-slate-400 transition-all rounded-xs flex items-center justify-center gap-2"
-            >
-              <Wrench className="w-4 h-4 text-orange-600" />
-              <span>RİG SİHİRBAZI</span>
-            </a>
-          </div>
-
-          {/* Hızlı Platform Etiketleri */}
-          <div className="pt-6 border-t border-slate-200 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-400 mr-1">
-              ŞASİ PLATFORMU:
-            </span>
-            {["TRX-4", "SCX10", "SCX24", "Capra", "Overdrive", "Pirinç Aks"].map((tag) => (
-              <button
-                key={tag}
-                onClick={() => {
-                  setSearchQuery(tag);
-                  const el = document.getElementById("garaj");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 hover:border-slate-400 rounded-xs text-[11px] font-mono text-slate-700 transition-all"
+          {/* Ana Geniş Banner Slider */}
+          <div className="lg:col-span-8 relative rounded-xl overflow-hidden shadow-sm bg-gradient-to-r min-h-[280px] sm:min-h-[360px] flex items-center">
+            {HERO_BANNERS.map((banner, idx) => (
+              <div
+                key={banner.id}
+                className={`absolute inset-0 transition-opacity duration-700 flex items-center bg-gradient-to-r ${
+                  banner.bgGradient
+                } ${idx === bannerIndex ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"}`}
               >
-                #{tag}
-              </button>
+                <div className="relative z-10 w-full p-6 sm:p-10 text-white max-w-lg space-y-4">
+                  <span className="inline-block px-2.5 py-1 bg-white/20 backdrop-blur-sm text-white font-bold text-[10px] tracking-wider uppercase rounded">
+                    {banner.tag}
+                  </span>
+                  <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight uppercase">
+                    {banner.title}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-normal">
+                    {banner.subtitle}
+                  </p>
+                  <div className="pt-2 flex items-center gap-3">
+                    <a
+                      href={banner.target}
+                      className="px-6 py-3 bg-white text-[#F27A1A] font-bold text-xs sm:text-sm uppercase tracking-wider rounded-md hover:bg-slate-100 transition-all shadow-md flex items-center gap-2"
+                    >
+                      <span>{banner.linkText}</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </a>
+                    <a
+                      href={`https://wa.me/${phone}?text=Merhaba%20Cihan%20Usta,%20sitedeki%20kampanya%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-md transition-all flex items-center gap-1.5 shadow-sm"
+                    >
+                      <MessageCircle className="w-4 h-4 fill-white" />
+                      <span>Usta Masası</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden md:block overflow-hidden">
+                  <Image
+                    src={banner.image}
+                    alt={banner.title}
+                    fill
+                    className="object-cover opacity-85 mix-blend-overlay"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-black/60" />
+                </div>
+              </div>
             ))}
+
+            {/* Slider Kontrolleri */}
+            <div className="absolute bottom-3 right-4 z-20 flex items-center gap-1.5">
+              {HERO_BANNERS.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setBannerIndex(idx)}
+                  className={`h-2 rounded-full transition-all ${
+                    idx === bannerIndex ? "w-6 bg-white" : "w-2 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
+
+          {/* Sağ Sabit Kampanya Kartları (Trendyol İkili Promosyon) */}
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            {/* Kart 1: Rig Sihirbazı */}
+            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between relative overflow-hidden group hover:border-[#F27A1A]/50 transition-colors">
+              <div className="space-y-2 relative z-10">
+                <span className="text-[10px] font-bold text-[#F27A1A] bg-orange-50 px-2 py-0.5 rounded uppercase">
+                  Akıllı Asistan
+                </span>
+                <h3 className="font-bold text-slate-900 text-base leading-snug">
+                  Kendi Crawler&apos;ını Kendin Topla
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Şasi, aks ve motorunu seç; uyumluluk analizini hemen gör.
+                </p>
+              </div>
+              <div className="pt-4 relative z-10 flex items-center justify-between">
+                <a
+                  href="#rig-builder"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[#F27A1A] hover:underline"
+                >
+                  <span>Sihirbazı Başlat</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </a>
+                <Wrench className="w-8 h-8 text-orange-200 group-hover:text-[#F27A1A] transition-colors" />
+              </div>
+            </div>
+
+            {/* Kart 2: 3D Baskı ve Tescil */}
+            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between relative overflow-hidden group hover:border-emerald-500/50 transition-colors">
+              <div className="space-y-2 relative z-10">
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded uppercase">
+                  Özel İmalat
+                </span>
+                <h3 className="font-bold text-slate-900 text-base leading-snug">
+                  3D Parça Baskı & Şasi Tescil
+                </h3>
+                <p className="text-xs text-slate-500">
+                  STL dosyanı gönder, karbon/PETG malzeme ile üretelim.
+                </p>
+              </div>
+              <div className="pt-4 relative z-10 flex items-center justify-between">
+                <Link
+                  href="/3d-baski"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:underline"
+                >
+                  <span>Talep Oluştur</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+                <Cpu className="w-8 h-8 text-emerald-200 group-hover:text-emerald-500 transition-colors" />
+              </div>
+            </div>
+          </div>
+
         </div>
-      </section>
+      </div>
 
-      {/* 2. ATÖLYE ÇALIŞMA İLKELERİ VE HUKUKİ HOBİ KALKANI */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 sm:-mt-12 relative z-20">
-        <div className="bg-white border border-slate-200 rounded-xs p-6 sm:p-8 shadow-md grid grid-cols-1 md:grid-cols-3 gap-6 font-mono">
-          
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xs bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-900 flex-shrink-0">
-              <Shield className="w-5 h-5 stroke-[1.5]" />
-            </div>
-            <div>
-              <h3 className="text-xs uppercase tracking-wider font-bold text-slate-950">
-                Hobi Atölyesi Çekincesi
-              </h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed font-sans">
-                Perakende e-ticaret mağazası değildir. Şasi modifikasyon ve CNC prototip projelerini içeren zanaatkar kataloğudur.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xs bg-slate-50 border border-slate-200 flex items-center justify-center text-orange-600 flex-shrink-0">
-              <Wrench className="w-5 h-5 stroke-[1.5]" />
-            </div>
-            <div>
-              <h3 className="text-xs uppercase tracking-wider font-bold text-slate-950">
-                Kişiye Özel CNC & El Montajı
-              </h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed font-sans">
-                Her crawler aracı arazi eğim testlerinden geçirilir, ağırlık merkezi (CoG) dengelenir ve talep üzerine toplanır.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xs bg-slate-50 border border-slate-200 flex items-center justify-center text-emerald-600 flex-shrink-0">
-              <MessageCircle className="w-5 h-5 fill-current" />
-            </div>
-            <div>
-              <h3 className="text-xs uppercase tracking-wider font-bold text-slate-950">
-                Doğrudan Atölye İletişimi
-              </h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed font-sans">
-                Sipariş ve parça tedariği WhatsApp üzerinden usta ile birebir istişare edilerek elden veya kargo ile teslim edilir.
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 3. ÖNE ÇIKAN MASTERPIECE TANITIMI (Daylight Lab Precision Showcase) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white border border-slate-200 p-6 sm:p-10 rounded-xs shadow-md grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          
-          <div className="lg:col-span-6 relative aspect-[4/3] bg-slate-50 border border-slate-200 rounded-xs overflow-hidden group">
-            <Image
-              src="https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=1200&q=85"
-              alt="Custom Billet Rig"
-              fill
-              className="object-cover group-hover:scale-105 transition-all duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+      {/* 3. KAT: TRENDYOL "SÜPER FIRSATLAR" GERİ SAYIM ŞERİDİ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-r from-[#F27A1A] to-[#FF9036] rounded-xl p-4 sm:p-5 text-white shadow-md">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             
-            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end text-xs font-mono">
-              <span className="bg-white/95 backdrop-blur px-3 py-1 text-slate-900 font-bold tracking-widest text-xs border border-slate-200">
-                PROJE NO: #CR-08X TITANIUM
-              </span>
-              <span className="bg-slate-950 text-white font-bold px-2.5 py-1 uppercase text-[10px] tracking-wider">
-                REZERVASYONA AÇIK
-              </span>
-            </div>
-          </div>
-
-          <div className="lg:col-span-6 space-y-6">
-            <div className="space-y-2">
-              <span className="text-orange-600 font-mono text-xs tracking-widest uppercase block font-bold">
-                // ATÖLYE ÖZEL İMALATI
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-950 uppercase tracking-tight">
-                CAPRA 4WS COMPETITION // TİTANYUM EDİSYON
-              </h2>
-              <p className="text-slate-600 text-sm leading-relaxed font-normal">
-                Bu araçta tüm bağlantı linkleri 7075 sertleştirilmiş uçak alüminyumundan işlenmiş, şanzıman iç dişlileri helisel çeliğe dönüştürülmüştür. Ön portal kütlesi +450 gram pirinç ilavesi ile 60° tırmanışlarda arka takla atmasını kesin olarak engeller.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 border-y border-slate-100 py-4 text-xs font-mono">
-              <div>
-                <span className="text-slate-400 uppercase tracking-wider block text-[10px]">İŞÇİLİK SÜRESİ</span>
-                <span className="text-slate-900 text-sm font-bold">42 SAAT EL MONTAJI</span>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Flame className="w-6 h-6 text-white animate-bounce" />
               </div>
               <div>
-                <span className="text-slate-400 uppercase tracking-wider block text-[10px]">TORK & MOTOR</span>
-                <span className="text-orange-600 text-sm font-bold">FOC 1800KV SENSÖRLÜ</span>
-              </div>
-              <div>
-                <span className="text-slate-400 uppercase tracking-wider block text-[10px]">AĞIRLIK DAĞILIMI</span>
-                <span className="text-slate-900 text-sm font-bold">%64 ÖN / %36 ARKA</span>
-              </div>
-              <div>
-                <span className="text-slate-400 uppercase tracking-wider block text-[10px]">ZEMİN AÇIKLIĞI</span>
-                <span className="text-emerald-600 text-sm font-bold">+18.5MM PORTAL</span>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-black tracking-tight uppercase">
+                    ⚡ SÜPER FIRSATLAR
+                  </h2>
+                  <span className="px-2 py-0.5 bg-rose-600 text-[10px] font-black uppercase rounded shadow-xs">
+                    GÜNÜN İNDİRİMLERİ
+                  </span>
+                </div>
+                <p className="text-xs text-white/90">
+                  Sınırlı sayıda masif pirinç ve CNC şasi paketleri stoklarla sınırlıdır.
+                </p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-              <div>
-                <span className="text-slate-400 text-[10px] font-mono uppercase block tracking-wider">
-                  ATÖLYE MALİYET REFERANSI
+            {/* Geri Sayım Kutusu (Trendyol Timer) */}
+            <div className="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+              <Timer className="w-4 h-4 text-white" />
+              <span className="text-xs font-bold text-white/90 uppercase mr-1">Kalan Süre:</span>
+              <div className="flex items-center gap-1 text-sm font-black font-mono">
+                <span className="bg-white text-slate-900 px-2 py-0.5 rounded shadow-xs">
+                  {String(timeLeft.hours).padStart(2, "0")}
                 </span>
-                <span className="text-slate-950 font-mono text-2xl font-black">
-                  28.500 ₺
+                <span>:</span>
+                <span className="bg-white text-slate-900 px-2 py-0.5 rounded shadow-xs">
+                  {String(timeLeft.minutes).padStart(2, "0")}
+                </span>
+                <span>:</span>
+                <span className="bg-white text-slate-900 px-2 py-0.5 rounded shadow-xs">
+                  {String(timeLeft.seconds).padStart(2, "0")}
                 </span>
               </div>
-              <a
-                href={`https://wa.me/${phone}?text=Merhaba%20Cihan%20Usta,%20CR-08X%20Titanium%20Edition%20Capra%20projesi%20hakk%C4%B1nda%20rezervasyon%20ve%20detay%20g%C3%B6r%C3%BC%C5%9Fmesi%20talep%20ediyorum.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold tracking-wider uppercase transition-all rounded-xs text-center flex items-center justify-center gap-2 shadow-xs"
-              >
-                <span>BU PROJE İÇİN TALEP OLUŞTUR</span>
-                <span>↗</span>
-              </a>
             </div>
-          </div>
 
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* 4. ÜRÜN VE PARÇA VİTRİNİ (#garaj) */}
-      <section id="garaj" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-6">
-          <div className="space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-orange-600 font-bold flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5" /> Performance Catalog
-            </span>
-            <h2 className="text-2xl sm:text-3xl text-slate-950 font-black uppercase tracking-tight">
-              RC Crawler & Modifikasyon Parçaları
-            </h2>
+      {/* 4. KAT: TRENDYOL GÜVEN VE HİZMET ROZETLERİ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-2.5 p-2">
+            <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-[#F27A1A] flex-shrink-0">
+              <Truck className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Hızlı & Bedava Kargo</p>
+              <p className="text-[11px] text-slate-500">Tüm parçalarda aynı gün çıkış</p>
+            </div>
           </div>
 
-          {/* Kategori Filtreleri */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none font-mono">
+          <div className="flex items-center gap-2.5 p-2">
+            <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+              <Shield className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">CNC Hassas İşçilik</p>
+              <p className="text-[11px] text-slate-500">7075 Alüminyum & Sarı Pirinç</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 p-2">
+            <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+              <MessageCircle className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Canlı Usta Desteği</p>
+              <p className="text-[11px] text-slate-500">WhatsApp üzerinden anında cevap</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 p-2">
+            <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0">
+              <Award className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">60° Eğim Testi</p>
+              <p className="text-[11px] text-slate-500">Teslimat öncesi parkur kalibrasyonu</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. KAT: TRENDYOL VİTRİN ÜRÜN KARTLARI & TABLAR (#vitrin) */}
+      <div id="vitrin" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+        
+        {/* Tab Menüsü & Arama Barı */}
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            
+            {/* Trendyol Tab Butonları */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                onClick={() => { setActiveTab("all"); setSelectedCategory("all"); }}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${
+                  activeTab === "all"
+                    ? "bg-[#F27A1A] text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                Tüm Ürünler ({products.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("deals")}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1 ${
+                  activeTab === "deals"
+                    ? "bg-[#F27A1A] text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5 text-rose-500" />
+                Flaş İndirimler
+              </button>
+              <button
+                onClick={() => setActiveTab("top")}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1 ${
+                  activeTab === "top"
+                    ? "bg-[#F27A1A] text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                Çok Satan Şasiler
+              </button>
+              <button
+                onClick={() => setActiveTab("micro")}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${
+                  activeTab === "micro"
+                    ? "bg-[#F27A1A] text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                1/24 Mini Crawler
+              </button>
+            </div>
+
+            {/* Arama Inputu */}
+            <div className="relative w-full md:w-80">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Ürün, marka veya parça ara..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-[#F27A1A]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+          </div>
+
+          {/* Alt Kategori Filtre Butonları */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pt-1">
+            <span className="text-[11px] font-semibold text-slate-400 whitespace-nowrap">
+              Kategori:
+            </span>
             <button
               onClick={() => setSelectedCategory("all")}
-              className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-xs transition-all whitespace-nowrap ${
+              className={`px-2.5 py-1 text-[11px] rounded-md transition-colors whitespace-nowrap ${
                 selectedCategory === "all"
-                  ? "bg-slate-950 text-white shadow-sm"
-                  : "bg-white border border-slate-200 text-slate-700 hover:border-slate-400"
+                  ? "bg-slate-900 text-white font-bold"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              Tümü
+              Hepsi
             </button>
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.slug)}
-                className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-xs transition-all whitespace-nowrap ${
+                className={`px-2.5 py-1 text-[11px] rounded-md transition-colors whitespace-nowrap ${
                   selectedCategory === cat.slug
-                    ? "bg-slate-950 text-white shadow-sm"
-                    : "bg-white border border-slate-200 text-slate-700 hover:border-slate-400"
+                    ? "bg-slate-900 text-white font-bold"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 {cat.name}
@@ -343,170 +577,64 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Arama & Ölçek Filtreleme Barı */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xs border border-slate-200 shadow-xs">
-          
-          {/* Arama Kutusu */}
-          <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Parça adı, portal aks, pirinç veya TRX4..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xs text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-500 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-800 text-xs font-mono"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Ölçek Seçimi */}
-          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 font-mono">
-            <span className="text-[11px] text-slate-400 uppercase mr-1 whitespace-nowrap">ÖLÇEK:</span>
-            <button
-              onClick={() => setSelectedScale("all")}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded-xs transition-all ${
-                selectedScale === "all"
-                  ? "bg-slate-950 text-white"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-slate-400"
-              }`}
-            >
-              Tümü
-            </button>
-            <button
-              onClick={() => setSelectedScale("1/10")}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded-xs transition-all ${
-                selectedScale === "1/10"
-                  ? "bg-orange-600 text-white font-black"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-slate-400"
-              }`}
-            >
-              1/10 Pro
-            </button>
-            <button
-              onClick={() => setSelectedScale("1/24")}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded-xs transition-all ${
-                selectedScale === "1/24"
-                  ? "bg-orange-600 text-white font-black"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-slate-400"
-              }`}
-            >
-              1/24 Mini
-            </button>
-          </div>
-        </div>
-
-        {/* Ürün Listesi */}
+        {/* Ürün Listesi (Trendyol 4-5 Kolonlu Grid) */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="animate-pulse space-y-4 bg-white p-5 rounded-xs border border-slate-200">
-                <div className="aspect-3/4 bg-slate-100 rounded-xs" />
-                <div className="h-4 bg-slate-100 w-3/4 rounded-xs" />
-                <div className="h-3 bg-slate-100 w-1/2 rounded-xs" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <div key={n} className="animate-pulse bg-white p-3 rounded-lg border border-slate-200 space-y-3">
+                <div className="aspect-square bg-slate-100 rounded-md" />
+                <div className="h-3 bg-slate-100 w-3/4 rounded" />
+                <div className="h-3 bg-slate-100 w-1/2 rounded" />
+                <div className="h-8 bg-slate-100 w-full rounded" />
               </div>
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-slate-200 rounded-xs space-y-3 bg-white font-mono">
-            <p className="text-base text-slate-700">Aramanıza veya filtrelerinize uygun parça bulunamadı.</p>
-            <p className="text-xs text-slate-400 font-sans">Lütfen farklı bir anahtar kelime veya ölçek seçiniz.</p>
+          <div className="text-center py-16 bg-white border border-slate-200 rounded-xl space-y-2">
+            <p className="text-base font-bold text-slate-800">Aramanıza uygun ürün bulunamadı.</p>
+            <p className="text-xs text-slate-500">Farklı bir arama kelimesi deneyebilir veya kategorileri sıfırlayabilirsiniz.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
-      </section>
 
-      {/* 5. CRAWLER SETUP & RIG SİHİRBAZI */}
-      <section id="rig-builder" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      </div>
+
+      {/* 6. KAT: RIG SİHİRBAZI & KONFİGÜRATÖR (#rig-builder) */}
+      <div id="rig-builder" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         <CrawlerConfigurator />
-      </section>
+      </div>
 
-      {/* 6. ZANAATKAR MANİFESTOSU & TEKNİK STANDARTLAR (#about) */}
-      <section id="about" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-200 pt-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
-          <div className="relative aspect-4/5 w-full bg-slate-100 rounded-xs overflow-hidden border border-slate-200 group shadow-sm">
-            <Image
-              src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80"
-              alt="RC Crawler CNC & Tuning Garage"
-              fill
-              className="object-cover group-hover:scale-105 transition-all duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-4 left-4 right-4 p-3 bg-white/95 border border-slate-200 text-[11px] font-mono text-slate-900 font-bold">
-              // ATÖLYE HASSAS TEST PARKURU · 60° TIRMANIŞ MASASI
-            </div>
+      {/* 7. KAT: ATÖLYE HUKUKİ BİLGİLENDİRME & HOBİ KALKANI */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs text-xs text-slate-600 space-y-3">
+          <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+            <Shield className="w-4 h-4 text-[#F27A1A]" />
+            <span>Hobi Atölyesi ve Danışma Kataloğu Bilgilendirmesi</span>
           </div>
-
-          <div className="space-y-6">
-            <span className="text-xs font-mono uppercase tracking-widest text-orange-600 font-bold">
-              // KAYA TIRMANIŞI MÜHENDİSLİĞİ
-            </span>
-            <h2 className="text-3xl sm:text-4xl text-slate-950 font-black uppercase tracking-tight leading-tight">
-              Ağırlık Merkezi (CoG), Artikülasyon ve Sıfır Tork Bükülmesi
-            </h2>
-            <p className="text-sm text-slate-600 leading-relaxed font-normal">
-              Standart fabrika çıkışı plastik RC araçlar dik kaya tırmanışlarında kolayca geriye takla atar ve diferansiyel dişlilerini sıyırır. Cihanpol RC Atölyesi olarak, döküm pirinç portal ağırlıkları, sertleştirilmiş çelik şaftlar ve akıllı FOC fırçasız motor sistemleriyle araçların tırmanma sınırlarını yeniden çiziyoruz.
-            </p>
-            <p className="text-sm text-slate-600 leading-relaxed font-normal">
-              Her özel toplanan crawler şasisi, eğim platformu ve kayalık parkur testlerinden geçirildikten sonra sahibine teslim edilir.
-            </p>
-
-            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200 font-mono">
-              <div>
-                <span className="text-2xl sm:text-3xl text-slate-950 font-black block">65°+</span>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500">
-                  Tırmanış Eğimi Güvencesi
-                </span>
-              </div>
-              <div>
-                <span className="text-2xl sm:text-3xl text-orange-600 font-black block">+420g</span>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500">
-                  Pirinç Alt Kütle Takviyesi
-                </span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 7. DOĞRUDAN USTA İSTİŞARE & TALEP MASASI (#contact) */}
-      <section id="contact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-200 pt-16">
-        <div className="text-center max-w-2xl mx-auto space-y-5 bg-white border border-slate-200 p-8 sm:p-12 rounded-xs shadow-md">
-          <span className="text-xs font-mono uppercase tracking-widest text-orange-600 font-bold">
-            // DOĞRUDAN USTA İLETİŞİMİ
-          </span>
-          <h2 className="text-2xl sm:text-3xl text-slate-950 font-black uppercase tracking-tight">
-            Özel Şasi Toplama & Parça Uyumluluğu
-          </h2>
-          <p className="text-sm text-slate-600 leading-relaxed font-normal">
-            Mevcut TRX-4, Axial SCX10, Element RC veya Vanquish aracınız için doğru pirinç ağırlık, şasi büküm açısı ve fırçasız motor seçimi yapmak için atölyemizle doğrudan WhatsApp üzerinden görüşebilirsiniz.
+          <p className="leading-relaxed text-slate-500">
+            <strong>cihanekspress.com</strong>, modelcilik tutkunları için hazırlanmış bir RC Rock Crawler teknik sergileme ve atölye tasarım kataloğudur. Doğrudan sanal POS ile ticari kart çekimi yapılmamakta olup, ürün bedelleri hobi malzeme ve zanaatkar işçilik referans değerleridir. Tüm sipariş, montaj ve teknik uyumluluk istişareleri WhatsApp usta hattı üzerinden birebir görüşülerek tamamlanır.
           </p>
-          <div className="pt-2 flex justify-center">
-            <a
-              href={`https://wa.me/${phone}?text=Merhaba%20Cihan%20Usta,%20arac%C4%B1ma%20%C3%B6zel%20crawler%20par%C3%A7a%20ve%20montaj%20tavsiyesi%20almak%20istiyorum.`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xs transition-all flex items-center gap-2 shadow-sm"
-            >
-              <MessageCircle className="w-4 h-4 fill-white" />
-              <span>WHATSAPP RC UZMANINA DANIŞIN</span>
-            </a>
+          <div className="flex flex-wrap items-center gap-4 pt-2 text-[11px] font-semibold text-slate-700">
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              Kişisel Modelcilik Portfolyosu
+            </span>
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              Doğrudan Usta İstişaresi
+            </span>
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              Test Parkuru Kalibrasyonu
+            </span>
           </div>
         </div>
-      </section>
+      </div>
 
     </div>
   );

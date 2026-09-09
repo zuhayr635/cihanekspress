@@ -4,48 +4,45 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useModules } from "@/lib/useModules";
-import { ShoppingBag, Lock, Unlock, KeyRound, Menu, X, ShieldAlert, Cpu, BookOpen, Wrench, Sparkles, MapPin, Trophy } from "lucide-react";
-
+import {
+  Search,
+  User,
+  Heart,
+  ShoppingCart,
+  Menu,
+  X,
+  Phone,
+  Truck,
+  BookOpen,
+  Sparkles,
+  Flame,
+  Wrench,
+  KeyRound,
+  ShieldAlert,
+} from "lucide-react";
 import VehicleSelector from "@/components/VehicleSelector";
 
 export default function Header() {
-  const { itemCount, setIsCartOpen, vipSession, storeSettings } = useCart();
+  const { itemCount, setIsCartOpen, storeSettings, subtotal, vipSession, refreshVipStatus } = useCart();
   const { isModuleActive } = useModules();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [vipModalOpen, setVipModalOpen] = useState(false);
   const [tokenInput, setTokenInput] = useState("");
   const [tokenError, setTokenError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // VIP Canlı Geri Sayım Sayacı (24 Saatlik Geri Sayım)
-  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
-    hours: 23,
-    minutes: 48,
-    seconds: 15,
-  });
-
-  React.useEffect(() => {
-    if (!vipSession.isVip) return;
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return prev;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [vipSession.isVip]);
-
-  const isSalesAllowed =
-    storeSettings?.storeMode === "PUBLIC_SALE" ||
-    (storeSettings?.storeMode === "INVITE_ONLY" && vipSession.isVip) ||
-    vipSession.isVip;
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    const el = document.getElementById("vitrin") || document.getElementById("tum-urunler");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleVerifyToken = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tokenInput.trim()) return;
-
     setIsVerifying(true);
     setTokenError("");
 
@@ -55,11 +52,14 @@ export default function Header() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: tokenInput.trim() }),
       });
+
       const data = await res.json();
-      if (data.success) {
-        window.location.reload();
+      if (!res.ok) {
+        setTokenError(data.error || "Geçersiz veya süresi dolmuş davetiye kodu.");
       } else {
-        setTokenError(data.error || "Geçersiz veya daha önce kullanılmış davetiye kodu.");
+        await refreshVipStatus();
+        setVipModalOpen(false);
+        setTokenInput("");
       }
     } catch {
       setTokenError("Bağlantı hatası oluştu.");
@@ -68,207 +68,261 @@ export default function Header() {
     }
   };
 
+  const whatsappPhone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
+
   return (
     <>
-      {/* Üst Bilgi Barı (Daylight Titanium Telemetry Bar) */}
-      <div className="bg-white text-slate-500 text-[10px] tracking-widest uppercase py-2 px-4 border-b border-slate-200 font-mono">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 text-slate-700">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-slate-900 font-bold tracking-wider">CİHAN LAB //</span>
-            <span className="text-slate-500 hidden sm:inline font-normal">
-              Özel Mekanik & CNC Hobi Kataloğu — Projeler Birebir Atölye İstişaresiyle Hazırlanır
+      {/* 1. KAT: Trendyol Üst Mikro Bar */}
+      <div className="bg-[#F8F8F8] text-slate-500 text-[11px] border-b border-slate-200 hidden md:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-slate-600 font-medium">
+              Türkiye&apos;nin RC Rock Crawler & CNC Parça Pazaryeri
             </span>
-            <span className="text-slate-500 sm:hidden">Özel Atölye Çalışma Kataloğu</span>
+            <span className="text-slate-300">|</span>
+            <span className="text-emerald-700 font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Atölye Çalışma & Danışma Kataloğu
+            </span>
           </div>
 
-          <div className="flex items-center gap-3 text-[10px]">
-            {/* WhatsApp Doğrudan Usta Hattı */}
+          <div className="flex items-center gap-5 text-slate-600">
             <a
-              href={`https://wa.me/${storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"}?text=Merhaba%20Cihan%20Usta,%20at%C3%B6lye%20projeleri%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
+              href={`https://wa.me/${whatsappPhone}?text=Merhaba%20Cihan%20Usta,%20par%C3%A7a%20ve%20ara%C3%A7%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1 font-bold"
+              className="hover:text-[#F27A1A] transition-colors flex items-center gap-1.5 font-medium"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-              <span>WhatsApp Danışma</span>
+              <Phone className="w-3 h-3 text-[#F27A1A]" />
+              <span>WhatsApp Usta Danışma Hattı</span>
             </a>
 
-            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
-            {/* Garaj Araç Seçicisi */}
-            <VehicleSelector />
+            <span className="text-slate-300">|</span>
 
-            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
-            <Link href="/rehber" className="hover:text-orange-600 transition-colors flex items-center gap-1 text-slate-600">
-              <BookOpen className="w-3 h-3 text-orange-600" />
-              <span>Rehber</span>
+            <Link
+              href="/order-tracking"
+              className="hover:text-[#F27A1A] transition-colors flex items-center gap-1.5"
+            >
+              <Truck className="w-3 h-3 text-slate-400" />
+              <span>Sipariş & Montaj Takibi</span>
             </Link>
 
-            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
-            <Link href="/order-tracking" className="hover:text-orange-600 transition-colors text-slate-600">
-              <span>Talep Takibi</span>
+            <span className="text-slate-300">|</span>
+
+            <Link
+              href="/rehber"
+              className="hover:text-[#F27A1A] transition-colors flex items-center gap-1.5"
+            >
+              <BookOpen className="w-3 h-3 text-slate-400" />
+              <span>Sistem Rehberi</span>
             </Link>
 
-            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
-            <Link href="/admin" className="hover:text-slate-900 transition-colors flex items-center gap-1 text-slate-400 hover:text-slate-700">
-              <ShieldAlert className="w-3 h-3 text-slate-500" /> Admin
+            <span className="text-slate-300">|</span>
+
+            <Link
+              href="/admin"
+              className="hover:text-slate-900 transition-colors text-slate-400 hover:text-slate-600"
+            >
+              Yönetici Paneli
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Ana Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 text-slate-900 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      {/* 2. KAT: Trendyol Ana Header (Logo, Geniş Arama Çubuğu, Giriş, Favoriler, Sepet) */}
+      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4 sm:gap-8">
           {/* Mobil Menü Butonu */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600 hover:text-slate-950 focus:outline-none"
+            className="lg:hidden p-2 text-slate-700 hover:text-[#F27A1A] transition-colors"
             aria-label="Menüyü Aç"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
-          {/* Sol Navigasyon Linkleri (Desktop) */}
-          <nav className="hidden md:flex items-center gap-6 text-xs tracking-wide uppercase font-semibold text-slate-600">
-            <Link href="/" className="hover:text-orange-600 transition-colors">
-              Katalog
-            </Link>
-            <Link href="/#rig-builder" className="text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1.5 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse" />
-              Rig Sihirbazı
-            </Link>
-            {(isModuleActive("cog_simulator") || isModuleActive("gear_calculator") || isModuleActive("exploded_cad") || isModuleActive("battery_wizard")) && (
-              <Link href="/hesaplayici" className="hover:text-orange-600 transition-colors flex items-center gap-1 text-slate-600">
-                <Wrench className="w-3.5 h-3.5 text-orange-600" />
-                Hesaplayıcı
-              </Link>
-            )}
-            {isModuleActive("bundle_deals") && (
-              <Link href="/paketler" className="hover:text-orange-600 transition-colors flex items-center gap-1 text-slate-600">
-                <Sparkles className="w-3 h-3 text-orange-600" />
-                Paketler
-              </Link>
-            )}
-            {isModuleActive("trail_map") && (
-              <Link href="/parkurlar" className="hover:text-emerald-600 transition-colors flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-600" />
-                Parkurlar
-              </Link>
-            )}
-            {isModuleActive("rig_of_month") && (
-              <Link href="/topluluk" className="hover:text-orange-600 transition-colors flex items-center gap-1">
-                <Trophy className="w-3 h-3 text-orange-600" />
-                Topluluk
-              </Link>
-            )}
-          </nav>
+          {/* Trendyol Tarzı Logo */}
+          <Link href="/" className="flex-shrink-0 group">
+            <div className="flex items-baseline gap-0.5">
+              <span className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
+                cihan
+              </span>
+              <span className="text-2xl sm:text-3xl font-black tracking-tight text-[#F27A1A]">
+                ekspress
+              </span>
+              <span className="text-xs font-semibold text-slate-400 ml-0.5">.com</span>
+            </div>
+            <p className="text-[9px] font-bold tracking-wider text-slate-400 -mt-1 uppercase">
+              RC SCALE CRAWLER ATELIER
+            </p>
+          </Link>
 
-          {/* Logo (Clean High-Tech Lab Brand) */}
-          <div className="text-center">
-            <Link href="/" className="inline-block group">
-              <div className="flex items-center justify-center gap-2">
-                <span className="w-2 h-2 rounded-xs bg-slate-950" />
-                <h1 className="font-mono text-xl sm:text-2xl tracking-widest font-black text-slate-950 group-hover:text-orange-600 transition-colors uppercase">
-                  CIHANPOL<span className="text-orange-600 font-light">.RC</span>
-                </h1>
-                <span className="w-2 h-2 rounded-xs bg-slate-950" />
-              </div>
-              <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-slate-400 mt-0.5">
-                CRAWLER PROTOTYPING LAB
-              </p>
-            </Link>
-          </div>
-
-          {/* Sağ Aksiyonlar: WhatsApp İletişim + Talep Listesi Butonu */}
-          <div className="flex items-center gap-3">
-            <a
-              href={`https://wa.me/${storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"}?text=Merhaba%20Cihan%20Usta,%20%C3%B6zel%20crawler%20projeleri%20hakk%C4%B1nda%20dan%C4%B1%C5%9Fmak%20istiyorum.`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xs transition-all shadow-xs"
+          {/* Trendyol Geniş Arama Çubuğu */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex-1 max-w-2xl relative hidden sm:block"
+          >
+            <input
+              type="text"
+              placeholder="Aradığınız crawler şasisi, pirinç portal aks veya parçayı yazın..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#F3F3F3] hover:bg-[#EBEBEB] focus:bg-white text-slate-900 placeholder:text-slate-400 border border-transparent focus:border-[#F27A1A] rounded-md py-2.5 pl-4 pr-12 text-xs sm:text-sm transition-all focus:outline-none focus:ring-1 focus:ring-[#F27A1A]"
+            />
+            <button
+              type="submit"
+              className="absolute right-1.5 top-1.5 p-2 bg-[#F27A1A] hover:bg-[#E06A0A] text-white rounded-md transition-colors"
+              aria-label="Ara"
             >
-              <span className="w-2 h-2 rounded-full bg-white" />
-              <span>WhatsApp İstişare</span>
-            </a>
+              <Search className="w-4 h-4" />
+            </button>
+          </form>
 
-            {/* Talep Listesi Butonu (Katalog Sepeti) */}
+          {/* Sağ Aksiyonlar: Giriş Yap, Favorilerim, Sepetim */}
+          <div className="flex items-center gap-2 sm:gap-6">
+            <Link
+              href="/admin/login"
+              className="flex items-center gap-2 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1.5 sm:px-2 rounded-md group"
+            >
+              <User className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
+              <div className="hidden xl:flex flex-col text-left">
+                <span className="text-xs font-bold leading-tight">Giriş Yap</span>
+                <span className="text-[10px] text-slate-400">veya Üye Ol</span>
+              </div>
+            </Link>
+
+            <Link
+              href="/topluluk"
+              className="flex items-center gap-2 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1.5 sm:px-2 rounded-md group relative"
+            >
+              <Heart className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
+              <div className="hidden xl:flex flex-col text-left">
+                <span className="text-xs font-bold leading-tight">Favorilerim</span>
+                <span className="text-[10px] text-slate-400">Kaydedilenler</span>
+              </div>
+            </Link>
+
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative px-3.5 sm:px-4 py-2 text-slate-800 hover:text-slate-950 rounded-xs border border-slate-200 hover:border-slate-400 bg-white transition-all group flex items-center gap-2 font-mono shadow-xs"
-              aria-label="Talep Listesini Aç"
+              className="flex items-center gap-2 bg-[#FFF3E8] hover:bg-[#FFE8D6] text-slate-900 border border-[#F27A1A]/30 hover:border-[#F27A1A] py-2 px-3 sm:px-3.5 rounded-md transition-all group relative"
             >
-              <Wrench className="w-4 h-4 text-slate-700 stroke-[2]" />
-              <span className="text-xs uppercase font-bold tracking-wider">Talep Masası</span>
-              {itemCount > 0 && (
-                <span className="bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded-xs font-black animate-in zoom-in">
-                  {itemCount}
+              <div className="relative">
+                <ShoppingCart className="w-5 h-5 text-[#F27A1A]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-[#F27A1A] text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center animate-in zoom-in">
+                    {itemCount}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-slate-900 leading-tight">Sepetim</span>
+                <span className="text-[10px] font-semibold text-[#F27A1A] hidden sm:inline">
+                  {itemCount > 0 ? `${subtotal.toLocaleString("tr-TR")} ₺` : "0 Ürün"}
                 </span>
-              )}
+              </div>
             </button>
           </div>
         </div>
 
-        {/* Mobil Açılır Menü */}
+        {/* 3. KAT: Trendyol Yatay Kategori ve Hızlı Linkler Barı */}
+        <div className="border-t border-slate-100 hidden lg:block bg-white text-xs font-semibold text-slate-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div className="flex items-center gap-6 py-2.5">
+              <Link href="/#vitrin" className="text-[#F27A1A] font-black flex items-center gap-1.5 hover:text-[#E06A0A]">
+                <Flame className="w-4 h-4 fill-[#F27A1A]" />
+                <span>FLAŞ İNDİRİMLER</span>
+              </Link>
+              <Link href="/#vitrin" className="hover:text-[#F27A1A] transition-colors">
+                1/10 Kaya Şasileri
+              </Link>
+              <Link href="/#vitrin" className="hover:text-[#F27A1A] transition-colors">
+                Ağır Pirinç (Brass) Akslar
+              </Link>
+              <Link href="/#vitrin" className="hover:text-[#F27A1A] transition-colors">
+                FOC Fırçasız Motorlar
+              </Link>
+              <Link href="/#vitrin" className="hover:text-[#F27A1A] transition-colors">
+                1/24 Mini Crawler
+              </Link>
+              <Link href="/#rig-builder" className="hover:text-[#F27A1A] transition-colors flex items-center gap-1 text-slate-900 font-bold">
+                <Wrench className="w-3.5 h-3.5 text-[#F27A1A]" />
+                <span>Rig Sihirbazı</span>
+              </Link>
+              <Link href="/paketler" className="text-[#F27A1A] hover:text-[#E06A0A] font-bold flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Paket Fırsatları</span>
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-4 py-2">
+              <VehicleSelector />
+            </div>
+          </div>
+        </div>
+
+        {/* Mobil Menü Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-6 py-6 space-y-4 text-[13px] uppercase tracking-wider font-semibold text-slate-800">
+          <div className="lg:hidden border-t border-slate-200 bg-white p-4 space-y-3 text-xs font-semibold">
             <Link
-              href="/"
+              href="/#vitrin"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-slate-800 hover:text-orange-600"
+              className="block text-[#F27A1A] font-bold"
             >
-              Araçlar & Parçalar
+              ⚡ Flaş İndirimler
+            </Link>
+            <Link
+              href="/#vitrin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-slate-700 hover:text-orange-600"
+            >
+              🏔️ 1/10 & 1/24 Kaya Şasileri
+            </Link>
+            <Link
+              href="/#vitrin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-slate-700 hover:text-orange-600"
+            >
+              🔩 Pirinç Aks & Ağırlıklar
             </Link>
             <Link
               href="/#rig-builder"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-orange-600 font-bold hover:text-orange-700"
+              className="block text-slate-700 hover:text-orange-600"
             >
-              ★ Kurulum Sihirbazı (Rig Builder)
+              🔧 Rig Toplama Sihirbazı
             </Link>
-            {(isModuleActive("cog_simulator") || isModuleActive("gear_calculator") || isModuleActive("exploded_cad") || isModuleActive("battery_wizard")) && (
+            <Link
+              href="/paketler"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-[#F27A1A] font-bold"
+            >
+              ★ Özel Paket Fırsatları
+            </Link>
+            {isModuleActive("gear_calc") && (
               <Link
                 href="/hesaplayici"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-slate-700 hover:text-orange-600"
               >
-                🛠️ Teknik Hesaplayıcılar & CAD
+                ⚙️ CoG & Dişli Hesaplayıcı
               </Link>
             )}
-            {isModuleActive("bundle_deals") && (
-              <Link
-                href="/paketler"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-orange-600 font-bold"
-              >
-                ✨ Özel Paket (Bundle) Fırsatları
-              </Link>
-            )}
-            {isModuleActive("trail_map") && (
+            {isModuleActive("crawler_spots") && (
               <Link
                 href="/parkurlar"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-emerald-600 font-bold"
+                className="block text-slate-700 hover:text-orange-600"
               >
                 📍 Türkiye Kaya Parkurları
               </Link>
             )}
-            {isModuleActive("rig_of_month") && (
+            {isModuleActive("community_rigs") && (
               <Link
                 href="/topluluk"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-orange-600"
-              >
-                🏆 Ayın Kaya Canavarı & Oylama
-              </Link>
-            )}
-            {isModuleActive("b2b_quotes") && (
-              <Link
-                href="/b2b"
-                onClick={() => setMobileMenuOpen(false)}
                 className="block text-slate-700 hover:text-orange-600"
               >
-                💼 B2B & Kulüp Teklif Masası
+                🏆 Ayın Kaya Canavarı
               </Link>
             )}
             {isModuleActive("trade_in") && (
@@ -320,19 +374,19 @@ export default function Header() {
                   setMobileMenuOpen(false);
                   setVipModalOpen(true);
                 }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider font-bold bg-amber-500 text-black rounded-sm"
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider font-bold bg-[#F27A1A] text-white rounded-md"
               >
                 <KeyRound className="w-4 h-4" />
                 Davetiye Kodu Gir
               </button>
             )}
-            <div className="pt-2 border-t border-stone-800">
+            <div className="pt-2 border-t border-slate-200">
               <Link
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-stone-400 text-xs flex items-center gap-1 hover:text-white"
+                className="text-slate-500 text-xs flex items-center gap-1 hover:text-slate-800"
               >
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-500" /> Yönetici Paneli
+                <ShieldAlert className="w-3.5 h-3.5 text-[#F27A1A]" /> Yönetici Paneli
               </Link>
             </div>
           </div>
@@ -341,30 +395,30 @@ export default function Header() {
 
       {/* Davetiye Kodu Modal */}
       {vipModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#181C24] border border-stone-700 w-full max-w-md p-8 rounded-sm shadow-2xl relative text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl relative text-slate-900">
             <button
               onClick={() => setVipModalOpen(false)}
-              className="absolute top-4 right-4 text-stone-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="text-center space-y-2 mb-6">
-              <div className="w-12 h-12 mx-auto rounded-full bg-stone-900 border border-amber-500/40 flex items-center justify-center text-amber-400">
+              <div className="w-12 h-12 mx-auto rounded-full bg-orange-50 border border-orange-200 flex items-center justify-center text-[#F27A1A]">
                 <KeyRound className="w-6 h-6 stroke-[1.5]" />
               </div>
-              <h3 className="font-mono text-2xl text-white font-bold tracking-tight uppercase">
+              <h3 className="text-xl text-slate-950 font-black tracking-tight uppercase">
                 RC Kulüp VIP Davetiyesi
               </h3>
-              <p className="text-xs text-stone-400 max-w-sm mx-auto leading-relaxed">
-                Yöneticinin size tahsis ettiği tek kullanımlık kodu girerek özel crawler araçlarının ve performans yükseltme parçalarının fiyatlarını ve sipariş yetkisini açabilirsiniz.
+              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                Yöneticinin size tahsis ettiği davetiye kodunu girerek özel crawler araçlarının ve parçaların sipariş yetkisini açabilirsiniz.
               </p>
             </div>
 
             <form onSubmit={handleVerifyToken} className="space-y-4">
               <div>
-                <label className="block text-[11px] uppercase tracking-wider text-stone-400 font-semibold mb-1.5">
+                <label className="block text-[11px] uppercase tracking-wider text-slate-600 font-bold mb-1.5">
                   Davetiye Kodu (Token)
                 </label>
                 <input
@@ -373,12 +427,12 @@ export default function Header() {
                   value={tokenInput}
                   onChange={(e) => setTokenInput(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 bg-stone-900 border border-stone-700 rounded-sm text-sm text-white focus:outline-none focus:border-amber-400 font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:outline-none focus:border-[#F27A1A] font-mono"
                 />
               </div>
 
               {tokenError && (
-                <div className="p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded-sm">
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md">
                   {tokenError}
                 </div>
               )}
@@ -386,7 +440,7 @@ export default function Header() {
               <button
                 type="submit"
                 disabled={isVerifying}
-                className="w-full py-3 bg-amber-500 text-black text-xs uppercase tracking-widest font-bold rounded-sm hover:bg-amber-400 transition-colors disabled:opacity-50"
+                className="w-full py-3 bg-[#F27A1A] text-white text-xs uppercase tracking-wider font-bold rounded-md hover:bg-[#E06A0A] transition-colors disabled:opacity-50 shadow-md"
               >
                 {isVerifying ? "Doğrulanıyor..." : "VIP Girişini Başlat"}
               </button>

@@ -1,18 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --accent-orange: #EA580C;
-  --accent-emerald: #059669;
+  --background: #F4F5F7;
+  --foreground: #1E242C;
+  --trendyol-orange: #F27A1A;
+  --trendyol-orange-hover: #E06A0A;
+  --trendyol-orange-light: #FFF5ED;
+  --trendyol-green: #0BC15C;
   --panel-bg: #FFFFFF;
-  --border-light: #E2E8F0;
-  --border-subtle: #F1F5F9;
+  --border-light: #E6E8ED;
+  --border-subtle: #F0F1F5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-trendyol: var(--trendyol-orange);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -20,9 +23,9 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
-  selection-background-color: #EA580C;
+  selection-background-color: #F27A1A;
   selection-color: #FFFFFF;
 }
 
