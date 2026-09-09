@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07080B;
-  --foreground: #E2E8F0;
+  --background: #060709;
+  --foreground: #EDE8DF;
   --accent-brass: #D97706;
   --accent-amber: #F59E0B;
-  --panel-bg: #0E121A;
-  --border-tactical: #1E2536;
+  --accent-gold: #FBBF24;
+  --panel-bg: #0C0D12;
+  --border-tactical: #1E1B18;
+  --border-subtle: #2A241F;
 }
 
 @theme inline {
@@ -21,19 +23,33 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
-  selection-background-color: #F59E0B;
+  selection-background-color: #D97706;
   selection-color: #000000;
 }
 
 /* 1. Teknik Blueprint / CNC Izgara Deseni */
 .bg-blueprint-grid {
   background-image: 
-    linear-gradient(to right, rgba(245, 158, 11, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(245, 158, 11, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(217, 119, 6, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(217, 119, 6, 0.04) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
-/* 2. Hassas Çapraz Kılavuz Deseni */
+/* 2. Hassas Atölye Noktalı Deseni */
+.atelier-pattern {
+  background-image: radial-gradient(rgba(217, 119, 6, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.brass-glow {
+  box-shadow: 0 0 40px -5px rgba(217, 119, 6, 0.15);
+}
+
+.brass-border {
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+/* 3. Hassas Çapraz Kılavuz Deseni */
 .bg-crosshair-dots {
   background-image: radial-gradient(rgba(245, 158, 11, 0.12) 1px, transparent 1px);
   background-size: 20px 20px;

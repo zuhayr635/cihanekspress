@@ -199,7 +199,7 @@ export default function ProductDetailPage({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-20 text-[#E2E8F0]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-20 text-[#EDE8DF]">
       {/* Geri Dön Linki */}
       <div>
         <Link
@@ -207,7 +207,7 @@ export default function ProductDetailPage({
           className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-stone-400 hover:text-amber-400 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Garaja Dön</span>
+          <span>Kataloğa Dön</span>
         </Link>
       </div>
 
@@ -215,7 +215,7 @@ export default function ProductDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
         {/* Sol Kolon: Görsel Galerisi (7 Kolon) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-3/4 w-full bg-[#141822] rounded-sm overflow-hidden border border-[#262F3F]">
+          <div className="relative aspect-3/4 w-full bg-[#0A0C10] rounded-xs overflow-hidden border border-[#1E1B18]">
             <Image
               src={selectedImage || images[0]}
               alt={product.title}
@@ -225,7 +225,7 @@ export default function ProductDetailPage({
               className="object-cover object-center"
             />
             {product.isFeatured && (
-              <span className="absolute top-4 left-4 px-3 py-1 bg-black/90 backdrop-blur-xs text-amber-400 border border-amber-500/40 text-[10px] font-mono tracking-widest uppercase font-bold rounded-xs flex items-center gap-1.5">
+              <span className="absolute top-4 left-4 px-3 py-1 bg-black/90 backdrop-blur-xs text-amber-400 border border-amber-600/40 text-[10px] font-mono tracking-widest uppercase font-bold rounded-xs flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-amber-400" />
                 Özel Crawler Projesi
               </span>
@@ -239,10 +239,10 @@ export default function ProductDetailPage({
                 <button
                   key={i}
                   onClick={() => setSelectedImage(img)}
-                  className={`relative w-20 h-24 bg-[#141822] rounded-sm overflow-hidden border transition-all flex-shrink-0 ${
+                  className={`relative w-20 h-24 bg-[#0A0C10] rounded-xs overflow-hidden border transition-all flex-shrink-0 ${
                     selectedImage === img
-                      ? "border-amber-400 ring-1 ring-amber-400"
-                      : "border-stone-800 opacity-60 hover:opacity-100"
+                      ? "border-amber-500 ring-1 ring-amber-500"
+                      : "border-[#1E1B18] opacity-60 hover:opacity-100"
                   }`}
                 >
                   <Image src={img} alt={`Önizleme ${i + 1}`} fill className="object-cover" />
@@ -257,7 +257,7 @@ export default function ProductDetailPage({
           <div className="space-y-6">
             <div>
               {product.category && (
-                <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-amber-400 font-bold mb-1 flex items-center gap-1.5">
+                <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-amber-500 font-bold mb-1 flex items-center gap-1.5">
                   <Cpu className="w-3.5 h-3.5" />
                   {product.category.name}
                 </p>
@@ -266,12 +266,12 @@ export default function ProductDetailPage({
                 {product.title}
               </h1>
               {product.sku && (
-                <p className="text-[11px] font-mono text-stone-500 mt-1">Parça / Model Kodu: {product.sku}</p>
+                <p className="text-[11px] font-mono text-stone-500 mt-1">Parça / Model Kodu: #{product.sku}</p>
               )}
             </div>
 
             {/* FİYAT BÖLÜMÜ (ATÖLYE REFERANS DEĞERİ) */}
-            <div className="p-5 bg-[#0F131C] border border-[#1E2536] rounded-xs space-y-2">
+            <div className="p-5 bg-[#0A0C10] border border-[#1E1B18] rounded-xs space-y-2 brass-glow">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-stone-500 block mb-1">
                   Atölye Referans Değeri (Malzeme & İmalat)
@@ -293,7 +293,7 @@ export default function ProductDetailPage({
                     </>
                   )}
                 </div>
-                <p className="text-[11px] text-stone-400 font-mono mt-1.5 leading-relaxed">
+                <p className="text-[11px] text-stone-400 font-mono mt-1.5 leading-relaxed font-light">
                   Bu çalışma hobi atölyesi özel üretimidir. Siparişler doğrudan atölye istişaresi, özel montaj ve teslimat mutabakatı ile hazırlanır.
                 </p>
               </div>

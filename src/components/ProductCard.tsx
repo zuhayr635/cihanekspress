@@ -78,11 +78,11 @@ export default function ProductCard({ product }: ProductCardProps) {
   const directWhatsAppUrl = `https://wa.me/${phone}?text=${encodeURIComponent(whatsAppMsg)}`;
 
   return (
-    <div className="group relative flex flex-col bg-[#0E1119] border border-[#1E2536] hover:border-amber-500/50 rounded-xs overflow-hidden transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.6)]">
+    <div className="group relative flex flex-col bg-[#0A0C10] border border-[#1E1B18] hover:border-amber-600/50 rounded-xs overflow-hidden transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.8)]">
       {/* Görsel Alanı */}
       <Link
         href={`/products/${product.slug}`}
-        className="relative aspect-4/3 sm:aspect-3/4 w-full bg-[#080B10] overflow-hidden block border-b border-[#1A2130]"
+        className="relative aspect-4/3 sm:aspect-3/4 w-full bg-[#060709] overflow-hidden block border-b border-[#1E1B18]"
       >
         {/* Arka plan blueprint ızgarası */}
         <div className="absolute inset-0 bg-blueprint-grid opacity-25 z-0 pointer-events-none" />
@@ -96,7 +96,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         />
 
         {/* Karartma Gradyanı */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0E1119] via-transparent to-black/40 z-15 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0C10] via-transparent to-black/40 z-15 pointer-events-none" />
 
         {/* Üst Rozetler (Teknik Telemetri Formatında) */}
         <div className="absolute top-3 left-3 z-20 flex flex-wrap gap-1.5 max-w-[85%]">
@@ -129,12 +129,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* Ürün Bilgisi */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 bg-[#0E1119]">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 bg-[#0A0C10]">
         <div>
           {/* Kategori ve SKU */}
-          <div className="flex items-center justify-between text-[10px] font-mono text-stone-400 border-b border-stone-800/60 pb-2 mb-2">
-            <span className="text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
-              <Cpu className="w-3 h-3 text-amber-400" />
+          <div className="flex items-center justify-between text-[10px] font-mono text-stone-400 border-b border-[#1E1B18] pb-2 mb-2">
+            <span className="text-amber-500 font-bold uppercase tracking-wider flex items-center gap-1">
+              <Cpu className="w-3 h-3 text-amber-500" />
               {product.category?.name?.split(" ")[0] || "CRAWLER PROJE"}
             </span>
             {product.sku && (
@@ -171,7 +171,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Fiyat ve Hızlı Sipariş / İnceleme Aksiyonları */}
-        <div className="pt-3 border-t border-[#1A2130] space-y-3">
+        <div className="pt-3 border-t border-[#1E1B18] space-y-3">
           <div className="flex items-end justify-between">
             <div className="flex flex-col">
               <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500">
@@ -204,7 +204,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               href={directWhatsAppUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/40 hover:border-[#25D366] text-[10px] font-mono uppercase font-black tracking-wider rounded-xs transition-all shadow-sm"
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#0E1E15] hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/40 hover:border-[#25D366] text-[10px] font-mono uppercase font-black tracking-wider rounded-xs transition-all shadow-sm"
               title="WhatsApp üzerinden atölye ile görüşün"
             >
               <MessageCircle className="w-3.5 h-3.5 fill-current" />
@@ -213,7 +213,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             <Link
               href={`/products/${product.slug}`}
-              className="w-full flex items-center justify-center gap-1 py-2.5 bg-[#141A26] hover:bg-amber-500 text-stone-300 hover:text-black border border-[#222C40] hover:border-amber-400 text-[10px] font-mono uppercase font-bold tracking-wider rounded-xs transition-all"
+              className="w-full flex items-center justify-center gap-1 py-2.5 bg-[#0E0F14] hover:bg-amber-600 text-stone-300 hover:text-black border border-[#1E1B18] hover:border-amber-500 text-[10px] font-mono uppercase font-bold tracking-wider rounded-xs transition-all"
             >
               <span>Projeyi İncele</span>
             </Link>
@@ -222,8 +222,8 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Alt İnce Aksan Çizgisi */}
-      <div className="h-0.5 w-full bg-[#18202E] flex">
-        <div className="w-1/3 h-full bg-amber-500/40 group-hover:w-full transition-all duration-500" />
+      <div className="h-0.5 w-full bg-[#14161F] flex">
+        <div className="w-1/3 h-full bg-amber-600/50 group-hover:w-full transition-all duration-500" />
       </div>
     </div>
   );

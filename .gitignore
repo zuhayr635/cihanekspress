@@ -40,7 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# python
-__pycache__/
-*.py[cod]
+# agent tools & skills
+.agents/
 

@@ -70,14 +70,14 @@ export default function Header() {
 
   return (
     <>
-      {/* Üst Bilgi Barı (Industrial Atelier Top Bar) */}
-      <div className="bg-[#07090E] text-[#94A3B8] text-[10px] tracking-widest uppercase py-2 px-4 border-b border-[#1A202C]">
+      {/* Üst Bilgi Barı (Obsidian Atelier Telemetry Bar) */}
+      <div className="bg-[#060709] text-[#9E978E] text-[10px] tracking-widest uppercase py-2.5 px-4 border-b border-[#1E1B18]">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 font-mono">
-          <div className="flex items-center gap-2 text-stone-300">
-            <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="text-amber-400 font-bold">CIHANPOL ATELIER:</span>
-            <span className="text-stone-400 hidden sm:inline">
-              Özel Hobi & Mühendislik Kataloğudur — Projeler Birebir Atölye İstişaresiyle Hazırlanır
+          <div className="flex items-center gap-2.5 text-stone-300">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span className="text-amber-400 font-bold tracking-wider">CİHAN ATELIER //</span>
+            <span className="text-stone-400 hidden sm:inline font-light">
+              Özel Mekanik & CNC Hobi Kataloğu — Projeler Birebir Atölye İstişaresiyle Hazırlanır
             </span>
             <span className="text-stone-400 sm:hidden">Özel Atölye Çalışma Kataloğu</span>
           </div>
@@ -88,10 +88,10 @@ export default function Header() {
               href={`https://wa.me/${storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"}?text=Merhaba%20Cihan%20Usta,%20at%C3%B6lye%20projeleri%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#25D366] hover:text-emerald-300 transition-colors flex items-center gap-1 font-bold"
+              className="text-[#25D366] hover:text-emerald-300 transition-colors flex items-center gap-1.5 font-bold"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
-              <span>WhatsApp Danışma</span>
+              <span>WhatsApp Danışma Hattı</span>
             </a>
 
             <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
@@ -99,13 +99,13 @@ export default function Header() {
             <VehicleSelector />
 
             <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
-            <Link href="/rehber" className="hover:text-amber-400 transition-colors flex items-center gap-1">
-              <BookOpen className="w-3 h-3 text-amber-400" />
+            <Link href="/rehber" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-300">
+              <BookOpen className="w-3 h-3 text-amber-500" />
               <span>Rehber</span>
             </Link>
 
             <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
-            <Link href="/order-tracking" className="hover:text-amber-400 transition-colors">
+            <Link href="/order-tracking" className="hover:text-amber-400 transition-colors text-stone-400">
               <span>Talep Takibi</span>
             </Link>
 
@@ -118,7 +118,7 @@ export default function Header() {
       </div>
 
       {/* Ana Header */}
-      <header className="sticky top-0 z-40 bg-[#0B0E15]/95 backdrop-blur-md border-b border-[#1C2333] text-white transition-all">
+      <header className="sticky top-0 z-40 bg-[#08090E]/95 backdrop-blur-md border-b border-[#1E1B18] text-white transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Mobil Menü Butonu */}
           <button
@@ -130,17 +130,17 @@ export default function Header() {
           </button>
 
           {/* Sol Navigasyon Linkleri (Desktop) */}
-          <nav className="hidden md:flex items-center gap-5 text-[11px] tracking-[0.14em] uppercase font-mono font-bold text-stone-300">
+          <nav className="hidden md:flex items-center gap-6 text-[11px] tracking-[0.18em] uppercase font-mono font-semibold text-stone-300">
             <Link href="/" className="hover:text-amber-400 transition-colors">
               Katalog
             </Link>
-            <Link href="/#rig-builder" className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
+            <Link href="/#rig-builder" className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               Rig Sihirbazı
             </Link>
             {(isModuleActive("cog_simulator") || isModuleActive("gear_calculator") || isModuleActive("exploded_cad") || isModuleActive("battery_wizard")) && (
               <Link href="/hesaplayici" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-300">
-                <Wrench className="w-3.5 h-3.5 text-amber-400" />
+                <Wrench className="w-3.5 h-3.5 text-amber-500" />
                 Hesaplayıcı
               </Link>
             )}
@@ -164,18 +164,18 @@ export default function Header() {
             )}
           </nav>
 
-          {/* Logo (RC Crawler Rugged Industrial Brand) */}
+          {/* Logo (RC Crawler Rugged Atelier Brand) */}
           <div className="text-center">
             <Link href="/" className="inline-block group">
-              <div className="flex items-center justify-center gap-1.5">
-                <span className="w-2 h-2 rounded-xs bg-amber-500 rotate-45" />
-                <h1 className="font-mono text-xl sm:text-2xl tracking-[0.2em] font-black text-white group-hover:text-amber-400 transition-colors uppercase">
-                  CIHANPOL<span className="text-amber-400 font-light">.RC</span>
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <h1 className="font-mono text-xl sm:text-2xl tracking-[0.25em] font-black text-white group-hover:text-amber-400 transition-colors uppercase">
+                  CIHANPOL<span className="text-amber-500 font-light">.RC</span>
                 </h1>
-                <span className="w-2 h-2 rounded-xs bg-amber-500 rotate-45" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               </div>
-              <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-stone-400 -mt-0.5">
-                CRAWLER & SCALE ATELIER LAB
+              <p className="text-[9px] font-mono tracking-[0.35em] uppercase text-stone-400 mt-0.5">
+                CRAWLER & BESPOKE ATELIER
               </p>
             </Link>
           </div>
@@ -186,20 +186,20 @@ export default function Header() {
               href={`https://wa.me/${storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"}?text=Merhaba%20Cihan%20Usta,%20%C3%B6zel%20crawler%20projeleri%20hakk%C4%B1nda%20dan%C4%B1%C5%9Fmak%20istiyorum.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/40 text-[10px] font-mono font-black uppercase tracking-wider rounded-xs transition-all shadow-xs"
+              className="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 bg-[#0E1E15] hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/40 text-[10px] font-mono font-black uppercase tracking-wider rounded-xs transition-all shadow-sm"
             >
               <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
-              <span>WhatsApp İle Ulaş</span>
+              <span>WhatsApp İstişare</span>
             </a>
 
             {/* Talep Listesi Butonu (Katalog Sepeti) */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative px-3 sm:px-4 py-2 text-white hover:text-amber-400 rounded-xs border border-[#2A3448] hover:border-amber-400/80 bg-[#121622] transition-all group flex items-center gap-2 font-mono"
+              className="relative px-3.5 sm:px-4 py-2 text-white hover:text-amber-400 rounded-xs border border-[#2A241F] hover:border-amber-500/70 bg-[#0F1015] transition-all group flex items-center gap-2 font-mono shadow-sm"
               aria-label="Talep Listesini Aç"
             >
-              <Wrench className="w-4 h-4 text-amber-400 stroke-[2]" />
-              <span className="text-xs uppercase font-bold tracking-wider">Talep Listesi</span>
+              <Wrench className="w-4 h-4 text-amber-500 stroke-[2]" />
+              <span className="text-xs uppercase font-bold tracking-wider">Talep Masası</span>
               {itemCount > 0 && (
                 <span className="bg-amber-500 text-black text-[10px] px-1.5 py-0.5 rounded-xs font-black animate-in zoom-in">
                   {itemCount}
