@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0B0E14;
+  --foreground: #E2E8F0;
+  --accent-brass: #D97706;
+  --accent-amber: #F59E0B;
+  --panel-bg: #121620;
+  --border-tactical: #232B3B;
 }
 
 @theme inline {
@@ -12,15 +16,88 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* 1. Teknik Blueprint / CNC Izgara Deseni */
+.bg-blueprint-grid {
+  background-image: 
+    linear-gradient(to right, rgba(245, 158, 11, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(245, 158, 11, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* 2. Hassas Çapraz Kılavuz Deseni */
+.bg-crosshair-dots {
+  background-image: radial-gradient(rgba(245, 158, 11, 0.12) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 3. Karbon Fiber / Taktik Dokulu Desen */
+.bg-carbon-weave {
+  background: 
+    linear-gradient(27deg, #0d1017 5px, transparent 5px) 0 5px,
+    linear-gradient(207deg, #0d1017 5px, transparent 5px) 10px 0px,
+    linear-gradient(27deg, #131824 5px, transparent 5px) 0px 10px,
+    linear-gradient(207deg, #131824 5px, transparent 5px) 10px 5px,
+    linear-gradient(90deg, #0a0d14 10px, #0f1420 10px);
+  background-size: 20px 20px;
+}
+
+/* 4. Taktik Köşe İşaretleri (Corner Brackets) */
+.tactical-box {
+  position: relative;
+}
+.tactical-box::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #F59E0B;
+  border-left: 2px solid #F59E0B;
+  pointer-events: none;
+}
+.tactical-box::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #F59E0B;
+  border-right: 2px solid #F59E0B;
+  pointer-events: none;
+}
+
+/* 5. Dik Tırmanış Sarı/Siyah Uyarı Çizgileri */
+.hazard-border {
+  background: repeating-linear-gradient(
+    -45deg,
+    #F59E0B,
+    #F59E0B 10px,
+    #0F1115 10px,
+    #0F1115 20px
+  );
+}
+
+/* Özel Kaydırma Çubuğu */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0E14;
+}
+::-webkit-scrollbar-thumb {
+  background: #232B3B;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F59E0B;
 }

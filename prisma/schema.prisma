@@ -1,0 +1,174 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model StoreSetting {
+  id                      String   @id @default("default")
+  storeName               String   @default("LUXE ATELIER")
+  storeTagline            String   @default("Kişiye Özel Lüks Koleksiyon")
+  storeMode               String   @default("CATALOG_ONLY") // "CATALOG_ONLY" | "INVITE_ONLY" | "PUBLIC_SALE"
+  currency                String   @default("TL")
+  currencySymbol          String   @default("₺")
+  taxRate                 Int      @default(20)
+  pricesIncludeTax        Boolean  @default(true)
+  freeShippingThreshold   Float    @default(2000.0)
+  defaultShippingFee      Float    @default(95.0)
+  bankTransferEnabled     Boolean  @default(true)
+  bankAccountsJson        String   @default("[{\"bankName\":\"Garanti BBVA\",\"accountHolder\":\"LUXE ATELIER TEKSTIL A.Ş.\",\"iban\":\"TR12 0006 2000 0001 2345 6789 01\"},{\"bankName\":\"Türkiye İş Bankası\",\"accountHolder\":\"LUXE ATELIER TEKSTIL A.Ş.\",\"iban\":\"TR34 0006 4000 0002 3456 7890 12\"}]")
+  whatsappOrderEnabled    Boolean  @default(true)
+  whatsappPhone           String   @default("+905550001122")
+  whatsappMessageTemplate String   @default("Merhaba, web sitenizden aşağıdaki ürünleri sipariş vermek istiyorum:\n\n{items}\n\nToplam Tutar: {total}\nAlıcı: {customerName}\nTeslimat Adresi: {address}")
+  creditCardEnabled       Boolean  @default(true)
+  creditCardProvider      String   @default("paytr") // "paytr" | "iyzico"
+  ccApiKey                String   @default("")
+  ccSecretKey             String   @default("")
+  ccMerchantId            String   @default("")
+  ccTestMode              Boolean  @default(true)
+  updatedAt               DateTime @updatedAt
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
+
+model InviteToken {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  status          String    @default("ACTIVE") // ACTIVE | USED | EXPIRED | REVOKED
+  note            String?
+  discountPercent Int       @default(0)
+  expiresAt       DateTime?
+  usedAt          DateTime?
+  usedByIp        String?
+  createdAt       DateTime  @default(now())
+  orders          Order[]
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  order       Int       @default(0)
+  products    Product[]
+}
+
+model Product {
+  id               String           @id @default(cuid())
+  title            String
+  slug             String           @unique
+  description      String
+  shortDescription String?
+  images           String           @default("[]") // JSON string array of URLs
+  type             String           @default("SIMPLE") // "SIMPLE" | "VARIABLE" | "DIGITAL" | "BUNDLE"
+  basePrice        Float
+  salePrice        Float?
+  sku              String?
+  stockQuantity    Int              @default(10)
+  manageStock      Boolean          @default(true)
+  allowBackorders  Boolean          @default(false)
+  lowStockThreshold Int             @default(3)
+  isFeatured       Boolean          @default(false)
+  digitalFileUrl   String?
+  weight           Float?
+  dimensions       String?
+  attributesJson   String?          @default("[]") // JSON: [{ "name": "Beden", "options": ["S", "M", "L"] }]
+  categoryId       String?
+  category         Category?        @relation(fields: [categoryId], references: [id])
+  variants         ProductVariant[]
+  reviews          ProductReview[]
+  orderItems       OrderItem[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String   // e.g. "Siyah / M"
+  sku        String?
+  price      Float
+  stock      Int      @default(5)
+  attributes String   @default("{}") // JSON: { "Renk": "Siyah", "Beden": "M" }
+  image      String?
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  type        String    @default("PERCENTAGE") // "PERCENTAGE" | "FIXED_CART" | "FIXED_PRODUCT"
+  amount      Float
+  minSpend    Float?
+  maxSpend    Float?
+  usageLimit  Int?
+  usageCount  Int       @default(0)
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+}
+
+model ProductReview {
+  id              String   @id @default(cuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  authorName      String
+  rating          Int      @default(5)
+  comment         String
+  isApproved      Boolean  @default(false)
+  isVerifiedOwner Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  shippingAddress String
+  billingAddress  String?
+  city            String
+  district        String?
+  customerNote    String?
+  adminNote       String?
+  status          String      @default("PENDING_PAYMENT") // PENDING_PAYMENT | PROCESSING | SHIPPED | COMPLETED | CANCELLED | REFUNDED
+  paymentMethod   String      // BANK_TRANSFER | WHATSAPP | CREDIT_CARD
+  paymentStatus   String      @default("PENDING") // PENDING | COMPLETED | FAILED
+  subtotal        Float
+  discountTotal   Float       @default(0.0)
+  taxTotal        Float       @default(0.0)
+  shippingFee     Float       @default(0.0)
+  total           Float
+  receiptUrl      String?
+  trackingNumber  String?
+  trackingUrl     String?
+  inviteTokenId   String?
+  inviteToken     InviteToken? @relation(fields: [inviteTokenId], references: [id])
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      Product? @relation(fields: [productId], references: [id])
+  productTitle String
+  variantName  String?
+  price        Float
+  quantity     Int
+  total        Float
+}
