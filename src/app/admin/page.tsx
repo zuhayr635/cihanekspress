@@ -41,6 +41,11 @@ import {
   MapPin,
   Trophy,
   Stethoscope,
+  Edit3,
+  Download,
+  Search,
+  X,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -60,6 +65,11 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+
+  // Ürün Düzenleme & Dışa Aktarma
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [productSearchTerm, setProductSearchTerm] = useState("");
 
   // 15 Yeni Modül Yönetimi
   const [modulesList, setModulesList] = useState<any[]>([]);
@@ -298,6 +308,98 @@ export default function AdminDashboardPage() {
     } catch {
       showNotify("error", "Ayarlar kaydedilirken hata oluştu.");
     }
+  };
+
+  // Ürün Düzenleme Kaydet
+  const handleSaveProductEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    setIsSavingProduct(true);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingProduct.id,
+          title: editingProduct.title,
+          description: editingProduct.description,
+          shortDescription: editingProduct.shortDescription,
+          basePrice: Number(editingProduct.basePrice),
+          salePrice: editingProduct.salePrice ? Number(editingProduct.salePrice) : null,
+          stockQuantity: Number(editingProduct.stockQuantity),
+          isFeatured: Boolean(editingProduct.isFeatured),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotify("success", `"${editingProduct.title}" başarıyla güncellendi!`);
+        setEditingProduct(null);
+        refreshAllData();
+      } else {
+        showNotify("error", data.error || "Ürün güncellenemedi.");
+      }
+    } catch {
+      showNotify("error", "Bağlantı hatası oluştu.");
+    } finally {
+      setIsSavingProduct(false);
+    }
+  };
+
+  // Ürün Silme
+  const handleDeleteProduct = async (id: string, title: string) => {
+    if (!window.confirm(`"${title}" ürününü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/products?id=${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotify("success", `"${title}" silindi.`);
+        refreshAllData();
+      } else {
+        showNotify("error", data.error || "Ürün silinemedi.");
+      }
+    } catch {
+      showNotify("error", "Bağlantı hatası oluştu.");
+    }
+  };
+
+  // Ürünleri CSV Olarak Dışa Aktar
+  const handleExportProductsCSV = () => {
+    if (products.length === 0) {
+      showNotify("error", "Dışa aktarılacak ürün bulunamadı.");
+      return;
+    }
+    const headers = ["ID", "Ürün Adı", "Kategori", "Fiyat (TL)", "İndirimli Fiyat (TL)", "Stok", "Slug", "Görsel URL"];
+    const rows = products.map((p) => {
+      let firstImg = "";
+      try {
+        const imgs = p.images ? JSON.parse(p.images) : [];
+        firstImg = imgs[0] || "";
+      } catch {}
+      return [
+        p.id,
+        `"${(p.title || "").replace(/"/g, '""')}"`,
+        `"${(p.category?.name || "Kategorisiz").replace(/"/g, '""')}"`,
+        p.basePrice,
+        p.salePrice || "",
+        p.stockQuantity,
+        p.slug,
+        `"${firstImg.replace(/"/g, '""')}"`,
+      ];
+    });
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cihanekspress-urunler-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showNotify("success", `${products.length} ürün CSV formatında dışa aktarıldı!`);
   };
 
   if (isLoading) {
@@ -1243,54 +1345,127 @@ export default function AdminDashboardPage() {
           {/* TAB 5: ÜRÜNLER (PRODUCTS) */}
           {activeTab === "products" && (
             <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 space-y-6 animate-in fade-in shadow-xs">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>
                   <h2 className="text-xs uppercase tracking-wider font-bold text-slate-900">
-                    Ürün & Varyasyon Yönetimi
+                    Ürün & Envanter Yönetimi
                   </h2>
-                  <p className="text-[11px] text-slate-500">Katalog ürünleri, stok adetleri ve vitrin önizlemeleri</p>
+                  <p className="text-[11px] text-slate-500">Katalog ürünlerini düzenleyin, stokları güncelleyin veya dışa aktarın</p>
                 </div>
-                <span className="text-xs font-mono font-bold bg-slate-100 text-slate-800 px-3 py-1 rounded-full">
-                  {products.length} Ürün
-                </span>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleExportProductsCSV}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Tüm ürünleri Excel uyumlu CSV olarak dışa aktar"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>CSV / Excel İndir</span>
+                  </button>
+                  <span className="text-xs font-mono font-bold bg-slate-100 text-slate-800 px-3 py-1 rounded-full">
+                    {products.length} Ürün
+                  </span>
+                </div>
               </div>
 
+              {/* Arama / Filtreleme Çubuğu */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Ürün adı, slug veya kategoriye göre ara..."
+                  value={productSearchTerm}
+                  onChange={(e) => setProductSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#F27A1A] focus:bg-white transition-all placeholder:text-slate-400 font-medium"
+                />
+                {productSearchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setProductSearchTerm("")}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Ürün Listesi */}
               <div className="divide-y divide-slate-100">
-                {products.map((p) => (
-                  <div key={p.id} className="py-4 flex items-center justify-between gap-4 hover:bg-slate-50/50 p-2 rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-14 h-16 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200/60">
-                        {p.images && (
-                          <Image
-                            src={JSON.parse(p.images)[0] || ""}
-                            alt={p.title}
-                            fill
-                            className="object-cover"
-                          />
-                        )}
+                {products
+                  .filter((p) => {
+                    if (!productSearchTerm) return true;
+                    const term = productSearchTerm.toLowerCase();
+                    return (
+                      p.title?.toLowerCase().includes(term) ||
+                      p.slug?.toLowerCase().includes(term) ||
+                      p.category?.name?.toLowerCase().includes(term)
+                    );
+                  })
+                  .map((p) => (
+                    <div key={p.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 p-2 rounded-xl transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-14 h-16 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200/60">
+                          {p.images && (
+                            <Image
+                              src={JSON.parse(p.images)[0] || ""}
+                              alt={p.title}
+                              fill
+                              className="object-cover"
+                            />
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-sans text-sm font-bold text-slate-900">{p.title}</h4>
+                            {p.isFeatured && (
+                              <span className="text-[9px] bg-orange-100 text-[#F27A1A] font-bold px-1.5 py-0.5 rounded">
+                                Öne Çıkan
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] font-medium text-slate-500">{p.category?.name || "Kategorisiz"}</p>
+                          <p className="font-sans text-xs font-black text-[#F27A1A] mt-0.5">
+                            {p.basePrice.toLocaleString("tr-TR")} ₺{" "}
+                            {p.salePrice && (
+                              <span className="line-through text-slate-400 font-normal ml-1">
+                                {p.salePrice.toLocaleString("tr-TR")} ₺
+                              </span>
+                            )}
+                            <span className="font-mono text-slate-500 font-normal ml-2">
+                              • Stok: <span className={`font-bold ${p.stockQuantity <= 3 ? "text-rose-600" : "text-slate-700"}`}>{p.stockQuantity}</span>
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-sans text-sm font-bold text-slate-900">{p.title}</h4>
-                        <p className="text-[11px] font-medium text-slate-500">{p.category?.name || "Kategorisiz"}</p>
-                        <p className="font-sans text-xs font-black text-[#F27A1A] mt-0.5">
-                          {p.basePrice.toLocaleString("tr-TR")} ₺{" "}
-                          <span className="font-mono text-slate-500 font-normal">
-                            • Stok: <span className="font-bold text-slate-700">{p.stockQuantity}</span>
-                          </span>
-                        </p>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => setEditingProduct({ ...p })}
+                          className="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-[#F27A1A] border border-orange-200/80 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Düzenle</span>
+                        </button>
+                        <Link
+                          href={`/products/${p.slug}`}
+                          target="_blank"
+                          className="px-3 py-1.5 border border-slate-200 hover:bg-white hover:border-slate-300 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors shadow-2xs"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Vitrinde Gör</span>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(p.id, p.title)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Ürünü Sil"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-
-                    <Link
-                      href={`/products/${p.slug}`}
-                      target="_blank"
-                      className="px-3.5 py-1.5 border border-slate-200 hover:bg-white hover:border-slate-300 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-[#F27A1A]" />
-                      <span>Vitrinde Gör</span>
-                    </Link>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -1780,6 +1955,150 @@ export default function AdminDashboardPage() {
           )}
         </main>
       </div>
+
+      {/* ÜRÜN DÜZENLEME MODALI */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto space-y-6">
+            {/* Modal Başlık */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#F27A1A] border border-orange-100 flex items-center justify-center">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    Ürün Bilgilerini Düzenle
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-mono">ID: {editingProduct.id}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingProduct(null)}
+                className="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveProductEdit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Ürün Başlığı
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingProduct.title || ""}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] focus:ring-2 focus:ring-orange-100 font-medium text-slate-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Taban Satış Fiyatı (TL)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    step="any"
+                    value={editingProduct.basePrice ?? ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, basePrice: e.target.value })}
+                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Kampanyalı Fiyat (TL)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    placeholder="Boş bırakılabilir"
+                    value={editingProduct.salePrice ?? ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value ? Number(e.target.value) : null })}
+                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Stok Adedi
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={editingProduct.stockQuantity ?? 0}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, stockQuantity: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Kısa Açıklama (Vitrin Özeti)
+                </label>
+                <input
+                  type="text"
+                  value={editingProduct.shortDescription || ""}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, shortDescription: e.target.value })}
+                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Detaylı Ürün Açıklaması
+                </label>
+                <textarea
+                  rows={4}
+                  value={editingProduct.description || ""}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900 leading-relaxed resize-y"
+                />
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingProduct.isFeatured)}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, isFeatured: e.target.checked })}
+                    className="w-4 h-4 rounded text-[#F27A1A] focus:ring-[#F27A1A]"
+                  />
+                  <span>Ana sayfada ve vitrinde öne çıkarılan ürün olarak işaretle</span>
+                </label>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProduct}
+                  className="px-6 py-2.5 bg-[#F27A1A] hover:bg-[#E06A0A] active:bg-[#C85B03] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingProduct ? <span>Kaydediliyor...</span> : <span>Değişiklikleri Kaydet</span>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
