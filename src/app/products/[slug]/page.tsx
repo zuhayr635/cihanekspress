@@ -270,46 +270,33 @@ export default function ProductDetailPage({
               )}
             </div>
 
-            {/* FİYAT BÖLÜMÜ (YALNIZCA SATIŞ İZNİ VARSA) */}
-            <div className="p-5 bg-[#141822] border border-[#262F3F] rounded-sm space-y-2">
-              {isSalesAllowed ? (
-                <div>
-                  <div className="flex items-baseline gap-3">
-                    {vipDiscount > 0 || product.salePrice ? (
-                      <>
-                        <span className="font-mono text-3xl text-white font-extrabold">
-                          {finalPrice.toLocaleString("tr-TR")} ₺
-                        </span>
-                        <span className="text-base text-stone-500 line-through font-mono">
-                          {currentPrice.toLocaleString("tr-TR")} ₺
-                        </span>
-                        {vipDiscount > 0 && (
-                          <span className="px-2 py-0.5 bg-amber-400 text-black text-[10px] font-mono font-bold tracking-wider rounded-xs">
-                            % {vipDiscount} Kulüp İndirimi
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="font-mono text-3xl text-white font-extrabold">
+            {/* FİYAT BÖLÜMÜ (ATÖLYE REFERANS DEĞERİ) */}
+            <div className="p-5 bg-[#0F131C] border border-[#1E2536] rounded-xs space-y-2">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-stone-500 block mb-1">
+                  Atölye Referans Değeri (Malzeme & İmalat)
+                </span>
+                <div className="flex items-baseline gap-3">
+                  <span className="font-mono text-3xl sm:text-4xl text-amber-400 font-black">
+                    {finalPrice.toLocaleString("tr-TR")} ₺
+                  </span>
+                  {(vipDiscount > 0 || product.salePrice) && (
+                    <>
+                      <span className="text-base text-stone-500 line-through font-mono">
                         {currentPrice.toLocaleString("tr-TR")} ₺
                       </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-stone-400 mt-1">
-                    KDV dahildir. 2.500 ₺ üzeri tüm parça ve araç siparişlerinde kargo ücretsizdir.
-                  </p>
+                      {vipDiscount > 0 && (
+                        <span className="px-2 py-0.5 bg-amber-400 text-black text-[10px] font-mono font-bold tracking-wider rounded-xs">
+                          % {vipDiscount} Kulüp İndirimi
+                        </span>
+                      )}
+                    </>
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-white font-bold text-sm font-mono">
-                    <Lock className="w-4 h-4 text-amber-500" />
-                    <span>Özel RC Proje Vitrini</span>
-                  </div>
-                  <p className="text-xs text-stone-400 leading-relaxed">
-                    Bu parçanın/aracın fiyatı ve sipariş yetkisi, yöneticinin özel tek kullanımlık davetiyesine sahip RC kulüp üyelerine açılmaktadır.
-                  </p>
-                </div>
-              )}
+                <p className="text-[11px] text-stone-400 font-mono mt-1.5 leading-relaxed">
+                  Bu çalışma hobi atölyesi özel üretimidir. Siparişler doğrudan atölye istişaresi, özel montaj ve teslimat mutabakatı ile hazırlanır.
+                </p>
+              </div>
             </div>
 
             {/* VARYANT SEÇİCİ (Beden / Renk / Aks Tipi) */}
@@ -325,14 +312,14 @@ export default function ProductDetailPage({
                       <button
                         key={variant.id}
                         onClick={() => setSelectedVariant(variant)}
-                        className={`px-4 py-2.5 text-xs font-mono font-bold tracking-wide rounded-sm border transition-all ${
+                        className={`px-4 py-2.5 text-xs font-mono font-bold tracking-wide rounded-xs border transition-all ${
                           isSelected
                             ? "border-amber-400 bg-amber-400 text-black shadow-md shadow-amber-400/20"
-                            : "border-stone-700 bg-[#161A22] text-stone-300 hover:border-amber-400"
+                            : "border-[#252F42] bg-[#121622] text-stone-300 hover:border-amber-400"
                         }`}
                       >
                         {variant.name}
-                        {isSalesAllowed && variant.price !== product.basePrice && (
+                        {variant.price !== product.basePrice && (
                           <span className="ml-1 text-[10px] opacity-90">
                             ({variant.price.toLocaleString("tr-TR")} ₺)
                           </span>
@@ -344,81 +331,78 @@ export default function ProductDetailPage({
               </div>
             )}
 
-            {/* STOK VE MİKTAR (Yalnızca Satış Yetkisinde) */}
-            {isSalesAllowed && (
-              <div className="space-y-4 pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono uppercase tracking-wider text-stone-300 font-bold">
-                    Adet
-                  </span>
-                  <span className="text-xs font-mono">
-                    {currentStock > 0 ? (
-                      <span className="text-emerald-400 font-bold">Stokta Mevcut ({currentStock} adet)</span>
-                    ) : (
-                      <span className="text-red-400 font-bold">Tükendi</span>
-                    )}
-                  </span>
-                </div>
+            {/* MİKTAR VE TALEP LİSTESİNE EKLEME */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono uppercase tracking-wider text-stone-300 font-bold">
+                  Adet Belirleyin
+                </span>
+                <span className="text-xs font-mono">
+                  {currentStock > 0 ? (
+                    <span className="text-emerald-400 font-bold">● Atölyede Hazırlanabilir</span>
+                  ) : (
+                    <span className="text-amber-400 font-bold">● Özel Talep Üzerine Üretim</span>
+                  )}
+                </span>
+              </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center border border-stone-700 rounded-sm bg-[#161A22]">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="p-3 text-stone-400 hover:text-white transition-colors"
-                      aria-label="Azalt"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="px-4 text-xs font-mono font-bold text-white">
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={() => setQuantity(Math.min(currentStock || 99, quantity + 1))}
-                      className="p-3 text-stone-400 hover:text-white transition-colors"
-                      aria-label="Artır"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
+              <div className="flex items-center gap-3">
+                <div className="flex items-center border border-[#263145] rounded-xs bg-[#11151F]">
                   <button
-                    onClick={handleAddToCart}
-                    disabled={currentStock <= 0}
-                    className="flex-1 py-3.5 bg-amber-500 text-black text-xs uppercase tracking-widest font-extrabold rounded-sm hover:bg-amber-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-40"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="p-3 text-stone-400 hover:text-white transition-colors"
+                    aria-label="Azalt"
                   >
-                    <ShoppingBag className="w-4 h-4 stroke-[2]" />
-                    <span>Sepete Ekle</span>
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="px-4 text-xs font-mono font-bold text-white">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(Math.min(currentStock || 99, quantity + 1))}
+                    className="p-3 text-stone-400 hover:text-white transition-colors"
+                    aria-label="Artır"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              </div>
-            )}
 
-            {/* WHATSAPP VE İLETİŞİM BUTONU */}
+                <button
+                  onClick={handleAddToCart}
+                  className="flex-1 py-3.5 bg-[#171E2C] hover:bg-[#20293C] border border-[#2B3850] hover:border-amber-400/80 text-stone-200 hover:text-white text-xs font-mono uppercase tracking-widest font-bold rounded-xs transition-all flex items-center justify-center gap-2"
+                >
+                  <Wrench className="w-4 h-4 text-amber-400" />
+                  <span>Talep Listesine Ekle</span>
+                </button>
+              </div>
+            </div>
+
+            {/* BÜYÜK WHATSAPP DOĞRUDAN SİPARİŞ BUTONU */}
             <div className="pt-2">
               <a
                 href={getDirectWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 py-3 border border-[#25D366]/60 text-white text-xs uppercase tracking-wider font-bold rounded-sm hover:bg-[#25D366]/10 transition-colors"
+                className="w-full flex items-center justify-center gap-2.5 py-4 bg-[#25D366] hover:bg-[#20ba59] text-black text-xs font-mono uppercase tracking-widest font-black rounded-xs transition-all shadow-xl shadow-[#25D366]/20 group"
               >
-                <MessageCircle className="w-4 h-4 text-[#25D366] fill-[#25D366]" />
-                <span>WhatsApp ile Bu Parça İçin Danış</span>
+                <MessageCircle className="w-4 h-4 fill-black text-black group-hover:scale-110 transition-transform" />
+                <span>WhatsApp İle Hemen Sipariş Ver & Danış</span>
               </a>
             </div>
 
-            {/* Hizmet Garantileri & Crawler Garaj Taahhüdü */}
-            <div className="border-t border-stone-800 pt-6 space-y-3 text-xs text-stone-400 font-mono">
-              <div className="flex items-center gap-3">
-                <Truck className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>Darbeye ve basınca dayanıklı özel korumalı kargo paketi</span>
-              </div>
-              <div className="flex items-center gap-3">
+            {/* Atölye Güvence & Hobi Beyanı */}
+            <div className="border-t border-[#1E2536] pt-5 space-y-2.5 text-xs text-stone-400 font-mono">
+              <div className="flex items-center gap-2.5">
                 <Wrench className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>TRX-4, SCX10 ve SCX24 şasi montajı için doğrudan atölye desteği</span>
+                <span>TRX-4, SCX10 ve SCX24 şasileri için doğrudan montaj ve uyumluluk desteği</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>%100 Orijinal CNC işleme, sertifikalı alaşım ve gerçek pirinç</span>
+                <span>%100 Sertifikalı CNC pirinç ve T6 havacılık alüminyumu</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Truck className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>Darbe emici koruyucu ambalaj ile kargo veya atölyeden teslim</span>
               </div>
             </div>
           </div>

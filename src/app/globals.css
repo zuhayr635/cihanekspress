@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0B0E14;
+  --background: #07080B;
   --foreground: #E2E8F0;
   --accent-brass: #D97706;
   --accent-amber: #F59E0B;
-  --panel-bg: #121620;
-  --border-tactical: #232B3B;
+  --panel-bg: #0E121A;
+  --border-tactical: #1E2536;
 }
 
 @theme inline {
@@ -21,6 +21,8 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  selection-background-color: #F59E0B;
+  selection-color: #000000;
 }
 
 /* 1. Teknik Blueprint / CNC Izgara Deseni */

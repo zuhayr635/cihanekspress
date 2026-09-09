@@ -90,41 +90,41 @@ export default function HomePage() {
   });
 
   return (
-    <div className="space-y-24 sm:space-y-32 pb-24 bg-[#0F1115] text-[#E2E8F0]">
+    <div className="space-y-24 sm:space-y-32 pb-24 bg-[#07090E] text-[#E2E8F0]">
       {/* 1. HERO BÖLÜMÜ (RC Crawler High-Performance Industrial Hero) */}
-      <section className="relative min-h-[90vh] flex items-center justify-center bg-[#07090D] overflow-hidden border-b border-[#1E2535]">
+      <section className="relative min-h-[88vh] flex items-center justify-center bg-[#07090E] overflow-hidden border-b border-[#1A2130]">
         {/* Arka Plan Blueprint Izgarası ve Crawler Görseli */}
-        <div className="absolute inset-0 bg-blueprint-grid opacity-35 z-0 pointer-events-none" />
+        <div className="absolute inset-0 bg-blueprint-grid opacity-30 z-0 pointer-events-none" />
         
-        <div className="absolute inset-0 z-0 opacity-40">
+        <div className="absolute inset-0 z-0 opacity-35">
           <Image
             src="https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=2000&q=85"
             alt="Custom RC Crawler Rigs"
             fill
             priority
-            className="object-cover object-center scale-105"
+            className="object-cover object-center scale-105 filter contrast-125"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E14] via-[#0B0E14]/75 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#07090E] via-[#07090E]/80 to-transparent" />
         </div>
 
         {/* Hero Köşe Telemetri İşaretleri (CAD / HUD Overlay) */}
         <div className="hidden lg:block absolute top-8 left-8 text-[10px] font-mono text-stone-500 space-y-1 z-10 border-l border-amber-500/40 pl-3">
-          <p className="text-amber-400 font-bold">LAT: 39°55'N // ELEV: 1850M</p>
-          <p>STAGE 4 // ROCK CLIMBING BENCHMARK</p>
+          <p className="text-amber-400 font-bold">ATELIER LAT: 39°55'N // ALT: 1850M</p>
+          <p>CUSTOM BILLET // SCALE WORKSHOP</p>
           <p>PORTAL AXLE CLEARANCE: +18.5MM</p>
         </div>
 
         <div className="hidden lg:block absolute top-8 right-8 text-[10px] font-mono text-stone-500 text-right space-y-1 z-10 border-r border-amber-500/40 pr-3">
           <p className="text-amber-400 font-bold">WEIGHT BIAS: %62 FRONT / %38 REAR</p>
-          <p>MAX GRADE ATTAINED: 68.4°</p>
-          <p>CNC 6061-T6 BILLET & BRASS</p>
+          <p>STATUS: ATELIER ORDER QUEUE ACTIVE</p>
+          <p>CNC 6061-T6 BILLET & HEAVY BRASS</p>
         </div>
 
         {/* Hero İçerik */}
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-8 py-20">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-amber-500/40 bg-amber-500/10 rounded-xs text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-amber-400 backdrop-blur-md font-mono">
             <Flame className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span>Scale Rock Crawling & CNC Brass Engineering</span>
+            <span>Özel Hobi & Mühendislik Proje Kataloğu</span>
           </div>
 
           <h1 className="font-mono text-3xl sm:text-6xl md:text-7xl tracking-tight leading-[1.08] font-black uppercase text-white">
@@ -132,45 +132,36 @@ export default function HomePage() {
             <span className="text-amber-400 font-black drop-shadow-md">Ağır Metal Mühendisliği</span>
           </h1>
 
-          <p className="text-xs sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed">
-            1/10 ve 1/24 profesyonel kaya tırmanıcı şasileri, ağırlık merkezini yere çeken ağır pirinç portal kapakları, FOC sensörlü fırçasız motorlar ve kilitli diferansiyeller. 
-            Sınırlı parti CNC işleme parçalarımız kulüp davetiyelidir.
+          <p className="text-xs sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed font-sans">
+            1/10 ve 1/24 profesyonel kaya tırmanıcı şasileri, ağırlık merkezini yere çeken ağır pirinç portal akslar, FOC sensörlü fırçasız motorlar ve kişiye özel CNC modifikasyon projeleri. Çevrim içi perakende satış yapılmamaktadır; tüm projeler doğrudan atölye istişaresi ve WhatsApp üzerinden planlanır.
           </p>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4 font-mono">
             <a
               href="#garaj"
-              className="w-full sm:w-auto px-8 py-4 bg-amber-500 text-black text-xs uppercase tracking-[0.2em] font-black hover:bg-amber-400 transition-all rounded-xs flex items-center justify-center gap-2 group shadow-xl shadow-amber-500/20"
+              className="w-full sm:w-auto px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black text-xs uppercase tracking-[0.2em] font-black transition-all rounded-xs flex items-center justify-center gap-2 group shadow-xl shadow-amber-500/20"
             >
-              <span>Crawler Parçalarını İncele</span>
+              <span>Kataloğu İncele</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
 
             <a
-              href="#rig-builder"
-              className="w-full sm:w-auto px-8 py-4 border border-amber-500/50 bg-[#141A25] text-amber-400 text-xs uppercase tracking-[0.2em] font-extrabold hover:bg-amber-500/15 hover:border-amber-400 transition-all rounded-xs flex items-center justify-center gap-2 group"
+              href={`https://wa.me/${storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"}?text=Merhaba%20Cihan%20Usta,%20%C3%B6zel%20crawler%20projeleri%20hakk%C4%B1nda%20dan%C4%B1%C5%9Fmak%20istiyorum.`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-8 py-4 border border-[#25D366]/50 bg-[#0E1F16] hover:bg-[#25D366] text-[#25D366] hover:text-black text-xs uppercase tracking-[0.2em] font-black transition-all rounded-xs flex items-center justify-center gap-2 group shadow-lg shadow-[#25D366]/10"
             >
-              <Wrench className="w-4 h-4 text-amber-400" />
-              <span>Rig Kurulum Sihirbazı</span>
+              <MessageCircle className="w-4 h-4 fill-current" />
+              <span>WhatsApp'tan Projeni Danış</span>
             </a>
 
-            <Link
-              href="/rehber"
-              className="w-full sm:w-auto px-6 py-4 border border-stone-700 bg-stone-900/90 text-stone-200 hover:text-amber-400 text-xs uppercase tracking-[0.2em] font-bold hover:bg-stone-800 transition-all rounded-xs flex items-center justify-center gap-2"
+            <a
+              href="#rig-builder"
+              className="w-full sm:w-auto px-6 py-4 border border-stone-700 bg-[#121622] text-stone-200 hover:text-amber-400 text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#1A2030] transition-all rounded-xs flex items-center justify-center gap-2"
             >
-              <BookOpen className="w-4 h-4 text-amber-400" />
-              <span>Sistem Rehberi</span>
-            </Link>
-
-            {!vipSession.isVip && storeSettings?.storeMode !== "PUBLIC_SALE" && (
-              <a
-                href="#davetiye-bilgi"
-                className="w-full sm:w-auto px-6 py-4 border border-stone-700 bg-stone-900/90 text-white text-xs uppercase tracking-[0.2em] font-bold hover:bg-stone-800 transition-all rounded-xs flex items-center justify-center gap-2"
-              >
-                <KeyRound className="w-4 h-4 text-amber-400" />
-                <span>VIP Girişi Yap</span>
-              </a>
-            )}
+              <Wrench className="w-4 h-4 text-amber-400" />
+              <span>Rig Sihirbazı</span>
+            </a>
           </div>
 
           {/* Popüler Platform Hızlı Etiketleri */}
@@ -186,7 +177,7 @@ export default function HomePage() {
                   const el = document.getElementById("garaj");
                   if (el) el.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="px-2.5 py-1 bg-[#121620] hover:bg-amber-500/15 border border-stone-800 hover:border-amber-400/60 rounded-xs text-[10px] font-mono text-stone-300 hover:text-amber-400 transition-all"
+                className="px-2.5 py-1 bg-[#101420] hover:bg-amber-500/15 border border-[#1E2536] hover:border-amber-400/60 rounded-xs text-[10px] font-mono text-stone-300 hover:text-amber-400 transition-all"
               >
                 #{tag}
               </button>
@@ -195,49 +186,47 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. TEKNİK AVANTAJLAR VE ERİŞİM PROTOKOLÜ */}
+      {/* 2. ATÖLYE ÇALIŞMA İLKELERİ VE HUKUKİ HOBİ KALKANI */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 relative z-20">
-        <div className="bg-[#141822] border border-[#262F3F] rounded-sm p-6 sm:p-8 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-[#0D1018] border border-[#1E2536] rounded-xs p-6 sm:p-8 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-6 font-mono">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-sm bg-stone-900 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
+            <div className="w-10 h-10 rounded-xs bg-[#141824] border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
               <Shield className="w-5 h-5 stroke-[1.5]" />
             </div>
             <div>
               <h3 className="text-xs uppercase tracking-wider font-bold text-white">
-                Tek Kullanımlık RC Token
+                Hobi Atölyesi Çekincesi
               </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
-                Her bağlantı tek kullanımlıktır. Tıklandığı an VIP oturum açılır, link yakılır ve başkasıyla paylaşılamaz.
+              <p className="text-xs text-stone-400 mt-1 leading-relaxed font-sans font-light">
+                Perakende e-ticaret mağazası değildir. Şasi modifikasyon ve CNC prototip projelerini içeren özel tasarım kataloğudur.
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-sm bg-stone-900 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
-              <Lock className="w-5 h-5 stroke-[1.5]" />
+            <div className="w-10 h-10 rounded-xs bg-[#141824] border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
+              <Wrench className="w-5 h-5 stroke-[1.5]" />
             </div>
             <div>
               <h3 className="text-xs uppercase tracking-wider font-bold text-white">
-                {isSalesAllowed ? "Kulüp Satış İzni Aktif" : "Özel Proje Vitrini"}
+                Kişiye Özel CNC & El Montajı
               </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
-                {isSalesAllowed
-                  ? "Tebrikler! Özel tırmanıcı parçaları ve sepet özellikleri oturumunuz için aktif edildi."
-                  : "Genel ziyaretçiler yalnızca projeleri inceleyebilir. Fiyatlar ve sipariş kilitlidir."}
+              <p className="text-xs text-stone-400 mt-1 leading-relaxed font-sans font-light">
+                Her crawler aracı arazi eğim testlerinden geçirilir, ağırlık merkezi (CoG) dengelenir ve talep üzerine toplanır.
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-sm bg-stone-900 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
-              <CheckCircle2 className="w-5 h-5 stroke-[1.5]" />
+            <div className="w-10 h-10 rounded-xs bg-[#141824] border border-[#25D366]/40 flex items-center justify-center text-[#25D366] flex-shrink-0">
+              <MessageCircle className="w-5 h-5 fill-current" />
             </div>
             <div>
               <h3 className="text-xs uppercase tracking-wider font-bold text-white">
-                Doğrudan Garaj Güvencesi
+                Doğrudan Atölye İletişimi
               </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
-                Kurumsal IBAN havale ile dekont yükleme, WhatsApp parça danışmanlığı ve 3D Secure kart ödemesi.
+              <p className="text-xs text-stone-400 mt-1 leading-relaxed font-sans font-light">
+                Sipariş ve parça tedariği WhatsApp üzerinden usta ile birebir istişare edilerek elden veya kargo ile teslim edilir.
               </p>
             </div>
           </div>

@@ -147,10 +147,21 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Hukuki Hobi Kalkanı & Atölye Manifestosu */}
+        <div className="py-6 px-5 bg-[#080B10] border border-[#1C2333] rounded-xs text-[11px] text-stone-400 font-mono space-y-2 leading-relaxed">
+          <div className="flex items-center gap-2 text-amber-400 font-bold uppercase tracking-wider text-xs">
+            <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>Hukuki Bilgilendirme & Hobi Atölyesi Çekincesi</span>
+          </div>
+          <p>
+            Bu platform, <strong className="text-stone-200">Cihanpol RC Atelier</strong> tarafından yürütülen kişisel modelleme, CNC pirinç parça işleme, 3D prototip baskı ve özel rock crawler şasi modifikasyonlarını sergileyen bir <em>atölye çalışma ve tasarım kataloğudur</em>. Sitede çevrim içi perakende satış veya sanal POS ödemesi yapılmamaktadır. Listelenen tüm bedeller hobi malzeme tedariği ve zanaat işçiliği referans değerleridir. Tüm montaj, şasi kalibrasyonu ve parça teslimatları kulüp üyeleri ve model meraklıları ile birebir atölye istişaresiyle gerçekleştirilir.
+          </p>
+        </div>
+
         {/* Telif & Alt Bilgi */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-stone-500 gap-4">
-          <p>© {new Date().getFullYear()} CIHANPOL RC CRAWLER LAB. Tüm hakları saklıdır.</p>
-          <p className="tracking-wider uppercase font-mono">RC Scale Engineering & Private Invite Platform</p>
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-stone-500 gap-4 font-mono">
+          <p>© {new Date().getFullYear()} CIHANPOL RC ATELIER LAB. Kişisel Hobi & Zanaat Portfolyosu.</p>
+          <p className="tracking-wider uppercase">Custom Rock Crawler Engineering & Spec Portfolio</p>
         </div>
       </div>
     </footer>
