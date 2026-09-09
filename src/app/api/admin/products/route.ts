@@ -87,7 +87,20 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
-    const { id, title, description, shortDescription, images, basePrice, salePrice, stockQuantity, isFeatured, categoryId } = body;
+    const {
+      id,
+      title,
+      description,
+      shortDescription,
+      images,
+      basePrice,
+      salePrice,
+      costPrice,
+      compatibleModels,
+      stockQuantity,
+      isFeatured,
+      categoryId,
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Ürün ID gereklidir" }, { status: 400 });
@@ -102,6 +115,8 @@ export async function PUT(req: Request) {
         images: images ? JSON.stringify(images) : undefined,
         basePrice: basePrice ? Number(basePrice) : undefined,
         salePrice: salePrice !== undefined ? (salePrice ? Number(salePrice) : null) : undefined,
+        costPrice: costPrice !== undefined ? (costPrice ? Number(costPrice) : null) : undefined,
+        compatibleModels: compatibleModels !== undefined ? (typeof compatibleModels === "string" ? compatibleModels : JSON.stringify(compatibleModels)) : undefined,
         stockQuantity: stockQuantity !== undefined ? Number(stockQuantity) : undefined,
         isFeatured: isFeatured !== undefined ? Boolean(isFeatured) : undefined,
         categoryId: categoryId || undefined,

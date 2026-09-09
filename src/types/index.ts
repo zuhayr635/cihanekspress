@@ -35,10 +35,14 @@ export interface StoreSettingsData {
   whatsappMessageTemplate: string;
   creditCardEnabled: boolean;
   creditCardProvider: string;
+  creditCardMerchantId?: string;
   ccApiKey: string;
   ccSecretKey: string;
   ccMerchantId: string;
   ccTestMode: boolean;
+  panicMode?: boolean;
+  usdRate?: number;
+  blockedIps?: string[];
 }
 
 export interface CartItem {

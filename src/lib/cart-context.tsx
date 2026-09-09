@@ -43,8 +43,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isVipModalOpen, setIsVipModalOpen] = useState(false);
 
   const isSalesAllowed =
-    storeSettings?.storeMode === "PUBLIC_SALE" ||
-    vipSession.isVip;
+    !storeSettings?.panicMode &&
+    (storeSettings?.storeMode === "PUBLIC_SALE" || vipSession.isVip);
 
   const setSelectedVehicle = (v: string | null) => {
     setSelectedVehicleState(v);

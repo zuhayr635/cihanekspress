@@ -11,26 +11,48 @@ export async function GET() {
   try {
     const [orders, products, invites] = await Promise.all([
       prisma.order.findMany({
+        include: {
+          items: {
+            include: {
+              product: { select: { costPrice: true, basePrice: true } },
+            },
+          },
+        },
         orderBy: { createdAt: "desc" },
       }),
       prisma.product.findMany({
-        select: { id: true, title: true, stockQuantity: true, lowStockThreshold: true, basePrice: true },
+        select: { id: true, title: true, stockQuantity: true, lowStockThreshold: true, basePrice: true, costPrice: true },
       }),
       prisma.inviteToken.findMany({
         include: { orders: { select: { id: true, total: true } } },
       }),
     ]);
 
-    const totalRevenue = orders
-      .filter((o) => o.status !== "CANCELLED" && o.status !== "REFUNDED")
-      .reduce((sum, o) => sum + o.total, 0);
+    const completedOrders = orders.filter(
+      (o) => o.status !== "CANCELLED" && o.status !== "REFUNDED"
+    );
+
+    const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+
+    // COGS & Kârlılık Hesabı
+    let totalCost = 0;
+    completedOrders.forEach((order) => {
+      order.items.forEach((item) => {
+        // Eğer ürünün maliyet fiyatı tanımlıysa onu al, yoksa varsayılan %55 maliyet baz al
+        const unitCost = item.product?.costPrice ?? item.price * 0.55;
+        totalCost += unitCost * item.quantity;
+      });
+    });
+
+    const grossProfit = Math.max(0, totalRevenue - totalCost);
+    const profitMargin = totalRevenue > 0 ? ((grossProfit / totalRevenue) * 100).toFixed(1) : "0";
 
     const pendingBankTransfers = orders.filter(
       (o) => o.status === "PENDING_PAYMENT" && o.paymentMethod === "BANK_TRANSFER"
     ).length;
 
     const lowStockProducts = products.filter(
-      (p) => p.stockQuantity <= p.lowStockThreshold
+      (p) => p.stockQuantity <= (p.lowStockThreshold || 3)
     );
 
     const totalInvites = invites.length;
@@ -40,6 +62,9 @@ export async function GET() {
 
     return NextResponse.json({
       totalRevenue,
+      totalCost: Math.round(totalCost),
+      grossProfit: Math.round(grossProfit),
+      profitMargin: `${profitMargin}%`,
       totalOrders: orders.length,
       pendingBankTransfers,
       activeProductsCount: products.length,

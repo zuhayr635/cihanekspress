@@ -73,14 +73,42 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "ID gereklidir" }, { status: 400 });
     }
 
-    await prisma.inviteToken.update({
-      where: { id },
-      data: { status: "REVOKED" },
-    });
+    if (searchParams.get("permanent") === "true") {
+      await prisma.inviteToken.delete({ where: { id } });
+    } else {
+      await prisma.inviteToken.update({
+        where: { id },
+        data: { status: "REVOKED" },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Invite revoke error:", err);
-    return NextResponse.json({ error: "Davetiye iptal edilemedi" }, { status: 500 });
+    return NextResponse.json({ error: "Davetiye işlemi başarısız" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  const session = await getAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+  }
+
+  try {
+    const { id, status } = await req.json();
+    if (!id || !status) {
+      return NextResponse.json({ error: "ID ve status zorunludur" }, { status: 400 });
+    }
+
+    const updated = await prisma.inviteToken.update({
+      where: { id },
+      data: { status },
+    });
+
+    return NextResponse.json({ success: true, invite: updated });
+  } catch (err) {
+    console.error("Invite update error:", err);
+    return NextResponse.json({ error: "Davetiye güncellenemedi" }, { status: 500 });
   }
 }

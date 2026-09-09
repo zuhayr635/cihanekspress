@@ -29,6 +29,9 @@ model StoreSetting {
   ccSecretKey             String   @default("")
   ccMerchantId            String   @default("")
   ccTestMode              Boolean  @default(true)
+  panicMode               Boolean  @default(false) // Zabıta & Denetim Acil Durum Kalkanı
+  usdRate                 Float    @default(38.50) // Manuel Dolar Kuru (USD/TRY)
+  blockedIpsJson          String   @default("[]")  // Şüpheli IP Engelleme Listesi
   updatedAt               DateTime @updatedAt
 }
 
@@ -73,6 +76,7 @@ model Product {
   type             String           @default("SIMPLE") // "SIMPLE" | "VARIABLE" | "DIGITAL" | "BUNDLE"
   basePrice        Float
   salePrice        Float?
+  costPrice        Float?           // Alış / Parça Maliyeti (COGS Kârlılık Hesabı)
   sku              String?
   stockQuantity    Int              @default(10)
   manageStock      Boolean          @default(true)
@@ -83,6 +87,7 @@ model Product {
   weight           Float?
   dimensions       String?
   attributesJson   String?          @default("[]") // JSON: [{ "name": "Beden", "options": ["S", "M", "L"] }]
+  compatibleModels String?          @default("[]") // Uyumlu Modeller: ["TRX-4", "SCX10 III", "Element", "SCX24"]
   categoryId       String?
   category         Category?        @relation(fields: [categoryId], references: [id])
   variants         ProductVariant[]

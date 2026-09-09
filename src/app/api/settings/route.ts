@@ -39,6 +39,15 @@ export async function GET() {
     creditCardEnabled: settings.creditCardEnabled,
     creditCardProvider: settings.creditCardProvider,
     ccTestMode: settings.ccTestMode,
+    panicMode: settings.panicMode,
+    usdRate: settings.usdRate,
+    blockedIps: (() => {
+      try {
+        return JSON.parse(settings.blockedIpsJson || "[]");
+      } catch {
+        return [];
+      }
+    })(),
   });
 }
 
@@ -75,6 +84,9 @@ export async function PUT(req: Request) {
         ccSecretKey: body.ccSecretKey || "",
         ccMerchantId: body.ccMerchantId || "",
         ccTestMode: Boolean(body.ccTestMode),
+        panicMode: Boolean(body.panicMode),
+        usdRate: body.usdRate !== undefined ? Number(body.usdRate) : 38.5,
+        blockedIpsJson: JSON.stringify(body.blockedIps || []),
       },
       update: {
         storeName: body.storeName,
@@ -97,6 +109,9 @@ export async function PUT(req: Request) {
         ccSecretKey: body.ccSecretKey !== undefined ? body.ccSecretKey : undefined,
         ccMerchantId: body.ccMerchantId !== undefined ? body.ccMerchantId : undefined,
         ccTestMode: Boolean(body.ccTestMode),
+        panicMode: body.panicMode !== undefined ? Boolean(body.panicMode) : undefined,
+        usdRate: body.usdRate !== undefined ? Number(body.usdRate) : undefined,
+        blockedIpsJson: body.blockedIps !== undefined ? JSON.stringify(body.blockedIps) : undefined,
       },
     });
 
