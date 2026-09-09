@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
-import { ShoppingBag, Lock, Unlock, KeyRound, Menu, X, ShieldAlert, Cpu } from "lucide-react";
+import { ShoppingBag, Lock, Unlock, KeyRound, Menu, X, ShieldAlert, Cpu, BookOpen } from "lucide-react";
 
 import VehicleSelector from "@/components/VehicleSelector";
 
@@ -103,6 +103,12 @@ export default function Header() {
             <VehicleSelector />
 
             <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
+            <Link href="/rehber" className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 font-bold">
+              <BookOpen className="w-3 h-3" />
+              <span>Nasıl Çalışır?</span>
+            </Link>
+
+            <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
             <Link href="/order-tracking" className="hover:text-amber-400 transition-colors flex items-center gap-1">
               <span>Sipariş Takibi</span>
             </Link>
@@ -136,11 +142,12 @@ export default function Header() {
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               Kurulum Sihirbazı
             </Link>
+            <Link href="/rehber" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-200">
+              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+              Sistem Rehberi
+            </Link>
             <Link href="/#about" className="hover:text-amber-400 transition-colors">
               Özel Yapım Garajı
-            </Link>
-            <Link href="/#contact" className="hover:text-amber-400 transition-colors">
-              Teknik Destek
             </Link>
           </nav>
 
@@ -213,6 +220,13 @@ export default function Header() {
               className="block text-amber-400 font-bold hover:text-amber-300"
             >
               ★ Kurulum Sihirbazı (Rig Builder)
+            </Link>
+            <Link
+              href="/rehber"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-amber-400 font-bold hover:text-amber-300"
+            >
+              📖 Sistem Rehberi (Nasıl Çalışır?)
             </Link>
             <Link
               href="/#about"

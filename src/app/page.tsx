@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import ProductCard from "@/components/ProductCard";
 import CrawlerConfigurator from "@/components/CrawlerConfigurator";
@@ -18,6 +19,7 @@ import {
   Zap,
   Cpu,
   Search,
+  BookOpen,
 } from "lucide-react";
 
 interface ProductItem {
@@ -152,10 +154,18 @@ export default function HomePage() {
               <span>Rig Kurulum Sihirbazı</span>
             </a>
 
+            <Link
+              href="/rehber"
+              className="w-full sm:w-auto px-6 py-4 border border-stone-700 bg-stone-900/90 text-stone-200 hover:text-amber-400 text-xs uppercase tracking-[0.2em] font-bold hover:bg-stone-800 transition-all rounded-xs flex items-center justify-center gap-2"
+            >
+              <BookOpen className="w-4 h-4 text-amber-400" />
+              <span>Sistem Rehberi</span>
+            </Link>
+
             {!vipSession.isVip && storeSettings?.storeMode !== "PUBLIC_SALE" && (
               <a
                 href="#davetiye-bilgi"
-                className="w-full sm:w-auto px-8 py-4 border border-stone-700 bg-stone-900/90 text-white text-xs uppercase tracking-[0.2em] font-bold hover:bg-stone-800 transition-all rounded-xs flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-4 border border-stone-700 bg-stone-900/90 text-white text-xs uppercase tracking-[0.2em] font-bold hover:bg-stone-800 transition-all rounded-xs flex items-center justify-center gap-2"
               >
                 <KeyRound className="w-4 h-4 text-amber-400" />
                 <span>VIP Girişi Yap</span>

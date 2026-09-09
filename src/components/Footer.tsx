@@ -88,6 +88,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/rehber" className="text-amber-400 font-bold hover:text-amber-300 transition-colors">
+                  ★ Sistem Rehberi (Nasıl Çalışır?)
+                </Link>
+              </li>
+              <li>
                 <Link href="/admin" className="hover:text-amber-400 transition-colors">
                   Yönetici Girişi
                 </Link>
