@@ -70,16 +70,16 @@ export default function Header() {
 
   return (
     <>
-      {/* Üst Bilgi Barı (Obsidian Atelier Telemetry Bar) */}
-      <div className="bg-[#060709] text-[#9E978E] text-[10px] tracking-widest uppercase py-2.5 px-4 border-b border-[#1E1B18]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 font-mono">
-          <div className="flex items-center gap-2.5 text-stone-300">
-            <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-amber-400 font-bold tracking-wider">CİHAN ATELIER //</span>
-            <span className="text-stone-400 hidden sm:inline font-light">
+      {/* Üst Bilgi Barı (Daylight Titanium Telemetry Bar) */}
+      <div className="bg-white text-slate-500 text-[10px] tracking-widest uppercase py-2 px-4 border-b border-slate-200 font-mono">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 text-slate-700">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-slate-900 font-bold tracking-wider">CİHAN LAB //</span>
+            <span className="text-slate-500 hidden sm:inline font-normal">
               Özel Mekanik & CNC Hobi Kataloğu — Projeler Birebir Atölye İstişaresiyle Hazırlanır
             </span>
-            <span className="text-stone-400 sm:hidden">Özel Atölye Çalışma Kataloğu</span>
+            <span className="text-slate-500 sm:hidden">Özel Atölye Çalışma Kataloğu</span>
           </div>
 
           <div className="flex items-center gap-3 text-[10px]">
@@ -88,94 +88,94 @@ export default function Header() {
               href={`https://wa.me/${storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"}?text=Merhaba%20Cihan%20Usta,%20at%C3%B6lye%20projeleri%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#25D366] hover:text-emerald-300 transition-colors flex items-center gap-1.5 font-bold"
+              className="text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1 font-bold"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
-              <span>WhatsApp Danışma Hattı</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              <span>WhatsApp Danışma</span>
             </a>
 
-            <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
+            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
             {/* Garaj Araç Seçicisi */}
             <VehicleSelector />
 
-            <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
-            <Link href="/rehber" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-300">
-              <BookOpen className="w-3 h-3 text-amber-500" />
+            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
+            <Link href="/rehber" className="hover:text-orange-600 transition-colors flex items-center gap-1 text-slate-600">
+              <BookOpen className="w-3 h-3 text-orange-600" />
               <span>Rehber</span>
             </Link>
 
-            <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
-            <Link href="/order-tracking" className="hover:text-amber-400 transition-colors text-stone-400">
+            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
+            <Link href="/order-tracking" className="hover:text-orange-600 transition-colors text-slate-600">
               <span>Talep Takibi</span>
             </Link>
 
-            <span className="w-1 h-1 rounded-full bg-stone-700 hidden md:block" />
-            <Link href="/admin" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-500 hover:text-amber-400">
-              <ShieldAlert className="w-3 h-3 text-amber-500" /> Admin
+            <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:block" />
+            <Link href="/admin" className="hover:text-slate-900 transition-colors flex items-center gap-1 text-slate-400 hover:text-slate-700">
+              <ShieldAlert className="w-3 h-3 text-slate-500" /> Admin
             </Link>
           </div>
         </div>
       </div>
 
       {/* Ana Header */}
-      <header className="sticky top-0 z-40 bg-[#08090E]/95 backdrop-blur-md border-b border-[#1E1B18] text-white transition-all">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 text-slate-900 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Mobil Menü Butonu */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-stone-400 hover:text-white focus:outline-none"
+            className="md:hidden p-2 text-slate-600 hover:text-slate-950 focus:outline-none"
             aria-label="Menüyü Aç"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
           {/* Sol Navigasyon Linkleri (Desktop) */}
-          <nav className="hidden md:flex items-center gap-6 text-[11px] tracking-[0.18em] uppercase font-mono font-semibold text-stone-300">
-            <Link href="/" className="hover:text-amber-400 transition-colors">
+          <nav className="hidden md:flex items-center gap-6 text-xs tracking-wide uppercase font-semibold text-slate-600">
+            <Link href="/" className="hover:text-orange-600 transition-colors">
               Katalog
             </Link>
-            <Link href="/#rig-builder" className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <Link href="/#rig-builder" className="text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1.5 font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse" />
               Rig Sihirbazı
             </Link>
             {(isModuleActive("cog_simulator") || isModuleActive("gear_calculator") || isModuleActive("exploded_cad") || isModuleActive("battery_wizard")) && (
-              <Link href="/hesaplayici" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-300">
-                <Wrench className="w-3.5 h-3.5 text-amber-500" />
+              <Link href="/hesaplayici" className="hover:text-orange-600 transition-colors flex items-center gap-1 text-slate-600">
+                <Wrench className="w-3.5 h-3.5 text-orange-600" />
                 Hesaplayıcı
               </Link>
             )}
             {isModuleActive("bundle_deals") && (
-              <Link href="/paketler" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-amber-300">
-                <Sparkles className="w-3 h-3 text-amber-400" />
+              <Link href="/paketler" className="hover:text-orange-600 transition-colors flex items-center gap-1 text-slate-600">
+                <Sparkles className="w-3 h-3 text-orange-600" />
                 Paketler
               </Link>
             )}
             {isModuleActive("trail_map") && (
-              <Link href="/parkurlar" className="hover:text-amber-400 transition-colors flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-400" />
+              <Link href="/parkurlar" className="hover:text-emerald-600 transition-colors flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-emerald-600" />
                 Parkurlar
               </Link>
             )}
             {isModuleActive("rig_of_month") && (
-              <Link href="/topluluk" className="hover:text-amber-400 transition-colors flex items-center gap-1">
-                <Trophy className="w-3 h-3 text-amber-400" />
+              <Link href="/topluluk" className="hover:text-orange-600 transition-colors flex items-center gap-1">
+                <Trophy className="w-3 h-3 text-orange-600" />
                 Topluluk
               </Link>
             )}
           </nav>
 
-          {/* Logo (RC Crawler Rugged Atelier Brand) */}
+          {/* Logo (Clean High-Tech Lab Brand) */}
           <div className="text-center">
             <Link href="/" className="inline-block group">
               <div className="flex items-center justify-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                <h1 className="font-mono text-xl sm:text-2xl tracking-[0.25em] font-black text-white group-hover:text-amber-400 transition-colors uppercase">
-                  CIHANPOL<span className="text-amber-500 font-light">.RC</span>
+                <span className="w-2 h-2 rounded-xs bg-slate-950" />
+                <h1 className="font-mono text-xl sm:text-2xl tracking-widest font-black text-slate-950 group-hover:text-orange-600 transition-colors uppercase">
+                  CIHANPOL<span className="text-orange-600 font-light">.RC</span>
                 </h1>
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span className="w-2 h-2 rounded-xs bg-slate-950" />
               </div>
-              <p className="text-[9px] font-mono tracking-[0.35em] uppercase text-stone-400 mt-0.5">
-                CRAWLER & BESPOKE ATELIER
+              <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-slate-400 mt-0.5">
+                CRAWLER PROTOTYPING LAB
               </p>
             </Link>
           </div>
@@ -186,22 +186,22 @@ export default function Header() {
               href={`https://wa.me/${storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"}?text=Merhaba%20Cihan%20Usta,%20%C3%B6zel%20crawler%20projeleri%20hakk%C4%B1nda%20dan%C4%B1%C5%9Fmak%20istiyorum.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 bg-[#0E1E15] hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/40 text-[10px] font-mono font-black uppercase tracking-wider rounded-xs transition-all shadow-sm"
+              className="hidden lg:inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xs transition-all shadow-xs"
             >
-              <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-white" />
               <span>WhatsApp İstişare</span>
             </a>
 
             {/* Talep Listesi Butonu (Katalog Sepeti) */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative px-3.5 sm:px-4 py-2 text-white hover:text-amber-400 rounded-xs border border-[#2A241F] hover:border-amber-500/70 bg-[#0F1015] transition-all group flex items-center gap-2 font-mono shadow-sm"
+              className="relative px-3.5 sm:px-4 py-2 text-slate-800 hover:text-slate-950 rounded-xs border border-slate-200 hover:border-slate-400 bg-white transition-all group flex items-center gap-2 font-mono shadow-xs"
               aria-label="Talep Listesini Aç"
             >
-              <Wrench className="w-4 h-4 text-amber-500 stroke-[2]" />
+              <Wrench className="w-4 h-4 text-slate-700 stroke-[2]" />
               <span className="text-xs uppercase font-bold tracking-wider">Talep Masası</span>
               {itemCount > 0 && (
-                <span className="bg-amber-500 text-black text-[10px] px-1.5 py-0.5 rounded-xs font-black animate-in zoom-in">
+                <span className="bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded-xs font-black animate-in zoom-in">
                   {itemCount}
                 </span>
               )}
@@ -211,18 +211,18 @@ export default function Header() {
 
         {/* Mobil Açılır Menü */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-stone-800 bg-[#14171E] px-6 py-6 space-y-4 text-[13px] uppercase tracking-wider font-semibold">
+          <div className="md:hidden border-t border-slate-200 bg-white px-6 py-6 space-y-4 text-[13px] uppercase tracking-wider font-semibold text-slate-800">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-stone-200 hover:text-amber-400"
+              className="block text-slate-800 hover:text-orange-600"
             >
               Araçlar & Parçalar
             </Link>
             <Link
               href="/#rig-builder"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-amber-400 font-bold hover:text-amber-300"
+              className="block text-orange-600 font-bold hover:text-orange-700"
             >
               ★ Kurulum Sihirbazı (Rig Builder)
             </Link>
@@ -230,7 +230,7 @@ export default function Header() {
               <Link
                 href="/hesaplayici"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-stone-200 hover:text-amber-400"
+                className="block text-slate-700 hover:text-orange-600"
               >
                 🛠️ Teknik Hesaplayıcılar & CAD
               </Link>
@@ -239,7 +239,7 @@ export default function Header() {
               <Link
                 href="/paketler"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-amber-300 font-bold"
+                className="block text-orange-600 font-bold"
               >
                 ✨ Özel Paket (Bundle) Fırsatları
               </Link>
@@ -248,7 +248,7 @@ export default function Header() {
               <Link
                 href="/parkurlar"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-emerald-400"
+                className="block text-emerald-600 font-bold"
               >
                 📍 Türkiye Kaya Parkurları
               </Link>
@@ -257,7 +257,7 @@ export default function Header() {
               <Link
                 href="/topluluk"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-amber-400"
+                className="block text-orange-600"
               >
                 🏆 Ayın Kaya Canavarı & Oylama
               </Link>
@@ -266,7 +266,7 @@ export default function Header() {
               <Link
                 href="/b2b"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-stone-300 hover:text-amber-400"
+                className="block text-slate-700 hover:text-orange-600"
               >
                 💼 B2B & Kulüp Teklif Masası
               </Link>
@@ -275,7 +275,7 @@ export default function Header() {
               <Link
                 href="/takas"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-stone-300 hover:text-amber-400"
+                className="block text-slate-700 hover:text-orange-600"
               >
                 🔄 Eski Şasini Getir (Takas)
               </Link>
@@ -284,7 +284,7 @@ export default function Header() {
               <Link
                 href="/bakim"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-stone-300 hover:text-amber-400"
+                className="block text-slate-700 hover:text-orange-600"
               >
                 🔧 Periyodik Bakım Servisi
               </Link>
@@ -293,7 +293,7 @@ export default function Header() {
               <Link
                 href="/3d-baski"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-stone-300 hover:text-amber-400"
+                className="block text-slate-700 hover:text-orange-600"
               >
                 🖨️ 3D Baskı Parça Üretimi
               </Link>
@@ -302,7 +302,7 @@ export default function Header() {
               <Link
                 href="/tescil"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-stone-300 hover:text-amber-400"
+                className="block text-slate-700 hover:text-orange-600"
               >
                 🎖️ Şasi Tescil & Doğrulama
               </Link>
@@ -310,7 +310,7 @@ export default function Header() {
             <Link
               href="/rehber"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-stone-300 hover:text-amber-400"
+              className="block text-slate-700 hover:text-orange-600"
             >
               📖 Sistem Rehberi (Nasıl Çalışır?)
             </Link>

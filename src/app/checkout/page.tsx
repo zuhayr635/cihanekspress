@@ -53,17 +53,17 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center space-y-4 text-stone-300">
-        <div className="w-16 h-16 rounded-full bg-[#121622] border border-stone-800 flex items-center justify-center text-amber-400 mx-auto">
+      <div className="max-w-4xl mx-auto px-4 py-24 text-center space-y-4 text-slate-700">
+        <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-orange-600 mx-auto">
           <Wrench className="w-8 h-8" />
         </div>
-        <h2 className="font-mono text-2xl text-white font-bold uppercase">Talep Listeniz Boş</h2>
-        <p className="text-xs text-stone-400 font-mono max-w-sm mx-auto">
+        <h2 className="font-mono text-2xl text-slate-950 font-bold uppercase">Talep Listeniz Boş</h2>
+        <p className="text-xs text-slate-500 font-mono max-w-sm mx-auto">
           Atölye siparişi oluşturabilmek için lütfen katalogdan crawler şasisi veya CNC parça seçiniz.
         </p>
         <Link
           href="/"
-          className="inline-block px-6 py-2.5 bg-amber-500 text-black text-xs font-mono uppercase tracking-widest font-black rounded-xs hover:bg-amber-400 transition-colors"
+          className="inline-block px-6 py-2.5 bg-slate-950 text-white text-xs font-mono uppercase tracking-widest font-black rounded-xs hover:bg-slate-900 transition-colors shadow-sm"
         >
           Kataloğa Dön
         </Link>
@@ -98,12 +98,13 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      const finalItems = [...items];
+      // Sipariş öğelerini hazırla
+      let finalItems = [...items];
       if (includeAssemblyService) {
         finalItems.push({
-          id: `assembly-${Date.now()}`,
-          productId: "service-assembly",
-          title: "CIHANPOL Atölye Montajı, Yağlama ve 65° Eğim Kaya Testi",
+          id: "service-assembly-750",
+          productId: "custom-assembly-service",
+          title: "CIHANPOL Özel RC Crawler Atölye Montaj & CoG Kalibrasyon Hizmeti",
           price: 750,
           quantity: 1,
           image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80",
@@ -116,17 +117,16 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerName,
-          customerEmail: customerEmail || "musteri@cihanekspress.com",
+          customerEmail: customerEmail || undefined,
           customerPhone,
           shippingAddress,
           city,
-          district,
-          customerNote: includeAssemblyService
-            ? `[ATÖLYE MONTAJ TALEBİ] ${customerNote}`.trim()
-            : customerNote,
+          district: district || undefined,
           paymentMethod,
           items: finalItems,
-          couponCode: appliedCoupon,
+          appliedCoupon: appliedCoupon || undefined,
+          discountAmount,
+          customerNote: customerNote || undefined,
         }),
       });
 
@@ -135,7 +135,6 @@ export default function CheckoutPage() {
       if (data.success && data.order) {
         clearCart();
 
-        // Eğer WhatsApp seçildiyse doğrudan WhatsApp'a yönlendir
         if (paymentMethod === "WHATSAPP") {
           const itemList = finalItems
             .map(
@@ -160,42 +159,42 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 text-[#E2E8F0]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 text-slate-900">
       {/* Üst Başlık ve Geri Dön */}
       <div className="mb-8 space-y-2">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-stone-400 hover:text-amber-400 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors font-bold"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Kataloğa Dön</span>
         </Link>
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-[#1E2536] pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-slate-200 pb-4">
           <div>
-            <h1 className="font-mono text-2xl sm:text-3xl text-white font-black uppercase">
+            <h1 className="font-mono text-2xl sm:text-3xl text-slate-950 font-black uppercase">
               Atölye Rezervasyon & Sipariş Masası
             </h1>
-            <p className="text-xs text-stone-400 font-mono mt-1">
+            <p className="text-xs text-slate-500 font-mono mt-1">
               Özel Hobi & Mühendislik Kataloğu — Birebir Atölye İletişimi
             </p>
           </div>
-          <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-mono font-bold uppercase rounded-xs">
+          <span className="px-3 py-1 bg-orange-50 border border-orange-200 text-orange-700 text-[10px] font-mono font-bold uppercase rounded-xs">
             ● Atölye Sipariş Sırası Aktif
           </span>
         </div>
       </div>
 
       {/* HIZLI WHATSAPP BANNER'I */}
-      <div className="mb-8 p-5 bg-gradient-to-r from-[#0D2418] via-[#101F18] to-[#0D151F] border border-[#25D366]/40 rounded-xs flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-[#25D366]/5">
+      <div className="mb-8 p-5 bg-emerald-50 border border-emerald-200 rounded-xs flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xs bg-[#25D366]/20 border border-[#25D366]/40 flex items-center justify-center text-[#25D366] flex-shrink-0">
+          <div className="w-10 h-10 rounded-xs bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 flex-shrink-0">
             <MessageCircle className="w-5 h-5 fill-current" />
           </div>
           <div>
-            <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+            <h3 className="text-xs font-mono font-bold text-slate-950 uppercase tracking-wider">
               En Hızlı Yol: WhatsApp Üzerinden Doğrudan Sipariş
             </h3>
-            <p className="text-[11px] text-stone-300 font-mono mt-0.5">
+            <p className="text-[11px] text-slate-600 font-mono mt-0.5">
               Form doldurmakla uğraşmadan, seçtiğiniz {items.length} kalemi tek tıkla ustanın WhatsApp hattına aktarın.
             </p>
           </div>
@@ -204,9 +203,9 @@ export default function CheckoutPage() {
           href={getDirectWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full md:w-auto px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-black text-xs font-mono font-black uppercase tracking-widest rounded-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-[#25D366]/20"
+          className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono font-black uppercase tracking-widest rounded-xs transition-all flex items-center justify-center gap-2 shadow-sm"
         >
-          <MessageCircle className="w-4 h-4 fill-black text-black" />
+          <MessageCircle className="w-4 h-4 fill-white text-white" />
           <span>WhatsApp ile Gönder</span>
         </a>
       </div>
@@ -216,15 +215,15 @@ export default function CheckoutPage() {
           {/* Sol Kolon: Teslimat ve İletişim Bilgileri (7 Kolon) */}
           <div className="lg:col-span-7 space-y-8">
             {/* 1. İletişim ve Teslimat Bilgileri */}
-            <div className="bg-[#0E1119] border border-[#1E2536] p-6 sm:p-8 rounded-xs space-y-6">
-              <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-amber-400 pb-3 border-b border-stone-800/80 flex items-center justify-between">
+            <div className="bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-xs space-y-6">
+              <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-slate-950 pb-3 border-b border-slate-200 flex items-center justify-between">
                 <span>1. Atölye İletişim & Teslimat Bilgileri</span>
-                <span className="text-[10px] text-stone-500 font-normal">* Zorunlu Alanlar</span>
+                <span className="text-[10px] text-slate-500 font-normal">* Zorunlu Alanlar</span>
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-stone-300 font-bold mb-1.5">
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                     Adınız ve Soyadınız *
                   </label>
                   <input
@@ -233,12 +232,12 @@ export default function CheckoutPage() {
                     placeholder="Örn: Ahmet Kaya"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#080B10] border border-[#232B3D] text-white rounded-xs focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-white border border-slate-300 text-slate-900 rounded-xs focus:outline-none focus:border-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-stone-300 font-bold mb-1.5">
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                     Telefon Numarası (WhatsApp) *
                   </label>
                   <input
@@ -247,12 +246,12 @@ export default function CheckoutPage() {
                     placeholder="0532 000 0000"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#080B10] border border-[#232B3D] text-white rounded-xs focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-white border border-slate-300 text-slate-900 rounded-xs focus:outline-none focus:border-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-stone-300 font-bold mb-1.5">
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                     E-Posta Adresi (Opsiyonel)
                   </label>
                   <input
@@ -260,12 +259,12 @@ export default function CheckoutPage() {
                     placeholder="ahmet@example.com"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#080B10] border border-[#232B3D] text-white rounded-xs focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-white border border-slate-300 text-slate-900 rounded-xs focus:outline-none focus:border-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-stone-300 font-bold mb-1.5">
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                     Şehir (İl) *
                   </label>
                   <input
@@ -274,12 +273,12 @@ export default function CheckoutPage() {
                     placeholder="İstanbul"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#080B10] border border-[#232B3D] text-white rounded-xs focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-white border border-slate-300 text-slate-900 rounded-xs focus:outline-none focus:border-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-stone-300 font-bold mb-1.5">
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                     İlçe (Opsiyonel)
                   </label>
                   <input
@@ -287,12 +286,12 @@ export default function CheckoutPage() {
                     placeholder="Kadıköy"
                     value={district}
                     onChange={(e) => setDistrict(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#080B10] border border-[#232B3D] text-white rounded-xs focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-white border border-slate-300 text-slate-900 rounded-xs focus:outline-none focus:border-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-stone-300 font-bold mb-1.5">
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                     Açık Teslimat Adresi *
                   </label>
                   <textarea
@@ -301,12 +300,12 @@ export default function CheckoutPage() {
                     placeholder="Mahalle, Cadde, Sokak, No, Daire veya Atölyeden Elden Teslim Notu..."
                     value={shippingAddress}
                     onChange={(e) => setShippingAddress(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#080B10] border border-[#232B3D] text-white rounded-xs focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-white border border-slate-300 text-slate-900 rounded-xs focus:outline-none focus:border-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-stone-300 font-bold mb-1.5">
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                     Atölye Notu (Araç / Şasi / Dişli Uyumluluk İstekleri)
                   </label>
                   <input
@@ -314,15 +313,15 @@ export default function CheckoutPage() {
                     placeholder="Örn: TRX-4 Defender aracıma takılacak, ön portal pirinç ağırlık öncelikli."
                     value={customerNote}
                     onChange={(e) => setCustomerNote(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#080B10] border border-[#232B3D] text-white rounded-xs focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono bg-white border border-slate-300 text-slate-900 rounded-xs focus:outline-none focus:border-slate-900 placeholder:text-slate-400"
                   />
                 </div>
               </div>
             </div>
 
             {/* 2. Tercih Edilen Sipariş İletişim Metodu */}
-            <div className="bg-[#0E1119] border border-[#1E2536] p-6 sm:p-8 rounded-xs space-y-4">
-              <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-amber-400 pb-3 border-b border-stone-800/80">
+            <div className="bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-xs space-y-4">
+              <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-slate-950 pb-3 border-b border-slate-200">
                 2. Tercih Edilen Atölye İletişim Şekli
               </h2>
 
@@ -331,8 +330,8 @@ export default function CheckoutPage() {
                 <label
                   className={`block p-4 border rounded-xs cursor-pointer transition-all ${
                     paymentMethod === "WHATSAPP"
-                      ? "border-[#25D366] bg-[#0E1E17]"
-                      : "border-[#1E2536] bg-[#080B10] hover:border-stone-700"
+                      ? "border-emerald-600 bg-emerald-50/60 shadow-xs"
+                      : "border-slate-200 bg-white hover:border-slate-400"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -341,14 +340,14 @@ export default function CheckoutPage() {
                       name="payment"
                       checked={paymentMethod === "WHATSAPP"}
                       onChange={() => setPaymentMethod("WHATSAPP")}
-                      className="accent-[#25D366]"
+                      className="accent-emerald-600"
                     />
-                    <MessageCircle className="w-5 h-5 text-[#25D366] fill-[#25D366]" />
+                    <MessageCircle className="w-5 h-5 text-emerald-600 fill-emerald-600" />
                     <div>
-                      <span className="text-xs font-mono font-bold text-white block uppercase">
+                      <span className="text-xs font-mono font-bold text-slate-950 block uppercase">
                         WhatsApp Üzerinden Birebir İstişare & Teyit (Tavsiye Edilen)
                       </span>
-                      <span className="text-[11px] font-mono text-stone-400">
+                      <span className="text-[11px] font-mono text-slate-600">
                         Talebiniz kaydedilir ve WhatsApp üzerinden usta ile doğrudan görüşebilirsiniz.
                       </span>
                     </div>
@@ -359,8 +358,8 @@ export default function CheckoutPage() {
                 <label
                   className={`block p-4 border rounded-xs cursor-pointer transition-all ${
                     paymentMethod === "BANK_TRANSFER"
-                      ? "border-amber-400 bg-[#161D2A]"
-                      : "border-[#1E2536] bg-[#080B10] hover:border-stone-700"
+                      ? "border-slate-950 bg-slate-100 shadow-xs"
+                      : "border-slate-200 bg-white hover:border-slate-400"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -369,14 +368,14 @@ export default function CheckoutPage() {
                       name="payment"
                       checked={paymentMethod === "BANK_TRANSFER"}
                       onChange={() => setPaymentMethod("BANK_TRANSFER")}
-                      className="accent-amber-500"
+                      className="accent-slate-900"
                     />
-                    <Building2 className="w-5 h-5 text-amber-400" />
+                    <Building2 className="w-5 h-5 text-slate-900" />
                     <div>
-                      <span className="text-xs font-mono font-bold text-white block uppercase">
+                      <span className="text-xs font-mono font-bold text-slate-950 block uppercase">
                         Banka Havalesi / EFT / Atölyede Elden Teslimat
                       </span>
-                      <span className="text-[11px] font-mono text-stone-400">
+                      <span className="text-[11px] font-mono text-slate-600">
                         Sipariş sonrası atölye IBAN bilgisi gösterilir ve sipariş teyidi için aranacaksınız.
                       </span>
                     </div>
@@ -388,26 +387,26 @@ export default function CheckoutPage() {
 
           {/* Sağ Kolon: Sepet Özeti & Atölye Montaj Seçeneği (5 Kolon) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-[#0E1119] border border-[#1E2536] p-6 rounded-xs space-y-6 sticky top-28 shadow-2xl">
-              <h3 className="text-xs font-mono uppercase tracking-widest font-bold text-amber-400 pb-3 border-b border-stone-800/80">
+            <div className="bg-white border border-slate-200 p-6 rounded-xs space-y-6 sticky top-28 shadow-lg">
+              <h3 className="text-xs font-mono uppercase tracking-widest font-bold text-slate-950 pb-3 border-b border-slate-200">
                 Talep Özeti ({items.length} Kalem)
               </h3>
 
               {/* Ürün Listesi */}
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1 divide-y divide-[#1A2130]">
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1 divide-y divide-slate-100">
                 {items.map((item) => (
                   <div key={item.id} className="pt-3 first:pt-0 flex gap-3">
-                    <div className="relative w-12 h-16 bg-[#080B10] rounded-xs overflow-hidden flex-shrink-0 border border-stone-800">
+                    <div className="relative w-12 h-16 bg-slate-50 rounded-xs overflow-hidden flex-shrink-0 border border-slate-200">
                       <Image src={item.image} alt={item.title} fill className="object-cover" />
                     </div>
                     <div className="flex-1 text-xs font-mono">
-                      <h4 className="font-bold text-white line-clamp-1">{item.title}</h4>
+                      <h4 className="font-bold text-slate-950 line-clamp-1">{item.title}</h4>
                       {item.variantName && (
-                        <p className="text-amber-400/80 text-[10px] mt-0.5">{item.variantName}</p>
+                        <p className="text-orange-600 text-[10px] mt-0.5 font-bold">{item.variantName}</p>
                       )}
                       <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-stone-400">{item.quantity} Adet</span>
-                        <span className="font-bold text-amber-400">
+                        <span className="text-slate-500">{item.quantity} Adet</span>
+                        <span className="font-bold text-slate-950">
                           {(item.price * item.quantity).toLocaleString("tr-TR")} ₺
                         </span>
                       </div>
@@ -417,19 +416,19 @@ export default function CheckoutPage() {
               </div>
 
               {/* ATÖLYE MONTAJ VE TEST HİZMETİ OPSİYONU */}
-              <div className="p-3.5 bg-[#121622] border border-amber-500/30 rounded-xs space-y-2">
+              <div className="p-3.5 bg-orange-50 border border-orange-200 rounded-xs space-y-2">
                 <label className="flex items-start gap-2.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={includeAssemblyService}
                     onChange={(e) => setIncludeAssemblyService(e.target.checked)}
-                    className="mt-0.5 accent-amber-500 w-4 h-4 rounded-xs"
+                    className="mt-0.5 accent-orange-600 w-4 h-4 rounded-xs"
                   />
                   <div className="text-xs font-mono">
-                    <span className="font-bold text-white block">
+                    <span className="font-bold text-slate-950 block">
                       CIHANPOL Atölye Montajı (+750 ₺)
                     </span>
-                    <span className="text-[10px] text-stone-400 font-light leading-snug block mt-0.5">
+                    <span className="text-[10px] text-slate-600 font-normal leading-snug block mt-0.5">
                       Pirinç parçalar, şaftlar ve motor atölyemizde toplanır, CoG dengelenir ve rampa testinden geçirilir.
                     </span>
                   </div>
@@ -437,14 +436,14 @@ export default function CheckoutPage() {
               </div>
 
               {/* Hesap Dökümü */}
-              <div className="border-t border-[#1E2536] pt-4 space-y-2 text-xs font-mono">
-                <div className="flex justify-between text-stone-400">
+              <div className="border-t border-slate-200 pt-4 space-y-2 text-xs font-mono">
+                <div className="flex justify-between text-slate-600">
                   <span>Parça / Malzeme Bedeli</span>
-                  <span className="text-white font-bold">{subtotal.toLocaleString("tr-TR")} ₺</span>
+                  <span className="text-slate-950 font-bold">{subtotal.toLocaleString("tr-TR")} ₺</span>
                 </div>
 
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-amber-400 font-bold">
+                  <div className="flex justify-between text-orange-600 font-bold">
                     <span>
                       {discountPercent > 0 ? `Kulüp İndirimi (%${discountPercent})` : "İndirim"}
                     </span>
@@ -453,30 +452,30 @@ export default function CheckoutPage() {
                 )}
 
                 {includeAssemblyService && (
-                  <div className="flex justify-between text-amber-400 font-bold">
+                  <div className="flex justify-between text-orange-600 font-bold">
                     <span>Özel Montaj Hizmeti</span>
                     <span>+750 ₺</span>
                   </div>
                 )}
 
-                <div className="flex justify-between text-stone-400">
+                <div className="flex justify-between text-slate-600">
                   <span>Atölye Teslimat & Kargo</span>
-                  <span className="text-emerald-400 font-bold">
+                  <span className="text-emerald-700 font-bold">
                     {shippingFee === 0 ? "Atölye İkramı (Ücretsiz)" : `${shippingFee} ₺`}
                   </span>
                 </div>
 
-                <div className="border-t border-[#1E2536] pt-3 flex justify-between items-baseline text-sm font-bold text-white">
-                  <span className="text-amber-400">Atölye Referans Toplamı</span>
-                  <span className="font-mono text-xl font-black text-amber-400">
+                <div className="border-t border-slate-200 pt-3 flex justify-between items-baseline text-sm font-bold text-slate-950">
+                  <span className="text-slate-950">Atölye Referans Toplamı</span>
+                  <span className="font-mono text-xl font-black text-slate-950">
                     {finalOrderTotal.toLocaleString("tr-TR")} ₺
                   </span>
                 </div>
               </div>
 
               {errorMessage && (
-                <div className="p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono rounded-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-mono rounded-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
                   <span>{errorMessage}</span>
                 </div>
               )}
@@ -484,21 +483,21 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black text-xs font-mono uppercase tracking-widest font-black rounded-xs transition-all flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 disabled:opacity-50"
+                className="w-full py-4 bg-slate-950 hover:bg-slate-900 text-white text-xs font-mono uppercase tracking-widest font-black rounded-xs transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <span>Talebiniz İletiliyor...</span>
                 ) : (
                   <>
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     <span>Atölye Sipariş Talebini Gönder</span>
                   </>
                 )}
               </button>
 
               {/* Hukuki Hobi Kalkanı Notu */}
-              <div className="p-3 bg-[#080B10] border border-stone-800 rounded-xs text-[10px] font-mono text-stone-400 leading-normal flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xs text-[10px] font-mono text-slate-600 leading-normal flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
                 <span>
                   Bu talep formu çevrim içi perakende satış değildir. Atölye parça tedariği ve özel montaj rezervasyonudur. Usta ile WhatsApp veya telefon üzerinden birebir teyit edilir.
                 </span>

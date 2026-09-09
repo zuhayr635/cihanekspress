@@ -69,10 +69,10 @@ export default function BundlesPage() {
   if (!isModuleActive("bundle_deals")) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="text-center max-w-md bg-[#11141D] p-8 border border-[#1E2536] rounded">
-          <Package className="w-12 h-12 text-amber-400 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-white">Paket İndirim Motoru Kapalıdır</h2>
-          <p className="text-xs text-stone-400 mt-2">Bu modül yönetici tarafından geçici olarak durdurulmuştur.</p>
+        <div className="text-center max-w-md bg-white p-8 border border-slate-200 rounded-xs shadow-sm">
+          <Package className="w-12 h-12 text-orange-600 mx-auto mb-3" />
+          <h2 className="text-xl font-bold text-slate-950 font-mono">Paket İndirim Motoru Kapalıdır</h2>
+          <p className="text-xs text-slate-500 mt-2">Bu modül yönetici tarafından geçici olarak durdurulmuştur.</p>
         </div>
       </div>
     );
@@ -99,16 +99,16 @@ export default function BundlesPage() {
   };
 
   return (
-    <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 text-slate-900">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-xs uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xs bg-orange-50 border border-orange-200 text-orange-700 font-mono text-xs uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Atölye Kombinasyon Motoru</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight uppercase">
+          <h1 className="text-3xl sm:text-4xl font-black font-mono text-slate-950 tracking-tight uppercase">
             Özel RC Crawler Paket (Bundle) Fırsatları
           </h1>
-          <p className="text-sm text-stone-400 mt-3 leading-relaxed">
+          <p className="text-sm text-slate-600 mt-3 leading-relaxed font-normal">
             Mühendislerimiz tarafından birbirleriyle %100 mekanik ve elektriksel uyum sağlayacak şekilde eşleştirilmiş özel kitler. Parçaları tek tek almak yerine paket olarak seçin, anında %15&apos;e varan indirim kazanın.
           </p>
         </div>
@@ -122,37 +122,37 @@ export default function BundlesPage() {
             return (
               <div
                 key={bundle.id}
-                className="bg-[#10141E] border border-[#1E2536] hover:border-amber-500/50 rounded-lg p-6 flex flex-col justify-between transition-all duration-300 relative group shadow-xl"
+                className="bg-white border border-slate-200 hover:border-slate-400 rounded-xs p-6 flex flex-col justify-between transition-all duration-300 relative group shadow-sm"
               >
                 {/* Rozet */}
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-xs bg-slate-100 text-slate-800 border border-slate-200">
                     {bundle.tag}
                   </span>
-                  <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/40">
+                  <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-xs border border-emerald-200">
                     %{bundle.discountRate} TASARRUF
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-white font-mono leading-snug">
+                  <h3 className="text-lg font-bold text-slate-950 font-mono leading-snug">
                     {bundle.name}
                   </h3>
-                  <p className="text-xs text-stone-400 mt-2 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                     {bundle.description}
                   </p>
 
                   {/* Paket İçeriği */}
-                  <div className="mt-5 space-y-2.5 font-mono text-xs border-t border-b border-[#1A2233] py-4">
-                    <span className="text-[10px] text-stone-400 uppercase tracking-wider block font-bold">
+                  <div className="mt-5 space-y-2.5 font-mono text-xs border-t border-b border-slate-100 py-4">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">
                       Pakete Dahil Parçalar:
                     </span>
                     {bundle.items.map((item, idx) => (
                       <div key={idx} className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <Check className="w-3.5 h-3.5 text-orange-600 flex-shrink-0 mt-0.5" />
                         <div>
-                          <span className="text-stone-200 font-semibold">{item.name}</span>
-                          <span className="block text-[10px] text-stone-400">{item.desc}</span>
+                          <span className="text-slate-900 font-semibold">{item.name}</span>
+                          <span className="block text-[10px] text-slate-500">{item.desc}</span>
                         </div>
                       </div>
                     ))}
@@ -162,14 +162,14 @@ export default function BundlesPage() {
                 {/* Fiyat ve Sepet Butonu */}
                 <div className="mt-6 pt-4">
                   <div className="flex items-baseline justify-between mb-3 font-mono">
-                    <span className="text-xs text-stone-400 line-through">
+                    <span className="text-xs text-slate-400 line-through">
                       {bundle.originalPrice.toLocaleString("tr-TR")} ₺
                     </span>
                     <div className="text-right">
-                      <span className="text-2xl font-bold text-amber-400">
+                      <span className="text-2xl font-black text-slate-950">
                         {bundle.bundlePrice.toLocaleString("tr-TR")} ₺
                       </span>
-                      <span className="block text-[10px] text-emerald-400 font-semibold">
+                      <span className="block text-[10px] text-emerald-700 font-semibold">
                         ({savings.toLocaleString("tr-TR")} ₺ Cebinizde Kalır)
                       </span>
                     </div>
@@ -177,10 +177,10 @@ export default function BundlesPage() {
 
                   <button
                     onClick={() => handleAddBundle(bundle)}
-                    className={`w-full py-3 rounded font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                    className={`w-full py-3 rounded-xs font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${
                       isAdded
-                        ? "bg-emerald-500 text-black"
-                        : "bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                        ? "bg-emerald-600 text-white"
+                        : "bg-slate-950 hover:bg-slate-900 text-white"
                     }`}
                   >
                     {isAdded ? (

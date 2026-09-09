@@ -78,15 +78,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const directWhatsAppUrl = `https://wa.me/${phone}?text=${encodeURIComponent(whatsAppMsg)}`;
 
   return (
-    <div className="group relative flex flex-col bg-[#0A0C10] border border-[#1E1B18] hover:border-amber-600/50 rounded-xs overflow-hidden transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.8)]">
+    <div className="group relative flex flex-col bg-white border border-slate-200 hover:border-slate-400 rounded-xs overflow-hidden transition-all duration-300 hover:shadow-md">
       {/* Görsel Alanı */}
       <Link
         href={`/products/${product.slug}`}
-        className="relative aspect-4/3 sm:aspect-3/4 w-full bg-[#060709] overflow-hidden block border-b border-[#1E1B18]"
+        className="relative aspect-4/3 sm:aspect-3/4 w-full bg-slate-50 overflow-hidden block border-b border-slate-100"
       >
-        {/* Arka plan blueprint ızgarası */}
-        <div className="absolute inset-0 bg-blueprint-grid opacity-25 z-0 pointer-events-none" />
-
         <Image
           src={mainImage}
           alt={product.title}
@@ -95,50 +92,47 @@ export default function ProductCard({ product }: ProductCardProps) {
           className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out z-10"
         />
 
-        {/* Karartma Gradyanı */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0C10] via-transparent to-black/40 z-15 pointer-events-none" />
-
-        {/* Üst Rozetler (Teknik Telemetri Formatında) */}
+        {/* Üst Rozetler */}
         <div className="absolute top-3 left-3 z-20 flex flex-wrap gap-1.5 max-w-[85%]">
-          <span className="px-2 py-0.5 bg-black/90 border border-amber-500/60 text-amber-400 text-[9px] font-mono tracking-wider uppercase font-black rounded-xs backdrop-blur-md shadow-sm">
+          <span className="px-2 py-0.5 bg-slate-950 text-white text-[9px] font-mono tracking-wider uppercase font-bold rounded-xs shadow-xs">
             {scaleTag}
           </span>
 
-          <span className="px-2 py-0.5 bg-[#151A26]/90 border border-stone-700 text-stone-300 text-[9px] font-mono tracking-wider uppercase rounded-xs backdrop-blur-md">
+          <span className="px-2 py-0.5 bg-white/95 border border-slate-200 text-slate-700 text-[9px] font-mono tracking-wider uppercase rounded-xs">
             {fitmentTag}
           </span>
 
           {isBrass && (
-            <span className="px-2 py-0.5 bg-gradient-to-r from-amber-600 to-amber-700 text-black text-[9px] font-mono font-black uppercase rounded-xs shadow-xs">
+            <span className="px-2 py-0.5 bg-orange-600 text-white text-[9px] font-mono font-bold uppercase rounded-xs shadow-xs">
               +AĞIR PİRİNÇ CNC
             </span>
           )}
 
           {vipSession.isVip && vipDiscount > 0 && (
-            <span className="px-2 py-0.5 bg-amber-400 text-black text-[9px] font-mono tracking-wider uppercase font-black rounded-xs">
+            <span className="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-mono tracking-wider uppercase font-bold rounded-xs">
               -%{vipDiscount} KULÜP
             </span>
           )}
         </div>
 
         {/* Sağ Alt Atölye Durum Rozeti */}
-        <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-black/85 border border-white/10 text-stone-300 text-[9px] font-mono tracking-wider uppercase rounded-xs flex items-center gap-1.5 backdrop-blur-md">
-          <Wrench className="w-3 h-3 text-amber-400" />
-          <span>Atölye Üretimi</span>
+        <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-white/90 border border-slate-200 text-slate-700 text-[9px] font-mono tracking-wider uppercase rounded-xs flex items-center gap-1.5 backdrop-blur-xs">
+          <Wrench className="w-3 h-3 text-orange-600" />
+          <span>Atölye İmalatı</span>
         </div>
       </Link>
 
       {/* Ürün Bilgisi */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 bg-[#0A0C10]">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 bg-white">
         <div>
           {/* Kategori ve SKU */}
-          <div className="flex items-center justify-between text-[10px] font-mono text-stone-400 border-b border-[#1E1B18] pb-2 mb-2">
-            <span className="text-amber-500 font-bold uppercase tracking-wider flex items-center gap-1">
-              <Cpu className="w-3 h-3 text-amber-500" />
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 border-b border-slate-100 pb-2 mb-2">
+            <span className="text-orange-600 font-bold uppercase tracking-wider flex items-center gap-1">
+              <Cpu className="w-3 h-3 text-orange-600" />
               {product.category?.name?.split(" ")[0] || "CRAWLER PROJE"}
             </span>
             {product.sku && (
-              <span className="text-stone-500 tracking-wider">#{product.sku}</span>
+              <span className="text-slate-400 tracking-wider">#{product.sku}</span>
             )}
           </div>
 
@@ -146,11 +140,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           {selectedVehicle && (
             <div className="mb-2">
               {isVehicleCompatible ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-950/80 border border-emerald-600/70 text-emerald-300 text-[9px] font-mono font-bold uppercase rounded-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-300 text-emerald-800 text-[9px] font-mono font-bold uppercase rounded-xs">
                   ✓ {selectedVehicle} ile Uyumlu
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-950/80 border border-amber-600/70 text-amber-300 text-[9px] font-mono font-bold uppercase rounded-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 text-[9px] font-mono font-bold uppercase rounded-xs">
                   ⚠️ {selectedVehicle} İçin Uyumsuz
                 </span>
               )}
@@ -158,31 +152,31 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
 
           <Link href={`/products/${product.slug}`} className="block">
-            <h3 className="font-mono text-xs sm:text-sm text-white font-bold group-hover:text-amber-400 transition-colors line-clamp-2 uppercase leading-snug">
+            <h3 className="font-mono text-xs sm:text-sm text-slate-900 font-bold group-hover:text-orange-600 transition-colors line-clamp-2 uppercase leading-snug">
               {product.title}
             </h3>
           </Link>
 
           {product.shortDescription && (
-            <p className="text-[11px] text-stone-400 mt-2 line-clamp-2 leading-relaxed font-light">
+            <p className="text-[11px] text-slate-500 mt-2 line-clamp-2 leading-relaxed font-normal">
               {product.shortDescription}
             </p>
           )}
         </div>
 
         {/* Fiyat ve Hızlı Sipariş / İnceleme Aksiyonları */}
-        <div className="pt-3 border-t border-[#1E1B18] space-y-3">
+        <div className="pt-3 border-t border-slate-100 space-y-3">
           <div className="flex items-end justify-between">
             <div className="flex flex-col">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">
                 Atölye Referans Değeri
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-sm sm:text-base font-mono font-black text-amber-400">
+                <span className="text-sm sm:text-base font-mono font-black text-slate-950">
                   {finalPrice.toLocaleString("tr-TR")} ₺
                 </span>
                 {(vipDiscount > 0 || product.salePrice) && (
-                  <span className="text-[10px] text-stone-500 line-through font-mono">
+                  <span className="text-[10px] text-slate-400 line-through font-mono">
                     {product.basePrice.toLocaleString("tr-TR")} ₺
                   </span>
                 )}
@@ -191,39 +185,39 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             <Link
               href={`/products/${product.slug}`}
-              className="inline-flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-stone-400 hover:text-amber-400 transition-colors"
+              className="inline-flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 hover:text-orange-600 transition-colors"
             >
               <span>Detaylar</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-orange-600" />
             </Link>
           </div>
 
-          {/* İkili Buton: 1. WhatsApp Hızlı Sipariş (Öncelikli), 2. Detaylı İncele */}
+          {/* İkili Buton: 1. WhatsApp Hızlı Sipariş, 2. Detaylı İncele */}
           <div className="grid grid-cols-2 gap-2 pt-1">
             <a
               href={directWhatsAppUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#0E1E15] hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/40 hover:border-[#25D366] text-[10px] font-mono uppercase font-black tracking-wider rounded-xs transition-all shadow-sm"
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white border border-emerald-300 hover:border-emerald-600 text-[10px] font-mono uppercase font-bold tracking-wider rounded-xs transition-all shadow-xs"
               title="WhatsApp üzerinden atölye ile görüşün"
             >
               <MessageCircle className="w-3.5 h-3.5 fill-current" />
-              <span>WhatsApp Sipariş</span>
+              <span>WhatsApp</span>
             </a>
 
             <Link
               href={`/products/${product.slug}`}
-              className="w-full flex items-center justify-center gap-1 py-2.5 bg-[#0E0F14] hover:bg-amber-600 text-stone-300 hover:text-black border border-[#1E1B18] hover:border-amber-500 text-[10px] font-mono uppercase font-bold tracking-wider rounded-xs transition-all"
+              className="w-full flex items-center justify-center gap-1 py-2.5 bg-slate-950 hover:bg-slate-800 text-white border border-slate-950 text-[10px] font-mono uppercase font-bold tracking-wider rounded-xs transition-all shadow-xs"
             >
-              <span>Projeyi İncele</span>
+              <span>İncele</span>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Alt İnce Aksan Çizgisi */}
-      <div className="h-0.5 w-full bg-[#14161F] flex">
-        <div className="w-1/3 h-full bg-amber-600/50 group-hover:w-full transition-all duration-500" />
+      {/* Alt İnce Çizgi */}
+      <div className="h-0.5 w-full bg-slate-100 flex">
+        <div className="w-1/4 h-full bg-orange-600 group-hover:w-full transition-all duration-500" />
       </div>
     </div>
   );
