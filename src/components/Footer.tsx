@@ -83,13 +83,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/" className="hover:text-amber-400 transition-colors">
-                  Beadlock Jant & Lastik
+                <Link href="/paketler" className="text-amber-300 font-bold hover:text-amber-200 transition-colors">
+                  ★ Özel Paket Fırsatları
                 </Link>
               </li>
               <li>
                 <Link href="/rehber" className="text-amber-400 font-bold hover:text-amber-300 transition-colors">
-                  ★ Sistem Rehberi (Nasıl Çalışır?)
+                  📖 Sistem Rehberi
                 </Link>
               </li>
               <li>
@@ -101,10 +101,49 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs uppercase tracking-widest font-bold text-white mb-4">Ödeme & Gönderim</h4>
-            <p className="text-xs text-stone-400 leading-relaxed">
-              Kurumsal IBAN havale/EFT, sipariş kodu ile dekont yükleme, WhatsApp hızlı sipariş ve 256-bit SSL korumalı 3D Secure kredi kartı altyapıları desteklenmektedir.
-            </p>
+            <h4 className="text-xs uppercase tracking-widest font-bold text-white mb-4">Mühendislik & Topluluk</h4>
+            <ul className="space-y-2 text-xs text-stone-400">
+              <li>
+                <Link href="/hesaplayici" className="hover:text-amber-400 transition-colors">
+                  🛠️ CoG & Dişli Hesaplayıcı
+                </Link>
+              </li>
+              <li>
+                <Link href="/parkurlar" className="hover:text-amber-400 transition-colors">
+                  📍 Türkiye Kaya Parkurları
+                </Link>
+              </li>
+              <li>
+                <Link href="/topluluk" className="hover:text-amber-400 transition-colors">
+                  🏆 Ayın Kaya Canavarı
+                </Link>
+              </li>
+              <li>
+                <Link href="/takas" className="hover:text-amber-400 transition-colors">
+                  🔄 Eski Şasini Getir (Takas)
+                </Link>
+              </li>
+              <li>
+                <Link href="/b2b" className="hover:text-amber-400 transition-colors">
+                  💼 B2B & Kulüp Masası
+                </Link>
+              </li>
+              <li>
+                <Link href="/bakim" className="hover:text-amber-400 transition-colors">
+                  🔧 Sezonluk Bakım Paketleri
+                </Link>
+              </li>
+              <li>
+                <Link href="/3d-baski" className="hover:text-amber-400 transition-colors">
+                  🖨️ 3D Baskı Parça Üretimi
+                </Link>
+              </li>
+              <li>
+                <Link href="/tescil" className="hover:text-amber-400 transition-colors">
+                  🎖️ Şasi Tescil & Seri No
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
 

@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
-import { ShoppingBag, Lock, Unlock, KeyRound, Menu, X, ShieldAlert, Cpu, BookOpen } from "lucide-react";
+import { useModules } from "@/lib/useModules";
+import { ShoppingBag, Lock, Unlock, KeyRound, Menu, X, ShieldAlert, Cpu, BookOpen, Wrench, Sparkles, MapPin, Trophy } from "lucide-react";
 
 import VehicleSelector from "@/components/VehicleSelector";
 
 export default function Header() {
   const { itemCount, setIsCartOpen, vipSession, storeSettings } = useCart();
+  const { isModuleActive } = useModules();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [vipModalOpen, setVipModalOpen] = useState(false);
   const [tokenInput, setTokenInput] = useState("");
@@ -134,20 +136,41 @@ export default function Header() {
           </button>
 
           {/* Sol Navigasyon Linkleri (Desktop) */}
-          <nav className="hidden md:flex items-center gap-7 text-[12px] tracking-[0.15em] uppercase font-semibold text-stone-300">
+          <nav className="hidden md:flex items-center gap-5 text-[11px] tracking-[0.12em] uppercase font-semibold text-stone-300">
             <Link href="/" className="hover:text-amber-400 transition-colors">
-              Araçlar & Parçalar
+              Katalog
             </Link>
             <Link href="/#rig-builder" className="text-amber-400 font-bold hover:text-amber-300 transition-colors flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Kurulum Sihirbazı
+              Sihirbaz
             </Link>
-            <Link href="/rehber" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-200">
+            {(isModuleActive("cog_simulator") || isModuleActive("gear_calculator") || isModuleActive("exploded_cad") || isModuleActive("battery_wizard")) && (
+              <Link href="/hesaplayici" className="hover:text-amber-400 transition-colors flex items-center gap-1">
+                <Wrench className="w-3.5 h-3.5 text-amber-400" />
+                Hesaplayıcı
+              </Link>
+            )}
+            {isModuleActive("bundle_deals") && (
+              <Link href="/paketler" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-amber-300 font-bold">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                Paketler
+              </Link>
+            )}
+            {isModuleActive("trail_map") && (
+              <Link href="/parkurlar" className="hover:text-amber-400 transition-colors flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-emerald-400" />
+                Parkurlar
+              </Link>
+            )}
+            {isModuleActive("rig_of_month") && (
+              <Link href="/topluluk" className="hover:text-amber-400 transition-colors flex items-center gap-1">
+                <Trophy className="w-3 h-3 text-amber-400" />
+                Topluluk
+              </Link>
+            )}
+            <Link href="/rehber" className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-300">
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-              Sistem Rehberi
-            </Link>
-            <Link href="/#about" className="hover:text-amber-400 transition-colors">
-              Özel Yapım Garajı
+              Rehber
             </Link>
           </nav>
 
@@ -221,26 +244,93 @@ export default function Header() {
             >
               ★ Kurulum Sihirbazı (Rig Builder)
             </Link>
+            {(isModuleActive("cog_simulator") || isModuleActive("gear_calculator") || isModuleActive("exploded_cad") || isModuleActive("battery_wizard")) && (
+              <Link
+                href="/hesaplayici"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-stone-200 hover:text-amber-400"
+              >
+                🛠️ Teknik Hesaplayıcılar & CAD
+              </Link>
+            )}
+            {isModuleActive("bundle_deals") && (
+              <Link
+                href="/paketler"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-amber-300 font-bold"
+              >
+                ✨ Özel Paket (Bundle) Fırsatları
+              </Link>
+            )}
+            {isModuleActive("trail_map") && (
+              <Link
+                href="/parkurlar"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-emerald-400"
+              >
+                📍 Türkiye Kaya Parkurları
+              </Link>
+            )}
+            {isModuleActive("rig_of_month") && (
+              <Link
+                href="/topluluk"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-amber-400"
+              >
+                🏆 Ayın Kaya Canavarı & Oylama
+              </Link>
+            )}
+            {isModuleActive("b2b_quotes") && (
+              <Link
+                href="/b2b"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-stone-300 hover:text-amber-400"
+              >
+                💼 B2B & Kulüp Teklif Masası
+              </Link>
+            )}
+            {isModuleActive("trade_in") && (
+              <Link
+                href="/takas"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-stone-300 hover:text-amber-400"
+              >
+                🔄 Eski Şasini Getir (Takas)
+              </Link>
+            )}
+            {isModuleActive("maintenance_packs") && (
+              <Link
+                href="/bakim"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-stone-300 hover:text-amber-400"
+              >
+                🔧 Periyodik Bakım Servisi
+              </Link>
+            )}
+            {isModuleActive("print3d_demand") && (
+              <Link
+                href="/3d-baski"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-stone-300 hover:text-amber-400"
+              >
+                🖨️ 3D Baskı Parça Üretimi
+              </Link>
+            )}
+            {isModuleActive("serial_plaque") && (
+              <Link
+                href="/tescil"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-stone-300 hover:text-amber-400"
+              >
+                🎖️ Şasi Tescil & Doğrulama
+              </Link>
+            )}
             <Link
               href="/rehber"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-amber-400 font-bold hover:text-amber-300"
+              className="block text-stone-300 hover:text-amber-400"
             >
               📖 Sistem Rehberi (Nasıl Çalışır?)
-            </Link>
-            <Link
-              href="/#about"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-stone-200 hover:text-amber-400"
-            >
-              Özel Yapım Garajı
-            </Link>
-            <Link
-              href="/#contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-stone-200 hover:text-amber-400"
-            >
-              Teknik Destek
             </Link>
             {!vipSession.isVip && storeSettings?.storeMode !== "PUBLIC_SALE" && (
               <button

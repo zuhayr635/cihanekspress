@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
+import AiCrawlerDoctor from "@/components/modules/AiCrawlerDoctor";
 import { CartProvider } from "@/lib/cart-context";
 
 const geistSans = Geist({
@@ -38,6 +39,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <CartDrawer />
+          <AiCrawlerDoctor />
         </CartProvider>
       </body>
     </html>

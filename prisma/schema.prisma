@@ -172,3 +172,117 @@ model OrderItem {
   quantity     Int
   total        Float
 }
+
+// 15 Özel Modül Konfigürasyon ve Aktif/Pasif Tablosu
+model ModuleConfig {
+  id            String   @id @default(cuid())
+  key           String   @unique // örn: "cog_simulator", "gear_calculator", "b2b_quotes"
+  name          String   // Modül görünen adı
+  category      String   // "TEKNIK", "TICARI", "ATOLYE", "TOPLULUK"
+  isEnabled     Boolean  @default(true) // Admin panelden Aç/Kapa
+  description   String
+  settingsJson  String   @default("{}") // Modüle özel ayarlar (JSON)
+  orderIndex    Int      @default(0)
+  updatedAt     DateTime @updatedAt
+}
+
+// 5. B2B & Kulüp Toplu Teklif İstekleri
+model B2BQuote {
+  id              String   @id @default(cuid())
+  companyName     String
+  contactName     String
+  phone           String
+  email           String
+  vehicleCount    Int      @default(1)
+  targetBudget    Float?
+  notes           String
+  status          String   @default("PENDING") // PENDING | REVIEWED | OFFER_SENT | REJECTED
+  adminReplyNote  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// 6. Eski Şasini Getir / Takas Değerleme Talepleri
+model TradeIn {
+  id              String   @id @default(cuid())
+  customerName    String
+  phone           String
+  currentChassis  String   // Mevcut araba/şasi modeli
+  condition       String   // TEMIZ | ORTA | YIPRANMIS | SADECE_SASI
+  expectedPrice   Float?
+  desiredProduct  String?  // Almak istediği yeni ürün/kit
+  photoUrlsJson   String   @default("[]") // Yüklenen görseller
+  adminOfferPrice Float?   // Yöneticinin biçtiği takas bedeli
+  status          String   @default("PENDING") // PENDING | EVALUATED | ACCEPTED | REJECTED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// 12. 3D Baskı Parça Üretim Talepleri
+model Print3d {
+  id              String   @id @default(cuid())
+  customerName    String
+  phone           String
+  email           String
+  projectTitle    String
+  fileUrl         String?  // Yüklenen STL veya görsel
+  scale           String   @default("1/10") // 1/10 | 1/24 | OZEL
+  material        String   @default("PETG") // PLA | PETG | TPU | KARBON_FIBER | REÇINE
+  color           String   @default("Siyah")
+  notes           String?
+  adminPrice      Float?
+  status          String   @default("PENDING") // PENDING | QUOTED | PRINTING | SHIPPED | REJECTED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// 13. Türkiye RC Crawler Parkur & Rota Noktaları
+model TrailSpot {
+  id            String   @id @default(cuid())
+  name          String   // Örn: "Aydos Ormanı Kaya Parkuru"
+  city          String   // Örn: "İstanbul / Kartal"
+  difficulty    String   @default("ORTA") // KOLAY | ORTA | ZOR | ASIRI_KAYA
+  terrain       String   @default("KAYA") // KAYA | ORMAN | KUM | CAMUR
+  description   String
+  coordinates   String?  // Örn: "40.9412, 29.2481"
+  coverImage    String?
+  isApproved    Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+// 14. Ayın Kaya Canavarı & Topluluk Galerisi
+model RigShowcase {
+  id            String   @id @default(cuid())
+  authorName    String
+  city          String
+  vehicleModel  String   // Örn: "TRX-4 Custom Carbon Edition"
+  specsJson     String   @default("{}") // Motor, esc, aks, ağırlık
+  photoUrl      String
+  votesCount    Int      @default(0)
+  isWinner      Boolean  @default(false)
+  isApproved    Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+// 8. Tescilli Şasi Seri Numarası Sistemi
+model CertifiedChassis {
+  id                String   @id @default(cuid())
+  serialNumber      String   @unique // Örn: "CHP-CRAWLER-007"
+  ownerName         String
+  buildDate         String
+  builderSignature  String   @default("CIHANPOL MASTER BUILDER")
+  specsJson         String   @default("{}")
+  isVerified        Boolean  @default(true)
+  createdAt         DateTime @default(now())
+}
+
+// 9. Canlı Atölye Montaj Günlüğü
+model BuildLog {
+  id            String   @id @default(cuid())
+  orderNumber   String   // İlgili sipariş no (örn: CHP-178897)
+  stageTitle    String   // Örn: "Aks & Dişli Yağlama Aşaması"
+  description   String
+  photoUrl      String?
+  date          DateTime @default(now())
+}
+

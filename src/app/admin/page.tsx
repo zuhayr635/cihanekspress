@@ -26,12 +26,27 @@ import {
   MessageCircle,
   Eye,
   Check,
+  Sliders,
+  ToggleLeft,
+  ToggleRight,
+  Sparkles,
+  Scale,
+  Cog,
+  Layers,
+  BatteryCharging,
+  RefreshCw,
+  Award,
+  Wrench,
+  Printer,
+  MapPin,
+  Trophy,
+  Stethoscope,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "settings" | "invites" | "products" | "orders" | "coupons" | "reviews"
+    "dashboard" | "settings" | "invites" | "products" | "orders" | "coupons" | "reviews" | "modules"
   >("dashboard");
 
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +60,13 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+
+  // 15 Yeni Modül Yönetimi
+  const [modulesList, setModulesList] = useState<any[]>([]);
+  const [b2bQuotes, setB2bQuotes] = useState<any[]>([]);
+  const [tradeIns, setTradeIns] = useState<any[]>([]);
+  const [printOrders, setPrintOrders] = useState<any[]>([]);
+  const [activeModuleSection, setActiveModuleSection] = useState<"switches" | "b2b" | "trade" | "print">("switches");
 
   // Davetiye Üretim Formu
   const [inviteNote, setInviteNote] = useState("");
@@ -80,7 +102,7 @@ export default function AdminDashboardPage() {
 
   const refreshAllData = async () => {
     try {
-      const [repRes, setRes, invRes, prodRes, ordRes, coupRes, revRes] = await Promise.all([
+      const [repRes, setRes, invRes, prodRes, ordRes, coupRes, revRes, modRes, b2bRes, tradeRes, printRes] = await Promise.all([
         fetch("/api/admin/reports"),
         fetch("/api/settings"),
         fetch("/api/admin/invites"),
@@ -88,6 +110,10 @@ export default function AdminDashboardPage() {
         fetch("/api/orders"),
         fetch("/api/admin/coupons"),
         fetch("/api/admin/reviews"),
+        fetch("/api/admin/modules"),
+        fetch("/api/modules/b2b"),
+        fetch("/api/modules/trade-in"),
+        fetch("/api/modules/print3d"),
       ]);
 
       if (repRes.ok) setReportData(await repRes.json());
@@ -112,8 +138,90 @@ export default function AdminDashboardPage() {
         const data = await revRes.json();
         setReviews(data.reviews || []);
       }
+      if (modRes.ok) {
+        const data = await modRes.json();
+        setModulesList(data.modules || []);
+      }
+      if (b2bRes.ok) {
+        const data = await b2bRes.json();
+        setB2bQuotes(data.quotes || []);
+      }
+      if (tradeRes.ok) {
+        const data = await tradeRes.json();
+        setTradeIns(data.tradeIns || []);
+      }
+      if (printRes.ok) {
+        const data = await printRes.json();
+        setPrintOrders(data.requests || []);
+      }
     } catch (err) {
       console.error("Data refresh error:", err);
+    }
+  };
+
+  // Modül Aç/Kapa Anahtarı Değişimi
+  const handleToggleModule = async (key: string, currentEnabled: boolean) => {
+    const nextState = !currentEnabled;
+    // İyimser güncelleme (optimistic)
+    setModulesList((prev) =>
+      prev.map((m) => (m.key === key ? { ...m, isEnabled: nextState } : m))
+    );
+
+    try {
+      const res = await fetch("/api/admin/modules", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, isEnabled: nextState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotify("success", `Modül ${nextState ? "AKTİF EDİLDİ" : "DEVRE DIŞI BIRAKILDI"}!`);
+      } else {
+        // Geri al
+        setModulesList((prev) =>
+          prev.map((m) => (m.key === key ? { ...m, isEnabled: currentEnabled } : m))
+        );
+        showNotify("error", data.error || "Modül güncellenemedi.");
+      }
+    } catch {
+      setModulesList((prev) =>
+        prev.map((m) => (m.key === key ? { ...m, isEnabled: currentEnabled } : m))
+      );
+      showNotify("error", "Bağlantı hatası oluştu.");
+    }
+  };
+
+  // B2B Teklif Durumu
+  const handleUpdateB2BStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch("/api/modules/b2b", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        showNotify("success", "B2B teklif durumu güncellendi!");
+        refreshAllData();
+      }
+    } catch {
+      showNotify("error", "Güncellenemedi.");
+    }
+  };
+
+  // Takas Durumu
+  const handleUpdateTradeStatus = async (id: string, status: string, adminOfferPrice?: number) => {
+    try {
+      const res = await fetch("/api/modules/trade-in", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status, adminOfferPrice }),
+      });
+      if (res.ok) {
+        showNotify("success", "Takas başvurusu güncellendi!");
+        refreshAllData();
+      }
+    } catch {
+      showNotify("error", "Güncellenemedi.");
     }
   };
 
@@ -342,6 +450,25 @@ export default function AdminDashboardPage() {
           >
             <MessageSquare className="w-4 h-4" />
             <span>Yorum Onay Havuzu</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("modules")}
+            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-sm transition-all ${
+              activeTab === "modules"
+                ? "bg-amber-500 text-black font-bold shadow-md"
+                : "bg-stone-900 text-amber-400 hover:bg-black border border-amber-500/40"
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Sliders className="w-4 h-4" />
+              <span>Modüller (15 Modül)</span>
+            </span>
+            <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
+              activeTab === "modules" ? "bg-black text-amber-400" : "bg-amber-500 text-black"
+            }`}>
+              {modulesList.length || 15}
+            </span>
           </button>
         </aside>
 
@@ -717,6 +844,44 @@ export default function AdminDashboardPage() {
                           Faturayı / Makbuzu Görüntüle
                         </Link>
                       </div>
+
+                      {/* WhatsApp Otomatik Sipariş Bildirimleri (Modül 10) */}
+                      <div className="pt-2 border-t border-stone-200/60 flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-800 font-bold flex items-center gap-1">
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          WhatsApp Şablonları:
+                        </span>
+                        <a
+                          href={`https://wa.me/${ord.customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                            `Merhaba ${ord.customerName}, CIHANPOL RC Crawler Lab'den ${ord.orderNumber} numaralı siparişiniz onaylandı! Atölyemizde montaj hazırlığı başladı.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 text-[11px] bg-emerald-600 text-white font-medium rounded hover:bg-emerald-700 flex items-center gap-1"
+                        >
+                          <span>✓ Onaylandı</span>
+                        </a>
+                        <a
+                          href={`https://wa.me/${ord.customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                            `Merhaba ${ord.customerName}, ${ord.orderNumber} numaralı siparişinizin atölye montaj ve kaya tırmanış testleri başarıyla tamamlandı, kargoya hazırlanıyor!`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 text-[11px] bg-emerald-700 text-white font-medium rounded hover:bg-emerald-800 flex items-center gap-1"
+                        >
+                          <span>🛠️ Montaj Bitti</span>
+                        </a>
+                        <a
+                          href={`https://wa.me/${ord.customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                            `Merhaba ${ord.customerName}, ${ord.orderNumber} numaralı siparişiniz kargoya verilmiştir. Takip no: ${ord.trackingNumber || "Hazırlanıyor"}. İyi tırmanışlar dileriz!`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 text-[11px] bg-emerald-800 text-white font-medium rounded hover:bg-emerald-900 flex items-center gap-1"
+                        >
+                          <span>📦 Kargolandı</span>
+                        </a>
+                      </div>
                     </div>
                   ))
                 )}
@@ -1075,6 +1240,400 @@ export default function AdminDashboardPage() {
                   ))
                 )}
               </div>
+            </div>
+          )}
+
+          {/* TAB 8: 15 MODÜL & ÖZELLİK KONTROL MERKEZİ (MODULES) */}
+          {activeTab === "modules" && (
+            <div className="bg-white border border-stone-200 rounded-sm p-6 sm:p-8 space-y-8 animate-in fade-in">
+              {/* Üst Başlık & İstatistikler */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
+                <div>
+                  <div className="flex items-center gap-2 text-amber-600 font-mono text-xs font-bold uppercase tracking-wider">
+                    <Sliders className="w-4 h-4" />
+                    <span>Feature Flag & Switchboard</span>
+                  </div>
+                  <h2 className="text-xl font-serif font-bold text-stone-900 mt-1">
+                    15 Modül & Özellik Yönetim Merkezi
+                  </h2>
+                  <p className="text-xs text-stone-500 mt-1">
+                    Tüm teknik hesaplayıcıları, ticari masaları ve topluluk özelliklerini tek tıkla açıp kapatın.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="bg-stone-50 border border-stone-200 px-3.5 py-2 rounded text-right">
+                    <span className="text-[10px] uppercase tracking-wider text-stone-500 block font-mono">Aktif Modüller</span>
+                    <span className="text-lg font-mono font-bold text-emerald-600">
+                      {modulesList.filter((m) => m.isEnabled).length} / {modulesList.length || 15}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Alt Sekmeler (Sub-Tabs) */}
+              <div className="flex flex-wrap gap-2 pb-2 border-b border-stone-200">
+                <button
+                  onClick={() => setActiveModuleSection("switches")}
+                  className={`px-4 py-2 text-xs font-semibold rounded uppercase tracking-wider transition-all ${
+                    activeModuleSection === "switches"
+                      ? "bg-black text-white"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  🎛️ Tüm Modül Anahtarları (15)
+                </button>
+                <button
+                  onClick={() => setActiveModuleSection("b2b")}
+                  className={`px-4 py-2 text-xs font-semibold rounded uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                    activeModuleSection === "b2b"
+                      ? "bg-black text-white"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  <span>💼 Gelen B2B Teklifleri</span>
+                  {b2bQuotes.length > 0 && (
+                    <span className="px-1.5 py-0.2 bg-amber-400 text-black text-[10px] rounded-full font-bold">
+                      {b2bQuotes.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveModuleSection("trade")}
+                  className={`px-4 py-2 text-xs font-semibold rounded uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                    activeModuleSection === "trade"
+                      ? "bg-black text-white"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  <span>🔄 Gelen Takas Talepleri</span>
+                  {tradeIns.length > 0 && (
+                    <span className="px-1.5 py-0.2 bg-amber-400 text-black text-[10px] rounded-full font-bold">
+                      {tradeIns.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveModuleSection("print")}
+                  className={`px-4 py-2 text-xs font-semibold rounded uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                    activeModuleSection === "print"
+                      ? "bg-black text-white"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  <span>🖨️ 3D Baskı Siparişleri</span>
+                  {printOrders.length > 0 && (
+                    <span className="px-1.5 py-0.2 bg-amber-400 text-black text-[10px] rounded-full font-bold">
+                      {printOrders.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* BÖLÜM 1: TÜM 15 MODÜLÜN AÇIK/KAPALI ANAHTARLARI */}
+              {activeModuleSection === "switches" && (
+                <div className="space-y-6">
+                  {["TEKNIK", "TICARI", "ATOLYE", "TOPLULUK"].map((cat) => {
+                    const catModules = modulesList.filter((m) => m.category === cat);
+                    const catTitles: Record<string, { label: string; desc: string }> = {
+                      TEKNIK: {
+                        label: "🛠️ Kategori 1: Teknik RC & Hesaplayıcı Araçları",
+                        desc: "Ağırlık merkezi, dişli oranları, patlatılmış şema ve pil sihirbazı.",
+                      },
+                      TICARI: {
+                        label: "💼 Kategori 2: Ticari & B2B Büyüme Masaları",
+                        desc: "Toplu kulüp teklifleri, takas değerleme, paket indirimleri ve tescil.",
+                      },
+                      ATOLYE: {
+                        label: "📦 Kategori 3: Atölye Operasyonları & Hizmetler",
+                        desc: "Canlı montaj günlüğü, WhatsApp şablonları, bakım paketleri ve 3D baskı.",
+                      },
+                      TOPLULUK: {
+                        label: "🧗 Kategori 4: Topluluk, Parkurlar & Yapay Zeka Teşhis",
+                        desc: "Türkiye parkur haritası, ayın canavarı oylaması ve AI Crawler Doctor.",
+                      },
+                    };
+
+                    const info = catTitles[cat] || { label: cat, desc: "" };
+
+                    const previewLinks: Record<string, string> = {
+                      cog_simulator: "/hesaplayici?tab=cog",
+                      gear_calculator: "/hesaplayici?tab=gear",
+                      exploded_cad: "/hesaplayici?tab=cad",
+                      battery_wizard: "/hesaplayici?tab=battery",
+                      b2b_quotes: "/b2b",
+                      trade_in: "/takas",
+                      bundle_deals: "/paketler",
+                      serial_plaque: "/tescil",
+                      build_log: "/order-tracking",
+                      whatsapp_bot: "#",
+                      maintenance_packs: "/bakim",
+                      print3d_demand: "/3d-baski",
+                      trail_map: "/parkurlar",
+                      rig_of_month: "/topluluk",
+                      ai_crawler_doctor: "/",
+                    };
+
+                    return (
+                      <div key={cat} className="border border-stone-200 rounded-sm overflow-hidden bg-white shadow-xs">
+                        <div className="bg-stone-50 px-5 py-3 border-b border-stone-200">
+                          <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-stone-900">
+                            {info.label}
+                          </h3>
+                          <p className="text-[11px] text-stone-500 mt-0.5">{info.desc}</p>
+                        </div>
+
+                        <div className="divide-y divide-stone-100">
+                          {catModules.map((mod) => {
+                            const link = previewLinks[mod.key] || "/";
+
+                            return (
+                              <div
+                                key={mod.key}
+                                className={`p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+                                  mod.isEnabled ? "bg-white" : "bg-stone-50/70 opacity-75"
+                                }`}
+                              >
+                                <div className="space-y-1 max-w-xl">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-[10px] bg-stone-200 text-stone-700 px-1.5 py-0.2 rounded font-bold">
+                                      #{mod.orderIndex}
+                                    </span>
+                                    <h4 className="font-mono font-bold text-sm text-stone-900">
+                                      {mod.name}
+                                    </h4>
+                                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                                      mod.isEnabled ? "bg-emerald-100 text-emerald-800" : "bg-stone-200 text-stone-600"
+                                    }`}>
+                                      {mod.isEnabled ? "AKTİF" : "DEVRE DIŞI"}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-stone-600">{mod.description}</p>
+                                </div>
+
+                                <div className="flex items-center gap-3 self-end sm:self-center">
+                                  {link !== "#" && (
+                                    <Link
+                                      href={link}
+                                      target="_blank"
+                                      className="px-3 py-1.5 border border-stone-300 hover:bg-stone-100 text-stone-700 rounded text-xs font-mono flex items-center gap-1"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                      <span>Sayfaya Git</span>
+                                    </Link>
+                                  )}
+
+                                  {/* Açık/Kapalı Switch */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleModule(mod.key, mod.isEnabled)}
+                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
+                                      mod.isEnabled ? "bg-emerald-600" : "bg-stone-300"
+                                    }`}
+                                    aria-label={`Toggle ${mod.name}`}
+                                  >
+                                    <span
+                                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                        mod.isEnabled ? "translate-x-8" : "translate-x-1"
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* BÖLÜM 2: GELEN B2B TEKLİF TALEPLERİ */}
+              {activeModuleSection === "b2b" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-2">
+                    <h3 className="text-xs uppercase tracking-wider font-bold text-stone-900 font-mono">
+                      Gelen B2B & Kulüp Teklif Listesi ({b2bQuotes.length})
+                    </h3>
+                  </div>
+
+                  {b2bQuotes.length === 0 ? (
+                    <p className="text-xs text-stone-500 py-8 text-center italic">Henüz B2B teklif talebi bulunmuyor.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs font-mono">
+                        <thead>
+                          <tr className="border-b border-stone-200 text-stone-400 uppercase text-[10px]">
+                            <th className="py-2.5">Firma / Kulüp</th>
+                            <th className="py-2.5">Yetkili</th>
+                            <th className="py-2.5">İletişim</th>
+                            <th className="py-2.5">Araç Adedi</th>
+                            <th className="py-2.5">Hedef Bütçe</th>
+                            <th className="py-2.5">Notlar</th>
+                            <th className="py-2.5">Durum</th>
+                            <th className="py-2.5 text-right">İşlem</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100">
+                          {b2bQuotes.map((q) => (
+                            <tr key={q.id}>
+                              <td className="py-3 font-bold text-stone-900">{q.companyName}</td>
+                              <td className="py-3 text-stone-700">{q.contactName}</td>
+                              <td className="py-3 text-stone-600">
+                                <div>{q.phone}</div>
+                                <div className="text-[10px] text-stone-400">{q.email}</div>
+                              </td>
+                              <td className="py-3 font-bold text-stone-900">{q.vehicleCount} Adet</td>
+                              <td className="py-3 text-stone-800">
+                                {q.targetBudget ? `${q.targetBudget.toLocaleString("tr-TR")} ₺` : "-"}
+                              </td>
+                              <td className="py-3 text-stone-600 max-w-xs truncate">{q.notes}</td>
+                              <td className="py-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  q.status === "OFFER_SENT" ? "bg-emerald-100 text-emerald-800" :
+                                  q.status === "REVIEWED" ? "bg-blue-100 text-blue-800" :
+                                  q.status === "REJECTED" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"
+                                }`}>
+                                  {q.status}
+                                </span>
+                              </td>
+                              <td className="py-3 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    onClick={() => handleUpdateB2BStatus(q.id, "OFFER_SENT")}
+                                    className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px]"
+                                  >
+                                    Teklif Gönderildi
+                                  </button>
+                                  <a
+                                    href={`https://wa.me/${q.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                                      `Merhaba ${q.contactName}, ${q.companyName} için oluşturduğunuz RC crawler teklif talebi incelendi.`
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1 bg-[#25D366] text-black rounded"
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                  </a>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* BÖLÜM 3: GELEN TAKAS BAŞVURULARI */}
+              {activeModuleSection === "trade" && (
+                <div className="space-y-4">
+                  <h3 className="text-xs uppercase tracking-wider font-bold text-stone-900 font-mono">
+                    Gelen Eski Şasini Getir / Takas Talepleri ({tradeIns.length})
+                  </h3>
+
+                  {tradeIns.length === 0 ? (
+                    <p className="text-xs text-stone-500 py-8 text-center italic">Henüz takas talebi bulunmuyor.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {tradeIns.map((t) => (
+                        <div key={t.id} className="p-4 border border-stone-200 rounded bg-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-stone-900 text-sm">{t.customerName}</span>
+                              <span className="text-stone-500">({t.phone})</span>
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 font-bold">
+                                {t.condition}
+                              </span>
+                            </div>
+                            <p className="text-stone-700">Mevcut Şasi: <strong>{t.currentChassis}</strong></p>
+                            <p className="text-stone-500 text-[11px]">
+                              İstenen Yeni Ürün: {t.desiredProduct || "-"} • Müşteri Beklentisi: {t.expectedPrice ? `${t.expectedPrice} ₺` : "-"}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`https://wa.me/${t.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                                `Merhaba ${t.customerName}, CIHANPOL atölyesinden ${t.currentChassis} şasinizin takas ekspertiz değerlendirmesi için yazıyoruz.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 bg-[#25D366] text-black font-bold rounded flex items-center gap-1 text-[11px]"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>WhatsApp Ekspertiz</span>
+                            </a>
+                            <button
+                              onClick={() => handleUpdateTradeStatus(t.id, "ACCEPTED")}
+                              className="px-3 py-1.5 bg-emerald-600 text-white font-bold rounded text-[11px]"
+                            >
+                              Onayla
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* BÖLÜM 4: GELEN 3D BASKI TALEPLERİ */}
+              {activeModuleSection === "print" && (
+                <div className="space-y-4">
+                  <h3 className="text-xs uppercase tracking-wider font-bold text-stone-900 font-mono">
+                    Gelen 3D Baskı Talepleri ({printOrders.length})
+                  </h3>
+
+                  {printOrders.length === 0 ? (
+                    <p className="text-xs text-stone-500 py-8 text-center italic">Henüz 3D baskı talebi bulunmuyor.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {printOrders.map((p) => (
+                        <div key={p.id} className="p-4 border border-stone-200 rounded bg-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-stone-900 text-sm">{p.projectTitle}</span>
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-800 font-bold">
+                                {p.material} ({p.scale})
+                              </span>
+                            </div>
+                            <p className="text-stone-700">Müşteri: {p.customerName} ({p.phone})</p>
+                            {p.notes && <p className="text-stone-500 text-[11px]">Notlar: {p.notes}</p>}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {p.fileUrl && (
+                              <a
+                                href={p.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 border border-stone-300 text-stone-700 rounded text-[11px] flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>STL İndir</span>
+                              </a>
+                            )}
+                            <a
+                              href={`https://wa.me/${p.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                                `Merhaba ${p.customerName}, 3D baskı projeniz (${p.projectTitle}) için baskı süresi ve fiyat teklifimiz hazırdır.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 bg-[#25D366] text-black font-bold rounded flex items-center gap-1 text-[11px]"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>Fiyat Teklifi İlet</span>
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </main>
