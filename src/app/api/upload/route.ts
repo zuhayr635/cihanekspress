@@ -13,20 +13,27 @@ export async function POST(req: Request) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const mimeType = file.type || "image/png";
 
-    // Güvenli dosya adı üretimi
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    const filename = `media-${uniqueSuffix}-${originalName}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    try {
+      // Güvenli dosya adı üretimi
+      const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+      const filename = `media-${uniqueSuffix}-${originalName}`;
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
 
-    await mkdir(uploadDir, { recursive: true });
-    const filePath = path.join(uploadDir, filename);
+      await mkdir(uploadDir, { recursive: true });
+      const filePath = path.join(uploadDir, filename);
 
-    await writeFile(filePath, buffer);
+      await writeFile(filePath, buffer);
 
-    const publicUrl = `/uploads/${filename}`;
-    return NextResponse.json({ success: true, url: publicUrl });
+      const publicUrl = `/uploads/${filename}`;
+      return NextResponse.json({ success: true, url: publicUrl });
+    } catch (fsErr) {
+      console.warn("Disk upload failed, using Data URL fallback:", fsErr);
+      const base64Url = `data:${mimeType};base64,${buffer.toString("base64")}`;
+      return NextResponse.json({ success: true, url: base64Url });
+    }
   } catch (err) {
     console.error("Upload error:", err);
     return NextResponse.json({ error: "Dosya yüklenirken hata oluştu" }, { status: 500 });

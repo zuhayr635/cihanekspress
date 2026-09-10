@@ -276,6 +276,16 @@ export async function ensureInitialized() {
       });
     }
 
+    if (settings && (!settings.logoUrl || settings.logoUrl.trim() === "")) {
+      await prisma.storeSetting.update({
+        where: { id: "default" },
+        data: {
+          logoUrl: "/cihanekspress-logo.png",
+          logoHeight: 48,
+        },
+      });
+    }
+
     // 2. Yönetici Hesabı
     const adminCount = await prisma.adminUser.count();
     if (adminCount === 0) {

@@ -29,15 +29,15 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy public & static
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 
 # Automatically leverage output traces to reduce image size
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Ensure prisma directory has permissions for SQLite read/write
-RUN chown -R nextjs:nodejs /app/prisma
+# Ensure prisma and uploads directories have permissions
+RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public /app/prisma
 
 USER nextjs
 

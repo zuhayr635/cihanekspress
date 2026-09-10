@@ -48,14 +48,14 @@ export default function Header() {
   };
 
   const whatsappPhone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
-  const logoUrl = storeSettings?.logoUrl || "";
+  const logoUrl = storeSettings?.logoUrl || "/cihanekspress-logo.png";
   const brandMode = storeSettings?.headerBrandMode || "BOTH";
   const primaryText = storeSettings?.headerPrimaryText || "cihan";
   const secondaryText = storeSettings?.headerSecondaryText || "ekspress";
   const suffixText = storeSettings?.headerSuffixText !== undefined ? storeSettings.headerSuffixText : ".com";
   const showSubtitle = storeSettings?.showHeaderSubtitle !== undefined ? storeSettings.showHeaderSubtitle : true;
   const subtitleText = storeSettings?.headerSubtitle || "RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU";
-  const logoHeight = storeSettings?.logoHeight || 38;
+  const logoHeight = storeSettings?.logoHeight || 48;
 
   return (
     <>
