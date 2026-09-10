@@ -3,6 +3,225 @@ import bcrypt from "bcryptjs";
 
 export async function ensureInitialized() {
   try {
+    // 0. Auto-Migration for SQLite Schema: Ensure all tables and columns exist
+    try {
+      const cols: any[] = await prisma.$queryRawUnsafe("PRAGMA table_info(StoreSetting)");
+      const colNames = new Set(cols.map((c: any) => c.name));
+
+      const storeSettingCols: [string, string][] = [
+        ["logoUrl", "TEXT DEFAULT ''"],
+        ["headerBrandMode", "TEXT DEFAULT 'BOTH'"],
+        ["headerPrimaryText", "TEXT DEFAULT 'cihan'"],
+        ["headerSecondaryText", "TEXT DEFAULT 'ekspress'"],
+        ["headerSuffixText", "TEXT DEFAULT '.com'"],
+        ["showHeaderSubtitle", "BOOLEAN DEFAULT 1"],
+        ["headerSubtitle", "TEXT DEFAULT 'RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU'"],
+        ["logoHeight", "INTEGER DEFAULT 38"],
+        ["panicMode", "BOOLEAN DEFAULT 0"],
+        ["usdRate", "REAL DEFAULT 38.5"],
+        ["blockedIpsJson", "TEXT DEFAULT '[]'"],
+        ["kuruEslestirmeEnabled", "BOOLEAN DEFAULT 1"],
+        ["burnerTimeoutMinutes", "INTEGER DEFAULT 15"],
+        ["stealthCamouflageEnabled", "BOOLEAN DEFAULT 1"],
+        ["stealthServiceTitle", "TEXT DEFAULT '3D CAD Çizim ve Teknik Modelleme Hizmet Bedeli'"],
+        ["safeMemosJson", "TEXT DEFAULT '[\"Teknik Danışmanlık Hizmet Bedeli\",\"3D CAD Modelleme\",\"Emanet İadesi\",\"Yazılım ve Tasarım Desteği\",\"Proje Çizim Bedeli\"]'"],
+        ["honeypotEnabled", "BOOLEAN DEFAULT 1"],
+        ["honeypotMode", "TEXT DEFAULT 'MAINTENANCE'"],
+        ["honeypotMessage", "TEXT DEFAULT 'Sistem Bakımı: Bankacılık API entegrasyonumuzda altyapı çalışması yapılmaktadır.'"],
+      ];
+
+      for (const [col, def] of storeSettingCols) {
+        if (!colNames.has(col)) {
+          await prisma.$executeRawUnsafe(`ALTER TABLE StoreSetting ADD COLUMN ${col} ${def}`);
+        }
+      }
+
+      const prodCols: any[] = await prisma.$queryRawUnsafe("PRAGMA table_info(Product)");
+      const prodColNames = new Set(prodCols.map((c: any) => c.name));
+      const productCols: [string, string][] = [
+        ["costPrice", "REAL"],
+        ["videoUrl", "TEXT"],
+        ["weight", "REAL"],
+        ["dimensions", "TEXT"],
+        ["compatibleModels", "TEXT DEFAULT '[]'"],
+      ];
+      for (const [col, def] of productCols) {
+        if (!prodColNames.has(col)) {
+          await prisma.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN ${col} ${def}`);
+        }
+      }
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS IbanAccount (
+          id TEXT PRIMARY KEY,
+          bankName TEXT NOT NULL,
+          accountHolder TEXT NOT NULL,
+          iban TEXT NOT NULL UNIQUE,
+          dailyLimit REAL DEFAULT 75000.0,
+          currentDailyTotal REAL DEFAULT 0.0,
+          dailyOrderLimit INTEGER DEFAULT 15,
+          currentOrderCount INTEGER DEFAULT 0,
+          isActive BOOLEAN DEFAULT 1,
+          priorityOrder INTEGER DEFAULT 0,
+          notes TEXT,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS ModuleConfig (
+          id TEXT PRIMARY KEY,
+          key TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          category TEXT NOT NULL,
+          isEnabled BOOLEAN DEFAULT 1,
+          description TEXT NOT NULL,
+          settingsJson TEXT DEFAULT '{}',
+          orderIndex INTEGER DEFAULT 0,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS B2BQuote (
+          id TEXT PRIMARY KEY,
+          companyName TEXT NOT NULL,
+          contactName TEXT NOT NULL,
+          phone TEXT NOT NULL,
+          email TEXT NOT NULL,
+          vehicleCount INTEGER DEFAULT 1,
+          targetBudget REAL,
+          notes TEXT NOT NULL,
+          status TEXT DEFAULT 'PENDING',
+          adminReplyNote TEXT,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS TradeIn (
+          id TEXT PRIMARY KEY,
+          customerName TEXT NOT NULL,
+          phone TEXT NOT NULL,
+          currentChassis TEXT NOT NULL,
+          condition TEXT NOT NULL,
+          expectedPrice REAL,
+          desiredProduct TEXT,
+          photoUrlsJson TEXT DEFAULT '[]',
+          adminOfferPrice REAL,
+          status TEXT DEFAULT 'PENDING',
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Print3d (
+          id TEXT PRIMARY KEY,
+          customerName TEXT NOT NULL,
+          phone TEXT NOT NULL,
+          email TEXT NOT NULL,
+          projectTitle TEXT NOT NULL,
+          fileUrl TEXT,
+          scale TEXT DEFAULT '1/10',
+          material TEXT DEFAULT 'PETG',
+          color TEXT DEFAULT 'Siyah',
+          notes TEXT,
+          adminPrice REAL,
+          status TEXT DEFAULT 'PENDING',
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS TrailSpot (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          city TEXT NOT NULL,
+          difficulty TEXT DEFAULT 'ORTA',
+          terrain TEXT DEFAULT 'KAYA',
+          description TEXT NOT NULL,
+          coordinates TEXT,
+          coverImage TEXT,
+          isApproved BOOLEAN DEFAULT 1,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS RigShowcase (
+          id TEXT PRIMARY KEY,
+          authorName TEXT NOT NULL,
+          city TEXT NOT NULL,
+          vehicleModel TEXT NOT NULL,
+          specsJson TEXT DEFAULT '{}',
+          photoUrl TEXT NOT NULL,
+          votesCount INTEGER DEFAULT 0,
+          isWinner BOOLEAN DEFAULT 0,
+          isApproved BOOLEAN DEFAULT 1,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS CertifiedChassis (
+          id TEXT PRIMARY KEY,
+          serialNumber TEXT NOT NULL UNIQUE,
+          ownerName TEXT NOT NULL,
+          buildDate TEXT NOT NULL,
+          builderSignature TEXT DEFAULT 'CIHANPOL MASTER BUILDER',
+          specsJson TEXT DEFAULT '{}',
+          isVerified BOOLEAN DEFAULT 1,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS BuildLog (
+          id TEXT PRIMARY KEY,
+          orderNumber TEXT NOT NULL,
+          stageTitle TEXT NOT NULL,
+          description TEXT NOT NULL,
+          photoUrl TEXT,
+          date DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // 15 Modülü otomatik tohumla (Eğer boşsa)
+      const moduleCount = await prisma.moduleConfig.count();
+      if (moduleCount === 0) {
+        const defaultModules = [
+          { key: "cog_simulator", name: "Ağırlık Merkezi (CoG) & Tırmanış Simülatörü", category: "TEKNIK", isEnabled: true, description: "Aks ağırlık dağılımı ve tırmanma açısı fizik motoru.", orderIndex: 1 },
+          { key: "gear_calculator", name: "Dişli Oranı & Crawl Ratio Hesaplayıcı", category: "TEKNIK", isEnabled: true, description: "Pinyon, spur ve şanzıman Crawl Ratio hesaplayıcı.", orderIndex: 2 },
+          { key: "exploded_cad", name: "Patlatılmış CAD Şema & Parça Bulucu", category: "TEKNIK", isEnabled: true, description: "İnteraktif şema üzerinden araca uyumlu yedek parça tespiti.", orderIndex: 3 },
+          { key: "battery_wizard", name: "LiPo Batarya & Sürüş Süresi Sihirbazı", category: "TEKNIK", isEnabled: true, description: "Motor kv, pil mah ve voltaja göre tahmini parkur süresi.", orderIndex: 4 },
+          { key: "b2b_quotes", name: "B2B & Kulüp Toplu Teklif Masası", category: "TICARI", isEnabled: true, description: "RC kulüpleri ve etkinlikler için toplu alım teklif formu.", orderIndex: 5 },
+          { key: "trade_in", name: "Eski Şasini Getir / Takas Değerleme", category: "TICARI", isEnabled: true, description: "Eski şasiyi takasa verip yeni modelde indirim talep etme masası.", orderIndex: 6 },
+          { key: "bundle_deals", name: "Atölye Montaj Paketleri (Bundle Deals)", category: "TICARI", isEnabled: true, description: "Şasi + Pirinç + Motor kombolarında sepet indirimi.", orderIndex: 7 },
+          { key: "serial_plaque", name: "Tescilli Şasi Seri Numarası Sistemi", category: "TICARI", isEnabled: true, description: "Özel montaj araçlar için benzersiz şasi kimlik plakası.", orderIndex: 8 },
+          { key: "build_log", name: "Canlı Atölye Montaj Günlüğü", category: "ATOLYE", isEnabled: true, description: "Sipariş toplanırken usta fotoğrafları ve montaj notları günlüğü.", orderIndex: 9 },
+          { key: "whatsapp_bot", name: "WhatsApp Hızlı Danışman & Sipariş Hattı", category: "ATOLYE", isEnabled: true, description: "Teknik usta desteği ve doğrudan WhatsApp sipariş butonu.", orderIndex: 10 },
+          { key: "maintenance_packs", name: "Periyodik Bakım & Gresleme Paketleri", category: "ATOLYE", isEnabled: true, description: "Kaya tırmanışı sonrası aks, şanzıman ve su yalıtım bakım paketleri.", orderIndex: 11 },
+          { key: "print3d_demand", name: "3D Baskı Özel Parça İmalat Masası", category: "ATOLYE", isEnabled: true, description: "STL dosyasıyla karbon fiber/PETG baskı talep etme masası.", orderIndex: 12 },
+          { key: "trail_map", name: "Türkiye RC Crawler Parkur Haritası", category: "TOPLULUK", isEnabled: true, description: "Şehir şehir crawler tırmanış rotaları ve koordinatlar.", orderIndex: 13 },
+          { key: "rig_of_month", name: "Ayın Kaya Canavarı & Topluluk Oylaması", category: "TOPLULUK", isEnabled: true, description: "Kullanıcıların araç fotoğraflarını yükleyip oylamaya katıldığı galeri.", orderIndex: 14 },
+          { key: "ai_crawler_doctor", name: "AI Usta: Telemetri & Arıza Teşhis", category: "TOPLULUK", isEnabled: true, description: "ESC ısınması ve mekanik arızalara yapay zeka çözümleri.", orderIndex: 15 },
+        ];
+        for (const mod of defaultModules) {
+          try {
+            await prisma.moduleConfig.create({
+              data: mod,
+            });
+          } catch {}
+        }
+      }
+    } catch (migErr) {
+      console.error("Auto-migration column check error:", migErr);
+    }
+
     // 1. Mağaza Ayarları Kontrolü
     const settings = await prisma.storeSetting.findUnique({
       where: { id: "default" },

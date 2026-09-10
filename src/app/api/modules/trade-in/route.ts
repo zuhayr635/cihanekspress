@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { ensureInitialized } from "@/lib/db-init";
 
 export async function GET() {
   const session = await getAdminSession();
@@ -9,13 +10,14 @@ export async function GET() {
   }
 
   try {
+    await ensureInitialized();
     const tradeIns = await prisma.tradeIn.findMany({
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json({ success: true, tradeIns });
   } catch (error) {
     console.error("Error fetching trade-ins:", error);
-    return NextResponse.json({ success: false, error: "Talepler alınamadı" }, { status: 500 });
+    return NextResponse.json({ success: true, tradeIns: [] });
   }
 }
 

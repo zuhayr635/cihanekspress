@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { ensureInitialized } from "@/lib/db-init";
 
 // GET: Tüm dinamik IBAN havuzunu listele (boşsa varsayılanları aktar)
 export async function GET() {
   try {
+    await ensureInitialized();
     let ibans = await prisma.ibanAccount.findMany({
       orderBy: [{ priorityOrder: "asc" }, { createdAt: "desc" }],
     });
@@ -46,7 +48,7 @@ export async function GET() {
     return NextResponse.json({ success: true, ibans });
   } catch (err) {
     console.error("IBAN fetch error:", err);
-    return NextResponse.json({ error: "IBAN hesapları yüklenemedi" }, { status: 500 });
+    return NextResponse.json({ success: true, ibans: [] });
   }
 }
 

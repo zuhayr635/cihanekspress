@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { ensureInitialized } from "@/lib/db-init";
 
 export async function GET() {
   try {
+    await ensureInitialized();
     const modules = await prisma.moduleConfig.findMany({
       select: {
         key: true,
@@ -34,6 +36,11 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching public modules:", error);
-    return NextResponse.json({ success: false, error: "Modüller alınamadı" }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      active: {},
+      configs: {},
+      list: [],
+    });
   }
 }

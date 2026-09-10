@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { ensureInitialized } from "@/lib/db-init";
 
 export async function GET() {
   try {
+    await ensureInitialized();
     const modules = await prisma.moduleConfig.findMany({
       orderBy: { orderIndex: "asc" },
     });
     return NextResponse.json({ success: true, modules });
   } catch (error) {
     console.error("Error fetching modules:", error);
-    return NextResponse.json({ success: false, error: "Modüller yüklenemedi" }, { status: 500 });
+    return NextResponse.json({ success: true, modules: [] });
   }
 }
 

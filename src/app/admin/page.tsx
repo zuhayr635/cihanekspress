@@ -105,8 +105,69 @@ export default function AdminDashboardPage() {
   const [isSavingStealthSettings, setIsSavingStealthSettings] = useState(false);
 
   // Veriler
-  const [reportData, setReportData] = useState<any>(null);
-  const [settings, setSettings] = useState<any>(null);
+  const [reportData, setReportData] = useState<any>({
+    totalRevenue: 0,
+    totalCost: 0,
+    grossProfit: 0,
+    profitMargin: "0%",
+    totalOrders: 0,
+    pendingBankTransfers: 0,
+    activeProductsCount: 0,
+    lowStockProducts: [],
+    totalInvites: 0,
+    usedInvites: 0,
+    ordersWithInvite: 0,
+    conversionRate: "0%",
+    recentOrders: [],
+  });
+  const [settings, setSettings] = useState<any>({
+    id: "default",
+    storeName: "CIHANPOL RC CRAWLER LAB",
+    storeTagline: "Özel Yapım Kaya Tırmanıcılar & CNC Performans Parçaları",
+    storeMode: "CATALOG_ONLY",
+    logoUrl: "",
+    headerBrandMode: "BOTH",
+    headerPrimaryText: "cihan",
+    headerSecondaryText: "ekspress",
+    headerSuffixText: ".com",
+    showHeaderSubtitle: true,
+    headerSubtitle: "RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU",
+    logoHeight: 38,
+    currency: "TL",
+    currencySymbol: "₺",
+    taxRate: 20,
+    pricesIncludeTax: true,
+    freeShippingThreshold: 2000,
+    defaultShippingFee: 95,
+    bankTransferEnabled: true,
+    bankAccounts: [],
+    whatsappOrderEnabled: true,
+    whatsappPhone: "+905551234567",
+    whatsappMessageTemplate: "",
+    creditCardEnabled: true,
+    creditCardProvider: "paytr",
+    ccApiKey: "",
+    ccSecretKey: "",
+    ccMerchantId: "",
+    ccTestMode: true,
+    panicMode: false,
+    usdRate: 38.5,
+    blockedIps: [],
+    kuruEslestirmeEnabled: true,
+    burnerTimeoutMinutes: 15,
+    stealthCamouflageEnabled: true,
+    stealthServiceTitle: "3D CAD Çizim ve Teknik Danışmanlık Hizmet Bedeli",
+    safeMemos: [
+      "Teknik Danışmanlık Hizmet Bedeli",
+      "3D CAD Modelleme",
+      "Emanet İadesi",
+      "Yazılım ve Tasarım Desteği",
+      "Proje Çizim Bedeli",
+    ],
+    honeypotEnabled: true,
+    honeypotMode: "MAINTENANCE",
+    honeypotMessage: "Sistem Bakımı: Bankacılık API entegrasyonumuzda altyapı çalışması yapılmaktadır.",
+  });
   const [invites, setInvites] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -184,79 +245,73 @@ export default function AdminDashboardPage() {
 
   const refreshAllData = async () => {
     try {
-      const [repRes, setRes, invRes, prodRes, ordRes, coupRes, revRes, modRes, b2bRes, tradeRes, printRes, catRes, ibanRes] = await Promise.all([
-        fetch("/api/admin/reports"),
-        fetch("/api/settings"),
-        fetch("/api/admin/invites"),
-        fetch("/api/products"),
-        fetch("/api/orders"),
-        fetch("/api/admin/coupons"),
-        fetch("/api/admin/reviews"),
-        fetch("/api/admin/modules"),
-        fetch("/api/modules/b2b"),
-        fetch("/api/modules/trade-in"),
-        fetch("/api/modules/print3d"),
-        fetch("/api/admin/categories"),
-        fetch("/api/admin/ibans"),
-      ]);
+      const endpoints = [
+        { key: "reports", url: "/api/admin/reports" },
+        { key: "settings", url: "/api/settings" },
+        { key: "invites", url: "/api/admin/invites" },
+        { key: "products", url: "/api/products" },
+        { key: "orders", url: "/api/orders" },
+        { key: "coupons", url: "/api/admin/coupons" },
+        { key: "reviews", url: "/api/admin/reviews" },
+        { key: "modules", url: "/api/admin/modules" },
+        { key: "b2b", url: "/api/modules/b2b" },
+        { key: "trade", url: "/api/modules/trade-in" },
+        { key: "print", url: "/api/modules/print3d" },
+        { key: "categories", url: "/api/admin/categories" },
+        { key: "ibans", url: "/api/admin/ibans" },
+      ];
 
-      if (repRes.ok) setReportData(await repRes.json());
-      if (setRes.ok) {
-        const setData = await setRes.json();
-        setSettings(setData);
-        if (setData.usdRate) setUsdRateInput(String(setData.usdRate));
-        if (setData.kuruEslestirmeEnabled !== undefined) setStealthKurusEnabled(Boolean(setData.kuruEslestirmeEnabled));
-        if (setData.burnerTimeoutMinutes !== undefined) setStealthBurnerTimeout(Number(setData.burnerTimeoutMinutes));
-        if (setData.stealthCamouflageEnabled !== undefined) setStealthCamouflageEnabled(Boolean(setData.stealthCamouflageEnabled));
-        if (setData.stealthServiceTitle) setStealthServiceTitle(setData.stealthServiceTitle);
-        if (Array.isArray(setData.safeMemos)) setStealthSafeMemos(setData.safeMemos);
-        if (setData.honeypotEnabled !== undefined) setStealthHoneypotEnabled(Boolean(setData.honeypotEnabled));
-        if (setData.honeypotMode) setStealthHoneypotMode(setData.honeypotMode);
-        if (setData.honeypotMessage) setStealthHoneypotMessage(setData.honeypotMessage);
-      }
-      if (invRes.ok) {
-        const data = await invRes.json();
-        setInvites(data.invites || []);
-      }
-      if (prodRes.ok) {
-        const data = await prodRes.json();
-        setProducts(data.products || []);
-      }
-      if (catRes.ok) {
-        const data = await catRes.json();
-        setCategories(data.categories || []);
-      }
-      if (ordRes.ok) {
-        const data = await ordRes.json();
-        setOrders(data.orders || []);
-      }
-      if (coupRes.ok) {
-        const data = await coupRes.json();
-        setCoupons(data.coupons || []);
-      }
-      if (revRes.ok) {
-        const data = await revRes.json();
-        setReviews(data.reviews || []);
-      }
-      if (modRes.ok) {
-        const data = await modRes.json();
-        setModulesList(data.modules || []);
-      }
-      if (b2bRes.ok) {
-        const data = await b2bRes.json();
-        setB2bQuotes(data.quotes || []);
-      }
-      if (tradeRes.ok) {
-        const data = await tradeRes.json();
-        setTradeIns(data.tradeIns || []);
-      }
-      if (printRes.ok) {
-        const data = await printRes.json();
-        setPrintOrders(data.requests || []);
-      }
-      if (ibanRes.ok) {
-        const data = await ibanRes.json();
-        setIbansList(data.ibans || []);
+      const settled = await Promise.allSettled(
+        endpoints.map(async (ep) => {
+          const res = await fetch(ep.url);
+          if (!res.ok) throw new Error(`HTTP ${res.status} on ${ep.url}`);
+          const data = await res.json();
+          return { key: ep.key, data };
+        })
+      );
+
+      for (const item of settled) {
+        if (item.status === "fulfilled") {
+          const { key, data } = item.value;
+          if (key === "reports" && data && !data.error) {
+            setReportData(data);
+          } else if (key === "settings" && data && !data.error) {
+            setSettings((prev: any) => ({ ...prev, ...data }));
+            if (data.usdRate) setUsdRateInput(String(data.usdRate));
+            if (data.kuruEslestirmeEnabled !== undefined) setStealthKurusEnabled(Boolean(data.kuruEslestirmeEnabled));
+            if (data.burnerTimeoutMinutes !== undefined) setStealthBurnerTimeout(Number(data.burnerTimeoutMinutes));
+            if (data.stealthCamouflageEnabled !== undefined) setStealthCamouflageEnabled(Boolean(data.stealthCamouflageEnabled));
+            if (data.stealthServiceTitle) setStealthServiceTitle(data.stealthServiceTitle);
+            if (Array.isArray(data.safeMemos)) setStealthSafeMemos(data.safeMemos);
+            if (data.honeypotEnabled !== undefined) setStealthHoneypotEnabled(Boolean(data.honeypotEnabled));
+            if (data.honeypotMode) setStealthHoneypotMode(data.honeypotMode);
+            if (data.honeypotMessage) setStealthHoneypotMessage(data.honeypotMessage);
+          } else if (key === "invites") {
+            setInvites(data.invites || []);
+          } else if (key === "products") {
+            setProducts(data.products || []);
+          } else if (key === "categories") {
+            setCategories(data.categories || []);
+          } else if (key === "orders") {
+            setOrders(data.orders || []);
+          } else if (key === "coupons") {
+            setCoupons(data.coupons || []);
+          } else if (key === "reviews") {
+            setReviews(data.reviews || []);
+          } else if (key === "modules") {
+            setModulesList(data.modules || []);
+          } else if (key === "b2b") {
+            setB2bQuotes(data.quotes || []);
+          } else if (key === "trade") {
+            setTradeIns(data.tradeIns || []);
+          } else if (key === "print") {
+            setPrintOrders(data.requests || []);
+          } else if (key === "ibans") {
+            setIbansList(data.ibans || []);
+          }
+        } else {
+          console.warn("Endpoint failed in refreshAllData:", item.reason);
+        }
       }
     } catch (err) {
       console.error("Data refresh error:", err);
@@ -1412,7 +1467,7 @@ export default function AdminDashboardPage() {
         {/* Sağ İçerik Alanı (Widescreen Fluid) */}
         <main className="flex-1 min-w-0">
           {/* TAB 1: GENEL BAKIŞ (DASHBOARD) */}
-          {activeTab === "dashboard" && reportData && (
+          {activeTab === "dashboard" && (
             <div className="space-y-6 animate-in fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white p-5 border border-slate-200/80 rounded-2xl shadow-xs flex items-center justify-between">
@@ -2111,7 +2166,7 @@ export default function AdminDashboardPage() {
           )}
 
           {/* TAB 4: SİTE, LOGO, HEADER & GENEL AYARLAR (SETTINGS) */}
-          {activeTab === "settings" && settings && (
+          {activeTab === "settings" && (
             <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 space-y-8 animate-in fade-in shadow-xs">
               <div className="pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
