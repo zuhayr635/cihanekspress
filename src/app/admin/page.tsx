@@ -1099,6 +1099,19 @@ export default function AdminDashboardPage() {
             </button>
           </div>
 
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors cursor-pointer text-xs font-semibold ${
+              activeTab === "settings"
+                ? "bg-[#F27A1A] text-white border-[#F27A1A] shadow-xs"
+                : "text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border-slate-700"
+            }`}
+            title="Site Ayarları, Header Logo ve Ödeme Kanalları"
+          >
+            <Settings className="w-3.5 h-3.5 text-orange-400" />
+            <span>Ayarlar & Logo</span>
+          </button>
+
           <Link
             href="/"
             target="_blank"
@@ -1144,179 +1157,260 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Ana Gövde */}
-      <div className="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 gap-8">
-        {/* Sol Menü (Tabs) */}
-        <aside className="w-full md:w-64 space-y-1.5 flex-shrink-0">
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "dashboard"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Genel Bakış</span>
-          </button>
+      {/* Ana Gövde: Widescreen PC + Tablet & Mobil Tam Uyumlu */}
+      <div className="flex-1 flex flex-col lg:flex-row w-full max-w-[1920px] mx-auto p-3 sm:p-5 lg:p-8 gap-5 lg:gap-8">
+        {/* Mobil & Tablet Hızlı Sekme Çubuğu (Yatay Kaydırılabilir) */}
+        <div className="lg:hidden w-full overflow-x-auto pb-2 scrollbar-none flex items-center gap-2 -mx-1 px-1 flex-shrink-0">
+          {[
+            { id: "dashboard", label: "Genel Bakış", icon: LayoutDashboard },
+            { id: "settings", label: "⚙️ Site & Logo", icon: Settings, highlight: true },
+            { id: "orders", label: "Siparişler", icon: ShoppingBag, count: orders.length },
+            { id: "products", label: "Ürünler", icon: Package, count: products.length },
+            { id: "categories", label: "Kategoriler", icon: FolderTree, count: categories.length },
+            { id: "stealth", label: "Gizli IBAN", icon: ShieldCheck, count: "5 Zırh" },
+            { id: "modules", label: "Modüller", icon: Sliders, count: modulesList.length || 15 },
+            { id: "invites", label: "Davetiyeler", icon: KeyRound, count: invites.length },
+            { id: "coupons", label: "Kuponlar", icon: Tag },
+            { id: "reviews", label: "Yorumlar", icon: MessageSquare },
+          ].map((tabItem) => {
+            const IconComp = tabItem.icon;
+            const isActive = activeTab === tabItem.id;
+            return (
+              <button
+                key={tabItem.id}
+                type="button"
+                onClick={() => setActiveTab(tabItem.id as any)}
+                className={`flex-shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs whitespace-nowrap ${
+                  isActive
+                    ? "bg-[#F27A1A] text-white ring-2 ring-orange-300"
+                    : tabItem.highlight
+                    ? "bg-orange-50 text-orange-950 border border-orange-300 font-extrabold"
+                    : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                }`}
+              >
+                <IconComp className="w-3.5 h-3.5" />
+                <span>{tabItem.label}</span>
+                {tabItem.count !== undefined && (
+                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
+                    isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
+                  }`}>
+                    {tabItem.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-          <button
-            onClick={() => setActiveTab("invites")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "invites"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <KeyRound className={`w-4 h-4 ${activeTab === "invites" ? "text-white" : "text-[#F27A1A]"}`} />
-              <span>Davetiye Linkleri</span>
+        {/* Sol Menü: Profesyonel Kategorize Edilmiş Desktop Sidebar */}
+        <aside className="hidden lg:flex flex-col w-72 space-y-6 flex-shrink-0">
+          {/* GRUP 1: YÖNETİM & SATIŞ */}
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-3 block mb-1">
+              Yönetim & Satış
             </span>
-            <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
-              activeTab === "invites" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
-            }`}>
-              {invites.length}
-            </span>
-          </button>
 
-          <button
-            onClick={() => setActiveTab("orders")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "orders"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <ShoppingBag className="w-4 h-4" />
-              <span>Siparişler</span>
-            </span>
-            {orders.length > 0 && (
-              <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
-                activeTab === "orders" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
-              }`}>
-                {orders.length}
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "dashboard"
+                  ? "bg-[#F27A1A] text-white shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/70"
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Genel Bakış</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("orders")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "orders"
+                  ? "bg-[#F27A1A] text-white shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/70"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <ShoppingBag className="w-4 h-4" />
+                <span>Siparişler</span>
               </span>
-            )}
-          </button>
+              {orders.length > 0 && (
+                <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === "orders" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
+                }`}>
+                  {orders.length}
+                </span>
+              )}
+            </button>
 
-          <button
-            onClick={() => setActiveTab("products")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "products"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <Package className="w-4 h-4" />
-              <span>Ürünler & Stok</span>
-            </span>
-            <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
-              activeTab === "products" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
-            }`}>
-              {products.length}
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveTab("products")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "products"
+                  ? "bg-[#F27A1A] text-white shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/70"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <Package className="w-4 h-4" />
+                <span>Ürünler & Stok</span>
+              </span>
+              <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                activeTab === "products" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
+              }`}>
+                {products.length}
+              </span>
+            </button>
 
-          {/* Kategori & Şasi Ölçeği Ağacı Sekmesi */}
-          <button
-            onClick={() => setActiveTab("categories")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "categories"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <FolderTree className="w-4 h-4" />
-              <span>Kategori & Ölçekler</span>
-            </span>
-            <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
-              activeTab === "categories" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
-            }`}>
-              {categories.length}
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveTab("categories")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "categories"
+                  ? "bg-[#F27A1A] text-white shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/70"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <FolderTree className="w-4 h-4" />
+                <span>Kategori & Ölçekler</span>
+              </span>
+              <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                activeTab === "categories" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
+              }`}>
+                {categories.length}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "settings"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            <span>Mağaza Modu & Ödeme</span>
-          </button>
+            <button
+              onClick={() => setActiveTab("invites")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "invites"
+                  ? "bg-[#F27A1A] text-white shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/70"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <KeyRound className={`w-4 h-4 ${activeTab === "invites" ? "text-white" : "text-[#F27A1A]"}`} />
+                <span>Davetiye Linkleri</span>
+              </span>
+              <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                activeTab === "invites" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-800"
+              }`}>
+                {invites.length}
+              </span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => setActiveTab("coupons")}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "coupons"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <Tag className="w-4 h-4" />
-            <span>İndirim Kuponları</span>
-          </button>
+          {/* GRUP 2: PAZARLAMA & MODÜLLER */}
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-3 block mb-1">
+              Pazarlama & Eklentiler
+            </span>
 
-          <button
-            onClick={() => setActiveTab("reviews")}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "reviews"
-                ? "bg-[#F27A1A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/60"
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>Yorum Onay Havuzu</span>
-          </button>
+            <button
+              onClick={() => setActiveTab("modules")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "modules"
+                  ? "bg-[#F27A1A] text-white font-bold shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white hover:bg-orange-50/60 text-slate-800 border border-slate-200/70"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <Sliders className={`w-4 h-4 ${activeTab === "modules" ? "text-white" : "text-[#F27A1A]"}`} />
+                <span>Modüller (15 Modül)</span>
+              </span>
+              <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                activeTab === "modules" ? "bg-white/20 text-white" : "bg-orange-100 text-[#F27A1A]"
+              }`}>
+                {modulesList.length || 15}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("modules")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "modules"
-                ? "bg-[#F27A1A] text-white font-bold shadow-xs"
-                : "bg-white hover:bg-orange-50/60 text-slate-800 border border-orange-200/80"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <Sliders className={`w-4 h-4 ${activeTab === "modules" ? "text-white" : "text-[#F27A1A]"}`} />
-              <span>Modüller (15 Modül)</span>
-            </span>
-            <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full font-bold ${
-              activeTab === "modules" ? "bg-white/20 text-white" : "bg-orange-100 text-[#F27A1A]"
-            }`}>
-              {modulesList.length || 15}
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveTab("coupons")}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "coupons"
+                  ? "bg-[#F27A1A] text-white shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/70"
+              }`}
+            >
+              <Tag className="w-4 h-4" />
+              <span>İndirim Kuponları</span>
+            </button>
 
-          {/* 5 ZIRH: STEALTH SATIŞ & GİZLİ IBAN KASASI */}
-          <button
-            onClick={() => setActiveTab("stealth")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-              activeTab === "stealth"
-                ? "bg-emerald-700 text-white font-bold shadow-xs"
-                : "bg-white hover:bg-emerald-50/60 text-slate-800 border border-emerald-300/80 shadow-xs"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <ShieldCheck className={`w-4 h-4 ${activeTab === "stealth" ? "text-white" : "text-emerald-700"}`} />
-              <span>Gizli IBAN & Stealth</span>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "reviews"
+                  ? "bg-[#F27A1A] text-white shadow-xs ring-1 ring-[#F27A1A]"
+                  : "bg-white text-slate-700 hover:bg-slate-100/80 border border-slate-200/70"
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Yorum Onay Havuzu</span>
+            </button>
+          </div>
+
+          {/* GRUP 3: GÜVENLİK & STEALTH */}
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-3 block mb-1">
+              Güvenlik & Savunma
             </span>
-            <span className={`font-mono text-[10px] px-2 py-0.5 rounded-full font-black ${
-              activeTab === "stealth" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800"
-            }`}>
-              5 ZIRH
+
+            <button
+              onClick={() => setActiveTab("stealth")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "stealth"
+                  ? "bg-emerald-700 text-white font-bold shadow-xs ring-1 ring-emerald-600"
+                  : "bg-white hover:bg-emerald-50/60 text-slate-800 border border-emerald-300/80 shadow-2xs"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <ShieldCheck className={`w-4 h-4 ${activeTab === "stealth" ? "text-white" : "text-emerald-700"}`} />
+                <span>Gizli IBAN & Stealth</span>
+              </span>
+              <span className={`font-mono text-[10px] px-2 py-0.5 rounded-full font-black ${
+                activeTab === "stealth" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800"
+              }`}>
+                5 ZIRH
+              </span>
+            </button>
+          </div>
+
+          {/* GRUP 4: SİSTEM & AYARLAR (ÖZEL VURGULU) */}
+          <div className="space-y-1 pt-2 border-t border-slate-200/80">
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-3 block mb-1">
+              Sistem & Yapılandırma
             </span>
-          </button>
+
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={`w-full flex items-center justify-between px-3.5 py-3 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                activeTab === "settings"
+                  ? "bg-[#F27A1A] text-white shadow-md ring-2 ring-orange-300"
+                  : "bg-orange-50/80 hover:bg-orange-100 text-orange-950 border border-orange-300 shadow-2xs"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Settings className={`w-4 h-4 ${activeTab === "settings" ? "text-white" : "text-[#F27A1A]"}`} />
+                <div className="text-left">
+                  <span className="block font-bold">Site, Logo & Ayarlar</span>
+                  <span className={`text-[10px] font-normal lowercase block ${activeTab === "settings" ? "text-orange-100" : "text-slate-500"}`}>
+                    Logo, başlık, kur, ödeme
+                  </span>
+                </div>
+              </div>
+              <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase ${
+                activeTab === "settings" ? "bg-white/20 text-white" : "bg-[#F27A1A] text-white"
+              }`}>
+                Logo & Başlık
+              </span>
+            </button>
+          </div>
         </aside>
 
-        {/* Sağ İçerik Alanı */}
-        <main className="flex-1">
+        {/* Sağ İçerik Alanı (Widescreen Fluid) */}
+        <main className="flex-1 min-w-0">
           {/* TAB 1: GENEL BAKIŞ (DASHBOARD) */}
           {activeTab === "dashboard" && reportData && (
             <div className="space-y-6 animate-in fade-in">
@@ -2016,14 +2110,22 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* TAB 4: MAĞAZA MODU & ÖDEME AYARLARI (SETTINGS) */}
+          {/* TAB 4: SİTE, LOGO, HEADER & GENEL AYARLAR (SETTINGS) */}
           {activeTab === "settings" && settings && (
             <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 space-y-8 animate-in fade-in shadow-xs">
-              <div className="pb-4 border-b border-slate-100">
-                <h2 className="text-xs uppercase tracking-wider font-bold text-slate-900">
-                  Mağaza Görünürlüğü & Ödeme Altyapıları Kontrolü
-                </h2>
-                <p className="text-[11px] text-slate-500">Mevzuat kalkanı, satış kısıtlamaları ve tahsilat kanalları yapılandırması</p>
+              <div className="pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-[#F27A1A]" />
+                    <span>Site, Logo, Header & Genel Ayarlar</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Logo yükleme, slogan kontrolü, mağaza modu, kur belirleme, zabıta kalkanı ve tahsilat kanalları
+                  </p>
+                </div>
+                <span className="px-3 py-1 rounded-lg bg-orange-100/70 text-[#F27A1A] text-xs font-bold font-mono self-start sm:self-auto">
+                  Yapılandırma Modu
+                </span>
               </div>
 
               <form onSubmit={handleSaveSettings} className="space-y-8">
