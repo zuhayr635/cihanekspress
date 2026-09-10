@@ -48,6 +48,14 @@ export default function Header() {
   };
 
   const whatsappPhone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
+  const logoUrl = storeSettings?.logoUrl || "";
+  const brandMode = storeSettings?.headerBrandMode || "BOTH";
+  const primaryText = storeSettings?.headerPrimaryText || "cihan";
+  const secondaryText = storeSettings?.headerSecondaryText || "ekspress";
+  const suffixText = storeSettings?.headerSuffixText !== undefined ? storeSettings.headerSuffixText : ".com";
+  const showSubtitle = storeSettings?.showHeaderSubtitle !== undefined ? storeSettings.showHeaderSubtitle : true;
+  const subtitleText = storeSettings?.headerSubtitle || "RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU";
+  const logoHeight = storeSettings?.logoHeight || 38;
 
   return (
     <>
@@ -129,33 +137,79 @@ export default function Header() {
 
       {/* 2. KAT: Trendyol Ana Header (Logo, Geniş Arama Çubuğu, Giriş, Favoriler, Sepet) */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4 sm:gap-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-8">
           {/* Mobil Menü Butonu */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-slate-700 hover:text-[#F27A1A] transition-colors"
+            className="lg:hidden p-1.5 sm:p-2 text-slate-700 hover:text-[#F27A1A] transition-colors flex-shrink-0"
             aria-label="Menüyü Aç"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
           </button>
 
-          {/* Trendyol Tarzı Logo */}
-          <Link href="/" className="flex-shrink-0 group">
-            <div className="flex items-baseline gap-0.5">
-              <span className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
-                cihan
-              </span>
-              <span className="text-2xl sm:text-3xl font-black tracking-tight text-[#F27A1A]">
-                ekspress
-              </span>
-              <span className="text-xs font-semibold text-slate-400 ml-0.5">.com</span>
-            </div>
-            <p className="text-[9px] font-bold tracking-wider text-slate-400 -mt-1 uppercase">
-              RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU
-            </p>
+          {/* Logo & Marka Başlığı */}
+          <Link href="/" className="flex-shrink-0 group max-w-[170px] sm:max-w-none">
+            {logoUrl && brandMode !== "TEXT_ONLY" ? (
+              <div className="flex flex-col items-start justify-center">
+                <img
+                  src={logoUrl}
+                  alt={`${primaryText} ${secondaryText}`}
+                  style={{
+                    height: `${logoHeight}px`,
+                    maxHeight: `${logoHeight}px`,
+                    width: "auto",
+                    objectFit: "contain",
+                  }}
+                  className="block select-none max-w-full"
+                  loading="eager"
+                  decoding="async"
+                />
+                {brandMode === "BOTH" && (
+                  <div className="flex items-baseline gap-0.5 leading-none mt-1">
+                    <span className="text-lg sm:text-2xl font-black tracking-tight text-slate-950 leading-none">
+                      {primaryText}
+                    </span>
+                    <span className="text-lg sm:text-2xl font-black tracking-tight text-[#F27A1A] leading-none">
+                      {secondaryText}
+                    </span>
+                    {suffixText && (
+                      <span className="text-[9px] sm:text-xs font-semibold text-slate-400 ml-0.5 leading-none">
+                        {suffixText}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {showSubtitle && (
+                  <p className="text-[7.5px] sm:text-[9px] font-bold tracking-wider text-slate-400 mt-1 uppercase leading-none max-w-[170px] sm:max-w-none truncate">
+                    {subtitleText}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-start justify-center">
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-xl sm:text-3xl font-black tracking-tight text-slate-950">
+                    {primaryText}
+                  </span>
+                  <span className="text-xl sm:text-3xl font-black tracking-tight text-[#F27A1A]">
+                    {secondaryText}
+                  </span>
+                  {suffixText && (
+                    <span className="text-xs font-semibold text-slate-400 ml-0.5">
+                      {suffixText}
+                    </span>
+                  )}
+                </div>
+                {showSubtitle && (
+                  <p className="text-[8px] sm:text-[9px] font-bold tracking-wider text-slate-400 -mt-0.5 uppercase tracking-wider max-w-[170px] sm:max-w-none truncate">
+                    {subtitleText}
+                  </p>
+                )}
+              </div>
+            )}
           </Link>
 
-          {/* Trendyol Geniş Arama Çubuğu */}
+          {/* Trendyol Geniş Arama Çubuğu (Tablet & Masaüstü) */}
           <form
             onSubmit={handleSearchSubmit}
             className="flex-1 max-w-2xl relative hidden sm:block"
@@ -177,13 +231,13 @@ export default function Header() {
           </form>
 
           {/* Sağ Aksiyonlar: Davetiye Butonu, Giriş Yap, Favorilerim, Sepetim */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-4 flex-shrink-0">
             
-            {/* Davetiye Kodu Butonu (Davetsiz Ziyaretçiler İçin Öne Çıkarılmış) */}
+            {/* Davetiye Kodu Butonu */}
             {!isSalesAllowed ? (
               <button
                 onClick={() => setIsVipModalOpen(true)}
-                className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-black py-1.5 px-2.5 sm:px-3 rounded-md text-xs font-bold transition-all shadow-xs"
+                className="flex items-center gap-1 bg-amber-500 hover:bg-amber-400 text-black py-1.5 px-2 sm:px-3 rounded-md text-xs font-bold transition-all shadow-xs flex-shrink-0"
                 title="VIP Davetiye Kodunuzu girerek fiyatları ve sipariş yetkisini açın"
               >
                 <KeyRound className="w-3.5 h-3.5" />
@@ -192,16 +246,18 @@ export default function Header() {
             ) : (
               <button
                 onClick={() => setIsVipModalOpen(true)}
-                className="flex items-center gap-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 py-1.5 px-2.5 sm:px-3 rounded-md text-xs font-bold transition-all shadow-xs"
+                className="flex items-center gap-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 py-1.5 px-2 sm:px-3 rounded-md text-xs font-bold transition-all shadow-xs flex-shrink-0"
                 title="VIP oturumunuz aktiftir"
               >
-                <span>👑 VIP Üye</span>
+                <span>👑</span>
+                <span className="hidden sm:inline"> VIP Üye</span>
               </button>
             )}
 
+            {/* Giriş Yap (Mobilde Hamburger Menüye Alındı) */}
             <Link
               href="/admin/login"
-              className="flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group"
+              className="hidden md:flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group"
             >
               <User className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
               <div className="hidden xl:flex flex-col text-left">
@@ -210,9 +266,10 @@ export default function Header() {
               </div>
             </Link>
 
+            {/* Favorilerim (Mobilde Hamburger Menüye Alındı) */}
             <Link
               href="/topluluk"
-              className="flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group relative"
+              className="hidden md:flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group relative"
             >
               <Heart className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
               <div className="hidden xl:flex flex-col text-left">
@@ -221,6 +278,7 @@ export default function Header() {
               </div>
             </Link>
 
+            {/* Sepetim Butonu (Mobilde Sağa Taşmayı Önleyen Kompakt Badge) */}
             <button
               onClick={() => {
                 if (!isSalesAllowed && itemCount === 0) {
@@ -229,7 +287,8 @@ export default function Header() {
                   setIsCartOpen(true);
                 }
               }}
-              className="flex items-center gap-2 bg-[#FFF3E8] hover:bg-[#FFE8D6] text-slate-900 border border-[#F27A1A]/30 hover:border-[#F27A1A] py-2 px-3 sm:px-3.5 rounded-md transition-all group relative"
+              className="flex items-center gap-1.5 sm:gap-2 bg-[#FFF3E8] hover:bg-[#FFE8D6] text-slate-900 border border-[#F27A1A]/30 hover:border-[#F27A1A] p-2 sm:py-2 sm:px-3.5 rounded-md transition-all group relative flex-shrink-0"
+              aria-label="Sepetim"
             >
               <div className="relative">
                 <ShoppingCart className="w-5 h-5 text-[#F27A1A]" />
@@ -239,9 +298,9 @@ export default function Header() {
                   </span>
                 )}
               </div>
-              <div className="flex flex-col text-left">
+              <div className="hidden sm:flex flex-col text-left">
                 <span className="text-xs font-bold text-slate-900 leading-tight">Sepetim</span>
-                <span className="text-[10px] font-semibold text-[#F27A1A] hidden sm:inline">
+                <span className="text-[10px] font-semibold text-[#F27A1A]">
                   {isSalesAllowed
                     ? itemCount > 0
                       ? `${subtotal.toLocaleString("tr-TR")} ₺`
@@ -251,6 +310,26 @@ export default function Header() {
               </div>
             </button>
           </div>
+        </div>
+
+        {/* Mobil Özel Arama Çubuğu (Mobilde Sağa Kaymayı Engelleyen ve Erişimi Kolaylaştıran Satır) */}
+        <div className="sm:hidden px-3 pb-2.5 pt-0.5 border-t border-slate-100 bg-white">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
+            <input
+              type="text"
+              placeholder="Crawler şasisi, pirinç aks veya parça ara..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#F3F3F3] hover:bg-[#EBEBEB] focus:bg-white text-slate-900 placeholder:text-slate-400 border border-transparent focus:border-[#F27A1A] rounded-lg py-2 pl-3.5 pr-10 text-xs transition-all focus:outline-none focus:ring-1 focus:ring-[#F27A1A]"
+            />
+            <button
+              type="submit"
+              className="absolute right-1 top-1 p-1.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white rounded-md transition-colors"
+              aria-label="Ara"
+            >
+              <Search className="w-3.5 h-3.5" />
+            </button>
+          </form>
         </div>
 
         {/* 3. KAT: Trendyol Yatay Kategori ve Hızlı Linkler Barı */}
@@ -415,11 +494,34 @@ export default function Header() {
               📖 Sistem Rehberi (Nasıl Çalışır?)
             </Link>
 
-            <div className="pt-2 border-t border-slate-200">
+            <div className="pt-2 border-t border-slate-200 space-y-2">
+              <Link
+                href="/admin/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-slate-700 text-xs font-bold flex items-center gap-2 hover:text-[#F27A1A]"
+              >
+                <User className="w-4 h-4 text-slate-500" /> Giriş Yap / Üye Ol
+              </Link>
+              <Link
+                href="/topluluk"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-slate-700 text-xs font-bold flex items-center gap-2 hover:text-[#F27A1A]"
+              >
+                <Heart className="w-4 h-4 text-slate-500" /> Favorilerim (Kaydedilenler)
+              </Link>
+              <a
+                href={`https://wa.me/${whatsappPhone}?text=Merhaba%20Cihan%20Usta,%20katalog%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-emerald-700 text-xs font-bold flex items-center gap-2 hover:text-emerald-800"
+              >
+                <Phone className="w-4 h-4 text-emerald-600" /> WhatsApp Usta Danışma Hattı
+              </a>
               <Link
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-slate-500 text-xs flex items-center gap-1 hover:text-slate-800"
+                className="text-slate-500 text-xs flex items-center gap-1 hover:text-slate-800 pt-1"
               >
                 <ShieldAlert className="w-3.5 h-3.5 text-[#F27A1A]" /> Yönetici Paneli
               </Link>

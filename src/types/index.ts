@@ -22,6 +22,14 @@ export interface StoreSettingsData {
   storeName: string;
   storeTagline: string;
   storeMode: StoreMode;
+  logoUrl?: string;
+  headerBrandMode?: "LOGO_ONLY" | "TEXT_ONLY" | "BOTH";
+  headerPrimaryText?: string;
+  headerSecondaryText?: string;
+  headerSuffixText?: string;
+  showHeaderSubtitle?: boolean;
+  headerSubtitle?: string;
+  logoHeight?: number;
   currency: string;
   currencySymbol: string;
   taxRate: number;

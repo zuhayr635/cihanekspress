@@ -12,6 +12,14 @@ model StoreSetting {
   storeName               String   @default("LUXE ATELIER")
   storeTagline            String   @default("Kişiye Özel Lüks Koleksiyon")
   storeMode               String   @default("CATALOG_ONLY") // "CATALOG_ONLY" | "INVITE_ONLY" | "PUBLIC_SALE"
+  logoUrl                 String   @default("")
+  headerBrandMode         String   @default("BOTH") // "LOGO_ONLY" | "TEXT_ONLY" | "BOTH"
+  headerPrimaryText       String   @default("cihan")
+  headerSecondaryText     String   @default("ekspress")
+  headerSuffixText        String   @default(".com")
+  showHeaderSubtitle      Boolean  @default(true)
+  headerSubtitle          String   @default("RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU")
+  logoHeight              Int      @default(38)
   currency                String   @default("TL")
   currencySymbol          String   @default("₺")
   taxRate                 Int      @default(20)

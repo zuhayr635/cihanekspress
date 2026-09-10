@@ -31,9 +31,9 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased light`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased light overflow-x-hidden`}
     >
-      <body className="min-h-full flex flex-col bg-[#F8FAFC] text-[#0F172A] font-sans selection:bg-orange-500 selection:text-white">
+      <body className="min-h-full w-full max-w-[100vw] overflow-x-hidden flex flex-col bg-[#F8FAFC] text-[#0F172A] font-sans selection:bg-orange-500 selection:text-white">
         <CartProvider>
           <Header />
           <main className="flex-1">{children}</main>

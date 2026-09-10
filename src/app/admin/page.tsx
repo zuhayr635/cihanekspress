@@ -2103,6 +2103,354 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
+                {/* 0.8 HEADER LOGO & MARKA BAŞLIĞI YÖNETİMİ */}
+                <div className="p-6 bg-slate-50/70 border border-slate-200/80 rounded-2xl space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                    <div>
+                      <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-[#F27A1A]" />
+                        <span>Üst Header, Logo & Marka Başlığı Yönetimi</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Logo yükleme, marka yazısı düzenleme, sloganı gizleme ve mobil uyumluluk ayarları
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-100/70 text-orange-950 text-[10px] font-bold">
+                        <Sparkles className="w-3 h-3 text-[#F27A1A]" />
+                        Kayıpsız Yüksek Netlik
+                      </span>
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Kaydet</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Canlı Header Önizleme Kutusu */}
+                  <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Sitedeki Canlı Görünüm Önizlemesi
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {settings.headerBrandMode || "BOTH"} Modu
+                      </span>
+                    </div>
+
+                    <div className="p-4 bg-slate-50/60 rounded-lg border border-dashed border-slate-200 flex items-center justify-center min-h-[90px]">
+                      <div className="flex flex-col items-center text-center">
+                        {settings.logoUrl && (settings.headerBrandMode || "BOTH") !== "TEXT_ONLY" ? (
+                          <>
+                            <img
+                              src={settings.logoUrl}
+                              alt="Logo Önizleme"
+                              style={{
+                                height: `${settings.logoHeight || 38}px`,
+                                maxHeight: `${settings.logoHeight || 38}px`,
+                                width: "auto",
+                                objectFit: "contain",
+                              }}
+                              className="block select-none"
+                            />
+                            {(settings.headerBrandMode || "BOTH") === "BOTH" && (
+                              <div className="flex items-baseline gap-0.5 leading-none mt-1.5">
+                                <span className="text-xl font-black tracking-tight text-slate-950">
+                                  {settings.headerPrimaryText || "cihan"}
+                                </span>
+                                <span className="text-xl font-black tracking-tight text-[#F27A1A]">
+                                  {settings.headerSecondaryText || "ekspress"}
+                                </span>
+                                <span className="text-xs font-semibold text-slate-400 ml-0.5">
+                                  {settings.headerSuffixText !== undefined ? settings.headerSuffixText : ".com"}
+                                </span>
+                              </div>
+                            )}
+                            {settings.showHeaderSubtitle !== false && (
+                              <p className="text-[9px] font-bold tracking-wider text-slate-400 mt-1 uppercase">
+                                {settings.headerSubtitle || "RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU"}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-baseline gap-0.5">
+                              <span className="text-2xl font-black tracking-tight text-slate-950">
+                                {settings.headerPrimaryText || "cihan"}
+                              </span>
+                              <span className="text-2xl font-black tracking-tight text-[#F27A1A]">
+                                {settings.headerSecondaryText || "ekspress"}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-400 ml-0.5">
+                                {settings.headerSuffixText !== undefined ? settings.headerSuffixText : ".com"}
+                              </span>
+                            </div>
+                            {settings.showHeaderSubtitle !== false && (
+                              <p className="text-[9px] font-bold tracking-wider text-slate-400 -mt-0.5 uppercase tracking-wider">
+                                {settings.headerSubtitle || "RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU"}
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 1. Görünüm Modu Seçimi (BOTH / LOGO_ONLY / TEXT_ONLY) */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-2">
+                      Header Görünüm Düzeni
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {[
+                        {
+                          id: "BOTH",
+                          title: "Logo + Marka Yazısı",
+                          desc: "Logonun hemen altında cihan ekspress yazısı gösterilir",
+                          badge: "Önerilen",
+                        },
+                        {
+                          id: "LOGO_ONLY",
+                          title: "Yalnızca Logo",
+                          desc: "Sadece yüklediğiniz logo görseli gösterilir",
+                          badge: "Sade",
+                        },
+                        {
+                          id: "TEXT_ONLY",
+                          title: "Yalnızca Metin",
+                          desc: "Logo gizlenir, sadece özel metinler gösterilir",
+                          badge: "Tipografi",
+                        },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setSettings({ ...settings, headerBrandMode: item.id })}
+                          className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            (settings.headerBrandMode || "BOTH") === item.id
+                              ? "bg-orange-50/60 border-[#F27A1A] ring-1 ring-[#F27A1A]"
+                              : "bg-white border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900">{item.title}</span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                              {item.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1">{item.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 2. Logo Yükleme, URL ve Boyutlandırma */}
+                  <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">
+                        Logo Görseli Yükle & Düzenle
+                      </span>
+                      {settings.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setSettings({ ...settings, logoUrl: "" })}
+                          className="text-[11px] text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" /> Logoyu Kaldır
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                      {/* Dosya Yükle Butonu */}
+                      <div className="sm:col-span-5">
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Bilgisayardan Logo Seç
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                            disabled={isUploadingImage}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const url = await handleUploadImageFile(file);
+                              if (url) {
+                                setSettings((prev: any) => ({ ...prev, logoUrl: url }));
+                                showNotify("success", "Logo başarıyla yüklendi!");
+                              }
+                            }}
+                            className="hidden"
+                            id="header-logo-upload-input"
+                          />
+                          <label
+                            htmlFor="header-logo-upload-input"
+                            className={`w-full flex items-center justify-center gap-2 py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                              isUploadingImage ? "opacity-60 pointer-events-none" : ""
+                            }`}
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>{isUploadingImage ? "Yükleniyor..." : "Logo Seç (PNG/SVG/JPG)"}</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Veya URL Girişi */}
+                      <div className="sm:col-span-5">
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Veya Doğrudan Görsel URL&apos;si
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="/uploads/... veya https://..."
+                          value={settings.logoUrl || ""}
+                          onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-mono text-slate-800"
+                        />
+                      </div>
+
+                      {/* Logo Yüksekliği (px) */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Yükseklik
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={20}
+                            max={120}
+                            value={settings.logoHeight || 38}
+                            onChange={(e) =>
+                              setSettings({
+                                ...settings,
+                                logoHeight: Number(e.target.value) || 38,
+                              })
+                            }
+                            className="w-full px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-800 text-center"
+                          />
+                          <span className="absolute right-2 top-2 text-[10px] text-slate-400">px</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-slate-400">
+                      💡 Şeffaf arka planlı (PNG veya SVG) logo kullanmanız tavsiye edilir. Sistem görseli sıkıştırmadan orijinal netliğinde gösterir.
+                    </p>
+                  </div>
+
+                  {/* 3. Marka Metinleri (Kişiselleştirilebilir Yazı) */}
+                  <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
+                    <span className="text-xs font-bold text-slate-800 block">
+                      Marka Yazısı Kelimeleri (Logonun Altında / Yerinde Görünür)
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Birinci Kelime (Koyu Renk)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.headerPrimaryText ?? "cihan"}
+                          onChange={(e) => setSettings({ ...settings, headerPrimaryText: e.target.value })}
+                          placeholder="cihan"
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          İkinci Kelime (Turuncu Vurgu)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.headerSecondaryText ?? "ekspress"}
+                          onChange={(e) => setSettings({ ...settings, headerSecondaryText: e.target.value })}
+                          placeholder="ekspress"
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-[#F27A1A]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Uzantı / Ek (Küçük Gri)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.headerSuffixText ?? ".com"}
+                          onChange={(e) => setSettings({ ...settings, headerSuffixText: e.target.value })}
+                          placeholder=".com"
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-semibold text-slate-600"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Alt Başlık / Slogan Yönetimi (Gizleme & Düzenleme) */}
+                  <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 block">
+                          Alt Başlık / Slogan Yönetimi
+                        </span>
+                        <p className="text-[11px] text-slate-500">
+                          Logonun ve marka yazısının altındaki açıklama metnini düzenleyin veya tamamen kapatın
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSettings({
+                            ...settings,
+                            showHeaderSubtitle: settings.showHeaderSubtitle === false ? true : false,
+                          })
+                        }
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          settings.showHeaderSubtitle !== false
+                            ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                            : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                        }`}
+                      >
+                        {settings.showHeaderSubtitle !== false ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Görünür (Açık)</span>
+                          </>
+                        ) : (
+                          <>
+                            <X className="w-3.5 h-3.5" />
+                            <span>Gizli (Kapalı)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {settings.showHeaderSubtitle !== false && (
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Alt Başlık Metni
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.headerSubtitle ?? "RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU"}
+                          onChange={(e) => setSettings({ ...settings, headerSubtitle: e.target.value })}
+                          placeholder="RC SCALE CRAWLER ATÖLYE SERGİ KATALOĞU"
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-800"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          İstediğiniz sloganı yazabilir veya sağdaki butona tıklayarak tamamen görünmez yapabilirsiniz.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* 1. Mağaza Modu (Çekirdek Gizlilik Kontrolü) */}
                 <div className="p-6 bg-slate-50/70 border border-slate-200/80 rounded-2xl space-y-4">
                   <div>
