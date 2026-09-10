@@ -15,8 +15,27 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(bytes);
     const mimeType = file.type || "image/png";
 
+    // 1. ImgBB CDN Desteği (Kalıcı bulut depolama)
+    const imgbbKey = process.env.IMGBB_API_KEY;
+    if (imgbbKey) {
+      try {
+        const imgbbForm = new FormData();
+        imgbbForm.append("image", buffer.toString("base64"));
+        const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+          method: "POST",
+          body: imgbbForm,
+        });
+        const imgbbData = await imgbbRes.json();
+        if (imgbbData?.success && imgbbData?.data?.url) {
+          return NextResponse.json({ success: true, url: imgbbData.data.url });
+        }
+      } catch (imgbbErr) {
+        console.warn("ImgBB upload failed, falling back to disk:", imgbbErr);
+      }
+    }
+
     try {
-      // Güvenli dosya adı üretimi
+      // 2. Yerel Disk (Persistent Volume) Depolaması
       const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
       const filename = `media-${uniqueSuffix}-${originalName}`;

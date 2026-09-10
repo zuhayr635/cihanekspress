@@ -299,20 +299,7 @@ export async function ensureInitialized() {
       });
     }
 
-    // 3. RC Crawler Kategorileri ve Ürünleri
-    // Eğer veritabanında eski giyim ürünleri varsa temizleyip RC Crawler ürünlerini yükle
-    const hasOldClothing = await prisma.category.findFirst({
-      where: { slug: "dis-giyim" },
-    });
-
-    if (hasOldClothing) {
-      await prisma.orderItem.deleteMany({});
-      await prisma.order.deleteMany({});
-      await prisma.productVariant.deleteMany({});
-      await prisma.productReview.deleteMany({});
-      await prisma.product.deleteMany({});
-      await prisma.category.deleteMany({});
-    }
+    // 3. RC Crawler Kategorileri ve Ürünleri - Mevcut veriler asla silinmez, sadece sıfırsa tohumlanır
 
     const catCount = await prisma.category.count();
     if (catCount === 0) {

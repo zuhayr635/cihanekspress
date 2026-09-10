@@ -459,6 +459,45 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Veritabanı Yedekleme & Geri Yükleme
+  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
+  const restoreFileRef = React.useRef<HTMLInputElement>(null);
+
+  const handleExportBackup = () => {
+    window.location.href = "/api/admin/backup";
+  };
+
+  const handleRestoreBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!confirm("Seçilen yedek veritabanına aktarılacak ve mevcut veriler güncellenecektir. Onaylıyor musunuz?")) {
+      if (restoreFileRef.current) restoreFileRef.current.value = "";
+      return;
+    }
+    setIsRestoringBackup(true);
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      const res = await fetch("/api/admin/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        showNotify("success", result.message || "Yedek başarıyla geri yüklendi!");
+        refreshAllData();
+      } else {
+        showNotify("error", "Geri yükleme başarısız: " + (result.error || "Bilinmeyen hata"));
+      }
+    } catch (err: any) {
+      showNotify("error", "Geçersiz yedek dosyası: " + err.message);
+    } finally {
+      setIsRestoringBackup(false);
+      if (restoreFileRef.current) restoreFileRef.current.value = "";
+    }
+  };
+
   const handleUploadImageFile = async (file: File): Promise<string | null> => {
     try {
       setIsUploadingImage(true);
@@ -2193,6 +2232,57 @@ export default function AdminDashboardPage() {
               </div>
 
               <form onSubmit={handleSaveSettings} className="space-y-8">
+                {/* KALICI VERİ DEPOLAMA VE VERİTABANI YEDEKLEME (PERSISTENT VOLUMES) */}
+                <div className="p-6 bg-linear-to-r from-emerald-950/20 via-emerald-900/10 to-transparent border border-emerald-500/30 rounded-2xl space-y-4 shadow-xs">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                        <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                          Kalıcı Veri & Veritabanı Güvencesi (Persistent Storage)
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold">
+                          KORUMA AKTİF
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                        Docker Persistent Storage sistemi devrededir. Siteye girdiğiniz tüm ürünler, kategoriler, siparişler, ayarlar ve yüklenen fotoğraflar sunucu güncellemelerinde veya yeni deploylarda <strong>asla silinmez, kalıcı olarak saklanır</strong>. Ayrıca istediğiniz an tek tıkla tam sistem JSON yedeği alabilir veya daha önce aldığınız bir yedeği geri yükleyebilirsiniz.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleExportBackup}
+                        className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer"
+                        title="Tüm veritabanını JSON formatında bilgisayarınıza indirir"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Veritabanı Yedeği İndir</span>
+                      </button>
+
+                      <input
+                        type="file"
+                        ref={restoreFileRef}
+                        onChange={handleRestoreBackup}
+                        accept=".json,application/json"
+                        className="hidden"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => restoreFileRef.current?.click()}
+                        disabled={isRestoringBackup}
+                        className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                        title="Daha önce indirilen JSON yedeğini sisteme aktarır"
+                      >
+                        <Upload className="w-4 h-4 text-emerald-400" />
+                        <span>{isRestoringBackup ? "Geri Yükleniyor..." : "Yedekten Geri Yükle"}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 0. ACİL DURUM ZABITA & VERGİ KALKANI (PANIC MODE) */}
                 <div className={`p-6 rounded-2xl border transition-all ${
                   settings.panicMode
