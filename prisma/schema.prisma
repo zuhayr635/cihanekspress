@@ -32,6 +32,15 @@ model StoreSetting {
   panicMode               Boolean  @default(false) // Zabıta & Denetim Acil Durum Kalkanı
   usdRate                 Float    @default(38.50) // Manuel Dolar Kuru (USD/TRY)
   blockedIpsJson          String   @default("[]")  // Şüpheli IP Engelleme Listesi
+  // 5 Gizli IBAN & Stealth Satış Operasyonu Ayarları
+  kuruEslestirmeEnabled     Boolean  @default(true)  // 1. Kuruşlu Referans Eşleştirme Motoru
+  burnerTimeoutMinutes      Int      @default(15)    // 3. Hayalet Ödeme Odası Süresi (dk)
+  stealthCamouflageEnabled  Boolean  @default(true)  // 4. Masum Hizmet / Kamuflaj Dekont Modu
+  stealthServiceTitle       String   @default("3D CAD Çizim ve Teknik Modelleme Hizmet Bedeli")
+  safeMemosJson             String   @default("[\"Teknik Danışmanlık Hizmet Bedeli\",\"3D CAD Modelleme\",\"Emanet İadesi\",\"Yazılım ve Tasarım Desteği\",\"Proje Çizim Bedeli\"]")
+  honeypotEnabled           Boolean  @default(true)  // 5. Ters Ağ Tuzağı & Sahte Bakım Modu
+  honeypotMode              String   @default("MAINTENANCE") // "MAINTENANCE" | "NOT_FOUND" | "TECHNICAL_PORTAL"
+  honeypotMessage           String   @default("Sistem Bakımı: Bankacılık API entegrasyonumuzda altyapı çalışması yapılmaktadır. Lütfen daha sonra tekrar deneyiniz.")
   updatedAt               DateTime @updatedAt
 }
 
@@ -161,6 +170,14 @@ model Order {
   trackingUrl     String?
   inviteTokenId   String?
   inviteToken     InviteToken? @relation(fields: [inviteTokenId], references: [id])
+  // Stealth IBAN & Burner Fields
+  exactAmount     Float?       // Kuruşlu net tutar (örn: 14500.42)
+  kuruSuffix      Float?       // Eklenen kuruş (örn: 0.42)
+  assignedIbanId  String?      // Dinamik havuzdan atanan IBAN ID
+  assignedIbanJson String?     // Snapshot: { bankName, accountHolder, iban }
+  burnerExpiresAt DateTime?    // Hayalet ödeme odası son geçerlilik anı
+  isBurnerExpired Boolean      @default(false)
+  safeMemo        String?      // Seçilen kamuflaj transfer açıklaması
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -290,5 +307,22 @@ model BuildLog {
   description   String
   photoUrl      String?
   date          DateTime @default(now())
+}
+
+// 2. Dinamik IBAN Havuzu & Akıllı Hesap Rotasyonu (Stealth Cash Vault)
+model IbanAccount {
+  id                 String   @id @default(cuid())
+  bankName           String
+  accountHolder      String
+  iban               String   @unique
+  dailyLimit         Float    @default(75000.0) // Günlük Maksimum Hacim Limiti (TL)
+  currentDailyTotal  Float    @default(0.0)     // Bugün giren tahmini tutar
+  dailyOrderLimit    Int      @default(15)      // Günlük Maksimum İşlem Sayısı
+  currentOrderCount  Int      @default(0)       // Bugün yönlendirilen sipariş adedi
+  isActive           Boolean  @default(true)    // Havuzda aktif mi?
+  priorityOrder      Int      @default(0)       // Öncelik sırası (küçük sayı önce)
+  notes              String?                    // Not / Açıklama (örn: "Şahıs hesabı A", "Yedek hesap")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 

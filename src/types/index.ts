@@ -43,6 +43,31 @@ export interface StoreSettingsData {
   panicMode?: boolean;
   usdRate?: number;
   blockedIps?: string[];
+  // 5 Gizli IBAN & Stealth Satış Operasyonu Ayarları
+  kuruEslestirmeEnabled?: boolean;
+  burnerTimeoutMinutes?: number;
+  stealthCamouflageEnabled?: boolean;
+  stealthServiceTitle?: string;
+  safeMemos?: string[];
+  honeypotEnabled?: boolean;
+  honeypotMode?: string;
+  honeypotMessage?: string;
+}
+
+export interface IbanAccountData {
+  id: string;
+  bankName: string;
+  accountHolder: string;
+  iban: string;
+  dailyLimit: number;
+  currentDailyTotal: number;
+  dailyOrderLimit: number;
+  currentOrderCount: number;
+  isActive: boolean;
+  priorityOrder: number;
+  notes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {

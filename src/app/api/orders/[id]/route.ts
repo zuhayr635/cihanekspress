@@ -22,16 +22,52 @@ export async function GET(
       return NextResponse.json({ error: "Sipariş bulunamadı" }, { status: 404 });
     }
 
-    // Mağaza banka hesaplarını da ekleyelim (Havale talimatı için)
+    // Mağaza banka hesapları ve stealth ayarları
     const settings = await prisma.storeSetting.findUnique({ where: { id: "default" } });
-    let bankAccounts = [];
-    try {
-      bankAccounts = JSON.parse(settings?.bankAccountsJson || "[]");
-    } catch {
-      bankAccounts = [];
+    
+    // Hayalet Ödeme Odası (Burner Session) Süre Kontrolü
+    const now = new Date();
+    const isBurnerExpired =
+      Boolean(order.burnerExpiresAt && now > new Date(order.burnerExpiresAt) && order.paymentStatus !== "COMPLETED");
+
+    let assignedIban: any = null;
+    let bankAccounts: any[] = [];
+
+    if (!isBurnerExpired) {
+      if (order.assignedIbanJson) {
+        try {
+          assignedIban = JSON.parse(order.assignedIbanJson);
+          bankAccounts = [assignedIban];
+        } catch {
+          // fallback
+        }
+      }
+
+      if (!assignedIban) {
+        try {
+          bankAccounts = JSON.parse(settings?.bankAccountsJson || "[]");
+          if (bankAccounts.length > 0) assignedIban = bankAccounts[0];
+        } catch {
+          bankAccounts = [];
+        }
+      }
     }
 
-    return NextResponse.json({ order, bankAccounts });
+    return NextResponse.json({
+      order: {
+        ...order,
+        isBurnerExpired,
+      },
+      assignedIban,
+      bankAccounts,
+      isBurnerExpired,
+      burnerExpiresAt: order.burnerExpiresAt,
+      exactAmount: order.exactAmount ?? order.total,
+      kuruSuffix: order.kuruSuffix,
+      safeMemo: order.safeMemo || "Teknik Danışmanlık Hizmet Bedeli",
+      stealthCamouflageEnabled: settings?.stealthCamouflageEnabled ?? true,
+      stealthServiceTitle: settings?.stealthServiceTitle || "3D CAD Çizim ve Teknik Danışmanlık Hizmet Bedeli",
+    });
   } catch (err) {
     console.error("Order fetch error:", err);
     return NextResponse.json({ error: "Sipariş bilgisi alınamadı" }, { status: 500 });

@@ -45,6 +45,9 @@ export default function CheckoutPage() {
   const [shippingAddress, setShippingAddress] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"WHATSAPP" | "BANK_TRANSFER">("WHATSAPP");
+  const [selectedSafeMemo, setSelectedSafeMemo] = useState<string>(
+    storeSettings?.safeMemos?.[0] || "3D CAD Çizim ve Teknik Danışmanlık Hizmet Bedeli"
+  );
 
   // Atölye Montaj Hizmeti Opsiyonu
   const [includeAssemblyService, setIncludeAssemblyService] = useState(false);
@@ -56,6 +59,70 @@ export default function CheckoutPage() {
   const finalOrderTotal = total + assemblyFee;
 
   if (!isSalesAllowed) {
+    if (storeSettings?.honeypotEnabled) {
+      if (storeSettings.honeypotMode === "NOT_FOUND") {
+        return (
+          <div className="max-w-md mx-auto px-4 py-24 text-center space-y-4 text-slate-800 font-sans">
+            <h1 className="text-6xl font-black text-slate-300">404</h1>
+            <h2 className="text-xl font-bold text-slate-900">Sayfa Bulunamadı</h2>
+            <p className="text-xs text-slate-500 font-mono">
+              Talep ettiğiniz adres sistemde mevcut değil veya sunucu yapılandırması nedeniyle taşınmış olabilir.
+            </p>
+            <div className="pt-4 flex justify-center gap-3">
+              <Link href="/" className="px-4 py-2 bg-slate-900 text-white text-xs rounded-xs font-semibold font-mono">
+                Ana Sayfaya Dön
+              </Link>
+              <button
+                onClick={() => setIsVipModalOpen(true)}
+                className="text-[11px] text-slate-400 hover:text-slate-600 underline font-mono"
+              >
+                VIP Doğrulama
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // Default Honeypot: Sahte Banka Altyapı Bakım Ekranı
+      return (
+        <div className="max-w-lg mx-auto px-4 py-24 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 mx-auto">
+            <Wrench className="w-8 h-8 animate-pulse" />
+          </div>
+          <div className="space-y-3">
+            <span className="text-[10px] font-mono tracking-widest text-amber-700 font-bold uppercase px-3 py-1 bg-amber-50 border border-amber-200 rounded-full">
+              SİSTEM ÇEVRİMDIŞI / ALTYAPI ÇALIŞMASI
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase">
+              Bankacılık & Takas Altyapısı Bakımda
+            </h2>
+            <p className="text-xs text-slate-600 leading-relaxed font-mono">
+              {storeSettings?.honeypotMessage ||
+                "Sistem Bakımı: Bankacılık API entegrasyonumuzda altyapı çalışması yapılmaktadır. Lütfen daha sonra tekrar deneyiniz."}
+            </p>
+            <div className="p-3 bg-slate-100 rounded-xs text-[10px] font-mono text-slate-500 border border-slate-200">
+              Hata Kodu: SEC-GATEWAY-OFFLINE-503 (EFT & Fast Takas Protokolü)
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              href="/"
+              className="px-5 py-2.5 bg-slate-900 text-white text-xs font-mono font-bold uppercase tracking-wider rounded-xs hover:bg-slate-800"
+            >
+              Kataloğa Dön
+            </Link>
+            <button
+              onClick={() => setIsVipModalOpen(true)}
+              className="text-xs text-slate-400 hover:text-slate-700 underline font-mono"
+            >
+              VIP Girişi Doğrula
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center space-y-6">
         <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mx-auto">
@@ -166,6 +233,7 @@ export default function CheckoutPage() {
           appliedCoupon: appliedCoupon || undefined,
           discountAmount,
           customerNote: customerNote || undefined,
+          safeMemo: selectedSafeMemo,
         }),
       });
 
@@ -394,14 +462,14 @@ export default function CheckoutPage() {
                 </label>
 
                 {/* Havale / EFT */}
-                <label
-                  className={`block p-4 border rounded-xs cursor-pointer transition-all ${
+                <div
+                  className={`p-4 border rounded-xs transition-all ${
                     paymentMethod === "BANK_TRANSFER"
                       ? "border-slate-950 bg-slate-100 shadow-xs"
                       : "border-slate-200 bg-white hover:border-slate-400"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="radio"
                       name="payment"
@@ -409,17 +477,55 @@ export default function CheckoutPage() {
                       onChange={() => setPaymentMethod("BANK_TRANSFER")}
                       className="accent-slate-900"
                     />
-                    <Building2 className="w-5 h-5 text-slate-900" />
+                    <Building2 className="w-5 h-5 text-slate-900 flex-shrink-0" />
                     <div>
                       <span className="text-xs font-mono font-bold text-slate-950 block uppercase">
-                        Banka Havalesi / EFT / Atölyede Elden Teslimat
+                        Banka Havalesi / EFT / Dinamik IBAN
                       </span>
                       <span className="text-[11px] font-mono text-slate-600">
-                        Sipariş sonrası atölye IBAN bilgisi gösterilir ve sipariş teyidi için aranacaksınız.
+                        Sipariş onayında kuruşlu net tutar ve 15 dakikalık güvenli IBAN tahsis edilir.
                       </span>
                     </div>
-                  </div>
-                </label>
+                  </label>
+
+                  {paymentMethod === "BANK_TRANSFER" && (
+                    <div className="mt-4 pt-3.5 border-t border-slate-200 space-y-3">
+                      <div className="flex items-start gap-2.5 p-3 bg-emerald-50 border border-emerald-200 rounded-xs text-emerald-950 text-xs font-mono">
+                        <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold uppercase tracking-wider text-[11px]">
+                            Akıllı Kuruş Eşleştirme & Sıfır-Açıklama (Zero-Memo):
+                          </p>
+                          <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
+                            Banka transferi yaparken açıklama kısmını <strong>TAMAMEN BOŞ</strong> bırakabilirsiniz. Siparişiniz kuruş hanesi (,XX ₺) üzerinden banka ekstresiyle saniyeler içinde otomatik eşleşir.
+                          </p>
+                        </div>
+                      </div>
+
+                      {storeSettings?.stealthCamouflageEnabled && storeSettings?.safeMemos && storeSettings.safeMemos.length > 0 && (
+                        <div className="space-y-1.5">
+                          <label className="block text-[11px] font-mono font-bold text-slate-800 uppercase">
+                            Önerilen Masum Transfer Açıklaması:
+                          </label>
+                          <select
+                            value={selectedSafeMemo}
+                            onChange={(e) => setSelectedSafeMemo(e.target.value)}
+                            className="w-full px-3 py-2 text-xs font-mono bg-white border border-slate-300 rounded-xs focus:outline-none focus:border-slate-900 text-slate-900"
+                          >
+                            {storeSettings.safeMemos.map((memo: string, idx: number) => (
+                              <option key={idx} value={memo}>
+                                {memo}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-[10px] font-mono text-slate-500 block">
+                            Bankanın yapay zeka ve denetim algoritmalarına karşı masum mühendislik hizmeti tanımı kullanılır.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

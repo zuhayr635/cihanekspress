@@ -55,6 +55,9 @@ import {
   CheckSquare,
   Star,
   ShieldOff,
+  ShieldCheck,
+  Flame,
+  FileText,
   Play,
   Video,
   Image as ImageIcon,
@@ -63,11 +66,43 @@ import {
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "settings" | "invites" | "products" | "categories" | "orders" | "coupons" | "reviews" | "modules"
+    "dashboard" | "settings" | "invites" | "products" | "categories" | "orders" | "coupons" | "reviews" | "modules" | "stealth"
   >("dashboard");
 
   const [isLoading, setIsLoading] = useState(true);
   const [adminUser, setAdminUser] = useState<{ name: string; username: string } | null>(null);
+
+  // 5 Gizli IBAN & Stealth Kasası Yönetimi
+  const [ibansList, setIbansList] = useState<any[]>([]);
+  const [isIbanModalOpen, setIsIbanModalOpen] = useState(false);
+  const [newIbanBank, setNewIbanBank] = useState("");
+  const [newIbanHolder, setNewIbanHolder] = useState("");
+  const [newIbanNumber, setNewIbanNumber] = useState("");
+  const [newIbanDailyLimit, setNewIbanDailyLimit] = useState<number>(75000);
+  const [newIbanDailyOrders, setNewIbanDailyOrders] = useState<number>(15);
+  const [newIbanPriority, setNewIbanPriority] = useState<number>(0);
+  const [newIbanNotes, setNewIbanNotes] = useState("");
+  const [isSavingIban, setIsSavingIban] = useState(false);
+
+  // Stealth Operasyon Ayarları (Local UI State)
+  const [stealthKurusEnabled, setStealthKurusEnabled] = useState(true);
+  const [stealthBurnerTimeout, setStealthBurnerTimeout] = useState(15);
+  const [stealthCamouflageEnabled, setStealthCamouflageEnabled] = useState(true);
+  const [stealthServiceTitle, setStealthServiceTitle] = useState("3D CAD Çizim ve Teknik Modelleme Hizmet Bedeli");
+  const [stealthSafeMemos, setStealthSafeMemos] = useState<string[]>([
+    "Teknik Danışmanlık Hizmet Bedeli",
+    "3D CAD Modelleme",
+    "Emanet İadesi",
+    "Yazılım ve Tasarım Desteği",
+    "Proje Çizim Bedeli",
+  ]);
+  const [newSafeMemoInput, setNewSafeMemoInput] = useState("");
+  const [stealthHoneypotEnabled, setStealthHoneypotEnabled] = useState(true);
+  const [stealthHoneypotMode, setStealthHoneypotMode] = useState("MAINTENANCE");
+  const [stealthHoneypotMessage, setStealthHoneypotMessage] = useState(
+    "Sistem Bakımı: Bankacılık API entegrasyonumuzda altyapı çalışması yapılmaktadır. Lütfen daha sonra tekrar deneyiniz."
+  );
+  const [isSavingStealthSettings, setIsSavingStealthSettings] = useState(false);
 
   // Veriler
   const [reportData, setReportData] = useState<any>(null);
@@ -149,7 +184,7 @@ export default function AdminDashboardPage() {
 
   const refreshAllData = async () => {
     try {
-      const [repRes, setRes, invRes, prodRes, ordRes, coupRes, revRes, modRes, b2bRes, tradeRes, printRes, catRes] = await Promise.all([
+      const [repRes, setRes, invRes, prodRes, ordRes, coupRes, revRes, modRes, b2bRes, tradeRes, printRes, catRes, ibanRes] = await Promise.all([
         fetch("/api/admin/reports"),
         fetch("/api/settings"),
         fetch("/api/admin/invites"),
@@ -162,6 +197,7 @@ export default function AdminDashboardPage() {
         fetch("/api/modules/trade-in"),
         fetch("/api/modules/print3d"),
         fetch("/api/admin/categories"),
+        fetch("/api/admin/ibans"),
       ]);
 
       if (repRes.ok) setReportData(await repRes.json());
@@ -169,6 +205,14 @@ export default function AdminDashboardPage() {
         const setData = await setRes.json();
         setSettings(setData);
         if (setData.usdRate) setUsdRateInput(String(setData.usdRate));
+        if (setData.kuruEslestirmeEnabled !== undefined) setStealthKurusEnabled(Boolean(setData.kuruEslestirmeEnabled));
+        if (setData.burnerTimeoutMinutes !== undefined) setStealthBurnerTimeout(Number(setData.burnerTimeoutMinutes));
+        if (setData.stealthCamouflageEnabled !== undefined) setStealthCamouflageEnabled(Boolean(setData.stealthCamouflageEnabled));
+        if (setData.stealthServiceTitle) setStealthServiceTitle(setData.stealthServiceTitle);
+        if (Array.isArray(setData.safeMemos)) setStealthSafeMemos(setData.safeMemos);
+        if (setData.honeypotEnabled !== undefined) setStealthHoneypotEnabled(Boolean(setData.honeypotEnabled));
+        if (setData.honeypotMode) setStealthHoneypotMode(setData.honeypotMode);
+        if (setData.honeypotMessage) setStealthHoneypotMessage(setData.honeypotMessage);
       }
       if (invRes.ok) {
         const data = await invRes.json();
@@ -181,10 +225,6 @@ export default function AdminDashboardPage() {
       if (catRes.ok) {
         const data = await catRes.json();
         setCategories(data.categories || []);
-      }
-      if (prodRes.ok) {
-        const data = await prodRes.json();
-        setProducts(data.products || []);
       }
       if (ordRes.ok) {
         const data = await ordRes.json();
@@ -213,6 +253,10 @@ export default function AdminDashboardPage() {
       if (printRes.ok) {
         const data = await printRes.json();
         setPrintOrders(data.requests || []);
+      }
+      if (ibanRes.ok) {
+        const data = await ibanRes.json();
+        setIbansList(data.ibans || []);
       }
     } catch (err) {
       console.error("Data refresh error:", err);
@@ -825,6 +869,173 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // --- 5 ZIRH: STEALTH SATIŞ & GİZLİ IBAN KASASI İŞLEMLERİ ---
+  const handleCreateIban = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newIbanBank || !newIbanHolder || !newIbanNumber) {
+      showNotify("error", "Banka adı, hesap sahibi ve IBAN alanları zorunludur.");
+      return;
+    }
+    setIsSavingIban(true);
+    try {
+      const res = await fetch("/api/admin/ibans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bankName: newIbanBank,
+          accountHolder: newIbanHolder,
+          iban: newIbanNumber,
+          dailyLimit: Number(newIbanDailyLimit) || 75000,
+          dailyOrderLimit: Number(newIbanDailyOrders) || 15,
+          priorityOrder: Number(newIbanPriority) || 0,
+          notes: newIbanNotes || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIbansList((prev) => [...prev, data.iban]);
+        setIsIbanModalOpen(false);
+        setNewIbanBank("");
+        setNewIbanHolder("");
+        setNewIbanNumber("");
+        setNewIbanNotes("");
+        showNotify("success", "✓ Yeni IBAN başarıyla havuz kasasına eklendi.");
+      } else {
+        showNotify("error", data.error || "IBAN eklenemedi.");
+      }
+    } catch {
+      showNotify("error", "Bağlantı hatası.");
+    } finally {
+      setIsSavingIban(false);
+    }
+  };
+
+  const handleToggleIbanActive = async (id: string, current: boolean) => {
+    const next = !current;
+    setIbansList((prev) => prev.map((item) => (item.id === id ? { ...item, isActive: next } : item)));
+    try {
+      const res = await fetch("/api/admin/ibans", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, isActive: next }),
+      });
+      if (!res.ok) {
+        setIbansList((prev) => prev.map((item) => (item.id === id ? { ...item, isActive: current } : item)));
+        showNotify("error", "Durum güncellenemedi.");
+      } else {
+        showNotify("success", `IBAN ${next ? "AKTİF EDİLDİ" : "PASİFE ALINDI"}.`);
+      }
+    } catch {
+      setIbansList((prev) => prev.map((item) => (item.id === id ? { ...item, isActive: current } : item)));
+      showNotify("error", "Bağlantı hatası.");
+    }
+  };
+
+  const handleResetIbanDaily = async (id: string) => {
+    try {
+      const res = await fetch("/api/admin/ibans", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, resetDaily: true }),
+      });
+      if (res.ok) {
+        setIbansList((prev) =>
+          prev.map((item) => (item.id === id ? { ...item, currentDailyTotal: 0, currentOrderCount: 0 } : item))
+        );
+        showNotify("success", "✓ Bu hesabın günlük hacim ve işlem sayaçları sıfırlandı.");
+      }
+    } catch {
+      showNotify("error", "Sıfırlama başarısız.");
+    }
+  };
+
+  const handleResetAllIbansDaily = async () => {
+    if (!window.confirm("Tüm havuzdaki IBAN'ların bugünkü hacim ve sayaçlarını sıfırlamak istiyor musunuz?")) return;
+    try {
+      const res = await fetch("/api/admin/ibans", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reset_all_daily" }),
+      });
+      if (res.ok) {
+        setIbansList((prev) =>
+          prev.map((item) => ({ ...item, currentDailyTotal: 0, currentOrderCount: 0 }))
+        );
+        showNotify("success", "✓ Tüm IBAN sayaçları sıfırlandı. Yeni gün rotasyonu başladı.");
+      }
+    } catch {
+      showNotify("error", "Sıfırlama başarısız.");
+    }
+  };
+
+  const handleDeleteIban = async (id: string, bank: string) => {
+    if (!window.confirm(`"${bank}" IBAN hesabını havuzdan silmek istediğinize emin misiniz?`)) return;
+    try {
+      const res = await fetch(`/api/admin/ibans?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setIbansList((prev) => prev.filter((item) => item.id !== id));
+        showNotify("success", "✓ IBAN havuzdan kaldırıldı.");
+      }
+    } catch {
+      showNotify("error", "Silme başarısız.");
+    }
+  };
+
+  const handleSaveStealthSettings = async () => {
+    setIsSavingStealthSettings(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...settings,
+          kuruEslestirmeEnabled: stealthKurusEnabled,
+          burnerTimeoutMinutes: Number(stealthBurnerTimeout),
+          stealthCamouflageEnabled: stealthCamouflageEnabled,
+          stealthServiceTitle: stealthServiceTitle,
+          safeMemos: stealthSafeMemos,
+          honeypotEnabled: stealthHoneypotEnabled,
+          honeypotMode: stealthHoneypotMode,
+          honeypotMessage: stealthHoneypotMessage,
+        }),
+      });
+      if (res.ok) {
+        setSettings((prev: any) => ({
+          ...prev,
+          kuruEslestirmeEnabled: stealthKurusEnabled,
+          burnerTimeoutMinutes: Number(stealthBurnerTimeout),
+          stealthCamouflageEnabled: stealthCamouflageEnabled,
+          stealthServiceTitle: stealthServiceTitle,
+          safeMemos: stealthSafeMemos,
+          honeypotEnabled: stealthHoneypotEnabled,
+          honeypotMode: stealthHoneypotMode,
+          honeypotMessage: stealthHoneypotMessage,
+        }));
+        showNotify("success", "🛡️ 5 Stealth Savunma Ayarı Başarıyla Kaydedildi!");
+      } else {
+        showNotify("error", "Ayarlar kaydedilemedi.");
+      }
+    } catch {
+      showNotify("error", "Bağlantı hatası.");
+    } finally {
+      setIsSavingStealthSettings(false);
+    }
+  };
+
+  const handleAddSafeMemo = () => {
+    if (!newSafeMemoInput.trim()) return;
+    if (stealthSafeMemos.includes(newSafeMemoInput.trim())) {
+      showNotify("error", "Bu açıklama etiketi zaten listede var.");
+      return;
+    }
+    setStealthSafeMemos((prev) => [...prev, newSafeMemoInput.trim()]);
+    setNewSafeMemoInput("");
+  };
+
+  const handleRemoveSafeMemo = (index: number) => {
+    setStealthSafeMemos((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F5F7]">
@@ -1080,6 +1291,26 @@ export default function AdminDashboardPage() {
               activeTab === "modules" ? "bg-white/20 text-white" : "bg-orange-100 text-[#F27A1A]"
             }`}>
               {modulesList.length || 15}
+            </span>
+          </button>
+
+          {/* 5 ZIRH: STEALTH SATIŞ & GİZLİ IBAN KASASI */}
+          <button
+            onClick={() => setActiveTab("stealth")}
+            className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+              activeTab === "stealth"
+                ? "bg-emerald-700 text-white font-bold shadow-xs"
+                : "bg-white hover:bg-emerald-50/60 text-slate-800 border border-emerald-300/80 shadow-xs"
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <ShieldCheck className={`w-4 h-4 ${activeTab === "stealth" ? "text-white" : "text-emerald-700"}`} />
+              <span>Gizli IBAN & Stealth</span>
+            </span>
+            <span className={`font-mono text-[10px] px-2 py-0.5 rounded-full font-black ${
+              activeTab === "stealth" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800"
+            }`}>
+              5 ZIRH
             </span>
           </button>
         </aside>
@@ -3034,6 +3265,482 @@ export default function AdminDashboardPage() {
               )}
             </div>
           )}
+
+          {/* TAB 10: 5 ZIRH - STEALTH SATIŞ & GİZLİ IBAN KASASI */}
+          {activeTab === "stealth" && (
+            <div className="space-y-8 animate-in fade-in">
+              {/* Üst Başlık & Operasyonel Durum */}
+              <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase rounded-full tracking-wider flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      5 Katmanlı Stealth Zırh Protokolü Aktif
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+                    Gizli Satış Operasyonu & IBAN Kasası
+                  </h2>
+                  <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                    Banka yapay zeka denetim algoritmalarını (MASAK / AML), limit alarmlarını ve harici şüpheleri bertaraf eden profesyonel transfer yönetim merkezi. Sistem siparişleri kuruşla eşleştirir, hesapları gün içi otomatik rotasyona tabi tutar ve 15 dakikada kendini imha eden hayalet ödeme odaları açar.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={handleResetAllIbansDaily}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                    title="Tüm IBAN'ların günlük hacim ve işlem sayaçlarını sıfırlar"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Günü Sıfırla (Sayaçları Temizle)</span>
+                  </button>
+                  <button
+                    onClick={() => setIsIbanModalOpen(true)}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Yeni IBAN Hesabı Ekle</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* ZIRH 1: DİNAMİK IBAN HAVUZU & AKILLI HESAP ROTASYONU */}
+              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                        1. Dinamik IBAN Havuzu & Akıllı Hesap Rotasyonu
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Gelen her sipariş, günlük limitini doldurmamış aktif hesaplar arasında otomatik paylaştırılır.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-lg">
+                      {ibansList.filter((i) => i.isActive).length} Aktif / {ibansList.length} Toplam IBAN
+                    </span>
+                  </div>
+                </div>
+
+                {/* IBAN Listesi Tablosu */}
+                {ibansList.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-50 border border-dashed border-slate-200 rounded-xl space-y-3">
+                    <Building2 className="w-8 h-8 text-slate-400 mx-auto" />
+                    <p className="text-xs text-slate-600 font-semibold">Havuzda kayıtlı IBAN bulunamadı.</p>
+                    <button
+                      onClick={() => setIsIbanModalOpen(true)}
+                      className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl"
+                    >
+                      İlk IBAN Hesabını Ekle
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {ibansList.map((acc) => {
+                      const limitPercent = Math.min(
+                        100,
+                        Math.round((acc.currentDailyTotal / (acc.dailyLimit || 75000)) * 100)
+                      );
+                      const isFull = limitPercent >= 100 || acc.currentOrderCount >= (acc.dailyOrderLimit || 15);
+
+                      return (
+                        <div
+                          key={acc.id}
+                          className={`p-5 rounded-xl border transition-all space-y-4 ${
+                            !acc.isActive
+                              ? "bg-slate-50 border-slate-200 opacity-60"
+                              : isFull
+                              ? "bg-amber-50/40 border-amber-300 shadow-xs"
+                              : "bg-white border-slate-200/90 shadow-2xs hover:border-emerald-500"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-black uppercase text-slate-900">{acc.bankName}</span>
+                                {acc.priorityOrder > 0 && (
+                                  <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                    Öncelik: #{acc.priorityOrder}
+                                  </span>
+                                )}
+                                {isFull && (
+                                  <span className="text-[10px] font-mono font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">
+                                    GÜNLÜK LİMİT DOLDU
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs font-semibold text-slate-600 block mt-0.5">
+                                {acc.accountHolder}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleToggleIbanActive(acc.id, acc.isActive)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer ${
+                                  acc.isActive
+                                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                    : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                                }`}
+                              >
+                                {acc.isActive ? "Aktif" : "Pasif"}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteIban(acc.id, acc.bankName)}
+                                className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                title="Sil"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* IBAN Numarası */}
+                          <div className="p-2.5 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-between font-mono text-xs font-bold text-slate-900 select-all break-all">
+                            <span>{acc.iban}</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(acc.iban);
+                                showNotify("success", "IBAN panoya kopyalandı.");
+                              }}
+                              className="p-1 text-slate-500 hover:text-slate-900 ml-2 cursor-pointer"
+                              title="Kopyala"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Günlük Limit İlerleme Barı */}
+                          <div className="space-y-1.5 text-xs font-mono">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-slate-500">Bugünkü Hacim:</span>
+                              <span className="font-bold text-slate-900">
+                                {acc.currentDailyTotal.toLocaleString("tr-TR")} ₺ / {acc.dailyLimit.toLocaleString("tr-TR")} ₺ (%{limitPercent})
+                              </span>
+                            </div>
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
+                              <div
+                                className={`h-full transition-all rounded-full ${
+                                  limitPercent > 80 ? "bg-rose-500" : limitPercent > 50 ? "bg-amber-500" : "bg-emerald-500"
+                                }`}
+                                style={{ width: `${limitPercent}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] pt-1">
+                              <span className="text-slate-500">İşlem Kotası:</span>
+                              <span className="font-semibold text-slate-700">
+                                {acc.currentOrderCount} / {acc.dailyOrderLimit} Sipariş
+                              </span>
+                            </div>
+                          </div>
+
+                          {acc.notes && (
+                            <p className="text-[11px] text-slate-500 italic bg-slate-50 p-2 rounded border border-slate-100">
+                              Not: {acc.notes}
+                            </p>
+                          )}
+
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-end">
+                            <button
+                              onClick={() => handleResetIbanDaily(acc.id)}
+                              className="text-[11px] text-slate-500 hover:text-orange-600 font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                              <span>Bu Hesabın Sayacını Sıfırla</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ZIRH 2 & 3: KURUŞLU REFERANS & HAYALET ÖDEME ODASI */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* ZIRH 2: KURUŞLU REFERANS EŞLEŞTİRME MOTORU */}
+                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#F27A1A] border border-orange-100 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">
+                          2. Kuruşlu Referans Eşleştirme Motoru
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Sıfır-Açıklama (Zero-Memo) Kalkanı</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setStealthKurusEnabled(!stealthKurusEnabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                        stealthKurusEnabled ? "bg-emerald-600" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          stealthKurusEnabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                    Sipariş tutarına rastgele <strong>0.11 - 0.99 ₺</strong> kuruş eklenir. Müşteri banka transferi yaparken açıklama kısmını <strong>TAMAMEN BOŞ</strong> bırakır. Ekstrenizde her sipariş kuruş hanesinden anında ve benzersiz olarak eşleşir.
+                  </p>
+
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 font-mono text-xs">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                      Canlı Simülasyon Örneği:
+                    </span>
+                    <div className="flex items-center justify-between text-slate-700">
+                      <span>Sipariş Tutarı:</span>
+                      <span className="font-bold">25.000,00 ₺</span>
+                    </div>
+                    <div className="flex items-center justify-between text-emerald-700 font-bold">
+                      <span>Müşterinin Yatıracağı:</span>
+                      <span className="text-sm bg-emerald-100 px-2 py-0.5 rounded">25.000,37 ₺</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-500 text-[11px]">
+                      <span>Banka Açıklaması:</span>
+                      <span className="text-rose-600 font-bold uppercase">&quot;[BOŞ BIRAKILDI]&quot;</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ZIRH 3: KENDİ KENDİNİ İMHA EDEN HAYALET ÖDEME ODASI */}
+                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center flex-shrink-0">
+                        <Flame className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">
+                          3. Hayalet Ödeme Odası (Burner Session)
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Zamanlı Kendini İmha Eden IBAN Ekranı</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 bg-red-100 text-red-700 font-mono font-bold text-xs rounded-lg">
+                      {stealthBurnerTimeout} Dakika
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                    Müşteriye tahsis edilen IBAN ekranı belirlenen süre boyunca geri sayar. Süre bittiğinde IBAN müşterinin ekranından ve DOM&apos;dan kalıcı olarak silinir. Ekran görüntüsü arşivlenmesi veya eski IBAN&apos;a mükerrer transfer engellenir.
+                  </p>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                      <span>Oturum Süresi (Dakika):</span>
+                      <span className="font-mono text-slate-900">{stealthBurnerTimeout} dk</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={5}
+                      max={60}
+                      step={5}
+                      value={stealthBurnerTimeout}
+                      onChange={(e) => setStealthBurnerTimeout(Number(e.target.value))}
+                      className="w-full accent-red-600 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                      <span>5 dk (Ekstra Hızlı)</span>
+                      <span>15 dk (Standart)</span>
+                      <span>30 dk</span>
+                      <span>60 dk</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ZIRH 4 & 5: KAMUFLAJ FATURA & TERS AĞ TUZAĞI (HONEYPOT) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* ZIRH 4: KAMUFLAJ DEKONT & MASUM HİZMET SÖZLÜĞÜ */}
+                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">
+                          4. Kamuflaj Dekont & Masum Hizmet
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Mühendislik / 3D CAD Beyan Kalkanı</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setStealthCamouflageEnabled(!stealthCamouflageEnabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                        stealthCamouflageEnabled ? "bg-purple-600" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          stealthCamouflageEnabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Resmi Kamuflaj Hizmet Başlığı (Makbuz & Sipariş Özeti İçin):
+                      </label>
+                      <input
+                        type="text"
+                        value={stealthServiceTitle}
+                        onChange={(e) => setStealthServiceTitle(e.target.value)}
+                        className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-600 font-medium text-slate-900"
+                      />
+                    </div>
+
+                    {/* Masum Açıklamalar Etiket Yönetimi */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Müşteriye Önerilen Masum Transfer Açıklamaları (Bankanın Zorunlu Kıldığı Durumlarda):
+                      </label>
+                      <div className="flex flex-wrap gap-2 mb-2.5">
+                        {stealthSafeMemos.map((memo, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-800 text-xs font-mono font-medium rounded-lg border border-purple-200"
+                          >
+                            <span>{memo}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSafeMemo(idx)}
+                              className="text-purple-400 hover:text-purple-700 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Yeni masum açıklama ekle (Örn: Proje Çizim Bedeli)"
+                          value={newSafeMemoInput}
+                          onChange={(e) => setNewSafeMemoInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddSafeMemo();
+                            }
+                          }}
+                          className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-purple-600 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSafeMemo}
+                          className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
+                        >
+                          Ekle
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ZIRH 5: TERS AĞ TUZAĞI (HONEYPOT & SAHTE BAKIM MODU) */}
+                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                        <ShieldAlert className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">
+                          5. Ters Ağ Tuzağı (Reverse Honeypot)
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Yetkisiz & Şüpheli Ziyaretçi Kalkanı</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setStealthHoneypotEnabled(!stealthHoneypotEnabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                        stealthHoneypotEnabled ? "bg-blue-600" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          stealthHoneypotEnabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                    Davetiyesi olmayan veya şüpheli/denetim amaçlı IP adresleri ödeme ve checkout ekranına girdiğinde gerçek sistemi gizleyip sahte bir teknik bakım ekranı veya 404 yanıtı verir.
+                  </p>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Tuzak Ekranı Modu:
+                      </label>
+                      <select
+                        value={stealthHoneypotMode}
+                        onChange={(e) => setStealthHoneypotMode(e.target.value)}
+                        className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 font-semibold text-slate-900"
+                      >
+                        <option value="MAINTENANCE">Planlı Banka API Bakım Ekranı (Tavsiye Edilen - En İnandırıcı)</option>
+                        <option value="NOT_FOUND">Sahte 404 Sayfa Bulunamadı Hatası</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Gösterilecek Sahte Bakım Bildirimi:
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={stealthHoneypotMessage}
+                        onChange={(e) => setStealthHoneypotMessage(e.target.value)}
+                        className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 font-mono text-slate-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* EN ALTTI KAYDET BUTONU */}
+              <div className="p-6 bg-slate-900 text-white rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold uppercase text-emerald-400">
+                    Stealth Operasyon Konfigürasyonu Hazır
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Değişiklikleri tüm sitede ve sipariş oluşturma motorunda anında yürürlüğe koymak için kaydedin.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveStealthSettings}
+                  disabled={isSavingStealthSettings}
+                  className="w-full sm:w-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingStealthSettings ? "Kaydediliyor..." : "Tüm 5 Stealth Ayarını Kaydet & Devreye Al"}
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 
@@ -3711,6 +4418,155 @@ export default function AdminDashboardPage() {
                 {isImporting ? <span>İçe Aktarılıyor...</span> : <span>Toplu Ürünleri Yükle & Kaydet</span>}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* YENİ DİNAMİK IBAN HESABI EKLEME MODALI */}
+      {isIbanModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    Yeni Dinamik IBAN Hesabı Ekle
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Rotasyon havuzuna yeni banka hesabı tanımlayın.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsIbanModalOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateIban} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Banka Adı *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Örn: Garanti BBVA, Enpara, Kuveyt Türk"
+                  value={newIbanBank}
+                  onChange={(e) => setNewIbanBank(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-semibold text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Hesap Sahibi (Alıcı Adı) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Örn: Cihan Polat veya Şirket Ünvanı"
+                  value={newIbanHolder}
+                  onChange={(e) => setNewIbanHolder(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-semibold text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  IBAN Numarası *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="TR00 0000 0000 0000 0000 0000 00"
+                  value={newIbanNumber}
+                  onChange={(e) => setNewIbanNumber(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-mono font-bold text-slate-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Günlük Maksimum Tutar (₺)
+                  </label>
+                  <input
+                    type="number"
+                    min={1000}
+                    step={1000}
+                    value={newIbanDailyLimit}
+                    onChange={(e) => setNewIbanDailyLimit(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-bold text-slate-900"
+                  />
+                  <span className="text-[10px] text-slate-400">Bu limit dolunca sıradaki hesaba geçer</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Günlük Maksimum İşlem Sayısı
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={newIbanDailyOrders}
+                    onChange={(e) => setNewIbanDailyOrders(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-bold text-slate-900"
+                  />
+                  <span className="text-[10px] text-slate-400">Gün içi sipariş kotası</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Öncelik Sırası (0 en yüksek öncelik)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={newIbanPriority}
+                  onChange={(e) => setNewIbanPriority(Number(e.target.value))}
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Özel Not / Açıklama (Opsiyonel)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Örn: Şahıs hesabı A, yedek şirket hesabı..."
+                  value={newIbanNotes}
+                  onChange={(e) => setNewIbanNotes(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsIbanModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingIban}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingIban ? "Kaydediliyor..." : "Hesabı Havuza Ekle"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

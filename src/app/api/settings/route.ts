@@ -48,6 +48,21 @@ export async function GET() {
         return [];
       }
     })(),
+    // 5 Gizli IBAN & Stealth Satış Operasyonu Ayarları
+    kuruEslestirmeEnabled: settings.kuruEslestirmeEnabled ?? true,
+    burnerTimeoutMinutes: settings.burnerTimeoutMinutes ?? 15,
+    stealthCamouflageEnabled: settings.stealthCamouflageEnabled ?? true,
+    stealthServiceTitle: settings.stealthServiceTitle || "3D CAD Çizim ve Teknik Danışmanlık Hizmet Bedeli",
+    safeMemos: (() => {
+      try {
+        return JSON.parse(settings.safeMemosJson || "[]");
+      } catch {
+        return ["Teknik Danışmanlık Hizmet Bedeli", "3D CAD Modelleme", "Emanet İadesi", "Yazılım ve Tasarım Desteği", "Proje Çizim Bedeli"];
+      }
+    })(),
+    honeypotEnabled: settings.honeypotEnabled ?? true,
+    honeypotMode: settings.honeypotMode || "MAINTENANCE",
+    honeypotMessage: settings.honeypotMessage || "Sistem Bakımı: Bankacılık API entegrasyonumuzda altyapı çalışması yapılmaktadır. Lütfen daha sonra tekrar deneyiniz.",
   });
 }
 
@@ -87,6 +102,14 @@ export async function PUT(req: Request) {
         panicMode: Boolean(body.panicMode),
         usdRate: body.usdRate !== undefined ? Number(body.usdRate) : 38.5,
         blockedIpsJson: JSON.stringify(body.blockedIps || []),
+        kuruEslestirmeEnabled: body.kuruEslestirmeEnabled !== undefined ? Boolean(body.kuruEslestirmeEnabled) : true,
+        burnerTimeoutMinutes: body.burnerTimeoutMinutes !== undefined ? Number(body.burnerTimeoutMinutes) : 15,
+        stealthCamouflageEnabled: body.stealthCamouflageEnabled !== undefined ? Boolean(body.stealthCamouflageEnabled) : true,
+        stealthServiceTitle: body.stealthServiceTitle || "3D CAD Çizim ve Teknik Danışmanlık Hizmet Bedeli",
+        safeMemosJson: body.safeMemos !== undefined ? JSON.stringify(body.safeMemos) : undefined,
+        honeypotEnabled: body.honeypotEnabled !== undefined ? Boolean(body.honeypotEnabled) : true,
+        honeypotMode: body.honeypotMode || "MAINTENANCE",
+        honeypotMessage: body.honeypotMessage || "Sistem Bakımı: Bankacılık API entegrasyonumuzda altyapı çalışması yapılmaktadır.",
       },
       update: {
         storeName: body.storeName,
@@ -112,6 +135,14 @@ export async function PUT(req: Request) {
         panicMode: body.panicMode !== undefined ? Boolean(body.panicMode) : undefined,
         usdRate: body.usdRate !== undefined ? Number(body.usdRate) : undefined,
         blockedIpsJson: body.blockedIps !== undefined ? JSON.stringify(body.blockedIps) : undefined,
+        kuruEslestirmeEnabled: body.kuruEslestirmeEnabled !== undefined ? Boolean(body.kuruEslestirmeEnabled) : undefined,
+        burnerTimeoutMinutes: body.burnerTimeoutMinutes !== undefined ? Number(body.burnerTimeoutMinutes) : undefined,
+        stealthCamouflageEnabled: body.stealthCamouflageEnabled !== undefined ? Boolean(body.stealthCamouflageEnabled) : undefined,
+        stealthServiceTitle: body.stealthServiceTitle !== undefined ? body.stealthServiceTitle : undefined,
+        safeMemosJson: body.safeMemos !== undefined ? JSON.stringify(body.safeMemos) : undefined,
+        honeypotEnabled: body.honeypotEnabled !== undefined ? Boolean(body.honeypotEnabled) : undefined,
+        honeypotMode: body.honeypotMode !== undefined ? body.honeypotMode : undefined,
+        honeypotMessage: body.honeypotMessage !== undefined ? body.honeypotMessage : undefined,
       },
     });
 
