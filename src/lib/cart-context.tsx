@@ -224,18 +224,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // VIP Davetiye indirimi varsa uygula
-  const vipDiscountPercent = vipSession.discountPercent || 0;
-  const vipDiscountAmount = (subtotal * vipDiscountPercent) / 100;
-  const discountAmount = Math.max(vipDiscountAmount, couponDiscount);
-
-  // 3. Paket / Set İndirimi: Sepette 2 veya daha fazla ürün varsa otomatik %5 Set İndirimi
-  const bundleDiscount = itemCount >= 2 ? Math.round(subtotal * 0.05) : 0;
+  // İndirimler tamamen kaldırıldı - Net atölye referans tutarı
+  const discountAmount = 0;
+  const discountPercent = 0;
+  const bundleDiscount = 0;
 
   const freeThreshold = storeSettings?.freeShippingThreshold ?? 2000;
   const defaultFee = storeSettings?.defaultShippingFee ?? 95;
   const shippingFee = subtotal > 0 && subtotal < freeThreshold ? defaultFee : 0;
-  const total = Math.max(0, subtotal - discountAmount - bundleDiscount + shippingFee);
+  const total = Math.max(0, subtotal + shippingFee);
 
   return (
     <CartContext.Provider
@@ -250,7 +247,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         itemCount,
         subtotal,
         discountAmount,
-        discountPercent: vipDiscountPercent,
+        discountPercent,
         bundleDiscount,
         shippingFee,
         total,

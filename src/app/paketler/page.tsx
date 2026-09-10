@@ -111,17 +111,16 @@ export default function BundlesPage() {
             <span>Atölye Kombinasyon Motoru</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black font-mono text-slate-950 tracking-tight uppercase">
-            Özel RC Crawler Paket (Bundle) Fırsatları
+            Özel RC Crawler Donanım Paketleri
           </h1>
           <p className="text-sm text-slate-600 mt-3 leading-relaxed font-normal">
-            Mühendislerimiz tarafından birbirleriyle %100 mekanik ve elektriksel uyum sağlayacak şekilde eşleştirilmiş özel kitler. Parçaları tek tek almak yerine paket olarak seçin, anında %15&apos;e varan indirim kazanın.
+            Mühendislerimiz tarafından birbirleriyle %100 mekanik ve elektriksel uyum sağlayacak şekilde bir araya getirilmiş hazır montaj kitleri ve atölye kombinasyonları.
           </p>
         </div>
 
         {/* Paket Kartları */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {BUNDLES.map((bundle) => {
-            const savings = bundle.originalPrice - bundle.bundlePrice;
             const isAdded = addedId === bundle.id;
 
             return (
@@ -133,9 +132,6 @@ export default function BundlesPage() {
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-xs bg-slate-100 text-slate-800 border border-slate-200">
                     {bundle.tag}
-                  </span>
-                  <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-xs border border-emerald-200">
-                    %{bundle.discountRate} TASARRUF
                   </span>
                 </div>
 
@@ -168,17 +164,12 @@ export default function BundlesPage() {
                 <div className="mt-6 pt-4">
                   {isSalesAllowed ? (
                     <div className="flex items-baseline justify-between mb-3 font-mono">
-                      <span className="text-xs text-slate-400 line-through">
-                        {bundle.originalPrice.toLocaleString("tr-TR")} ₺
+                      <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                        Paket Bedeli
                       </span>
-                      <div className="text-right">
-                        <span className="text-2xl font-black text-slate-950">
-                          {bundle.bundlePrice.toLocaleString("tr-TR")} ₺
-                        </span>
-                        <span className="block text-[10px] text-emerald-700 font-semibold">
-                          ({savings.toLocaleString("tr-TR")} ₺ Cebinizde Kalır)
-                        </span>
-                      </div>
+                      <span className="text-2xl font-black text-slate-950">
+                        {bundle.bundlePrice.toLocaleString("tr-TR")} ₺
+                      </span>
                     </div>
                   ) : (
                     <div className="mb-3">
@@ -209,7 +200,7 @@ export default function BundlesPage() {
                       ) : (
                         <>
                           <ShoppingBag className="w-4 h-4" />
-                          <span>Paketi İndirimle Sepete Ekle</span>
+                          <span>Paketi Sepete Ekle</span>
                         </>
                       )}
                     </button>

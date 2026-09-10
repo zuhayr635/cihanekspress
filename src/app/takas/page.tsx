@@ -75,7 +75,7 @@ export default function TradeInPage() {
             Eski Şasini Getir, Yenisini Al (Takas)
           </h1>
           <p className="text-sm text-stone-400 mt-3 leading-relaxed">
-            Mevcut RTR aracınızı veya rolling şasinizi CIHANPOL atölye ekspertizine gönderin; değerleme tutarını yeni nesil LCG şasi ve fırçasız yükseltmelerde anında nakit indirim olarak kullanın.
+            Mevcut RTR aracınızı veya rolling şasinizi CIHANPOL atölye ekspertizine gönderin; değerleme tutarını yeni nesil LCG şasi ve fırçasız yükseltmelerde anında bütçe mahsubu olarak kullanın.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export default function TradeInPage() {
           <div className="bg-[#10141E] border border-[#1E2536] p-5 rounded font-mono">
             <span className="text-amber-400 font-black text-xl">03</span>
             <h4 className="text-white font-bold text-xs uppercase mt-2">Yeni Canavarınızı Alın</h4>
-            <p className="text-stone-400 text-[11px] mt-1">Teklif tutarı sepetinize doğrudan indirim kuponu olarak yansır.</p>
+            <p className="text-stone-400 text-[11px] mt-1">Teklif tutarı doğrudan atölye siparişinizden mahsup edilir.</p>
           </div>
         </div>
 

@@ -38,7 +38,7 @@ export default function VipModal() {
       if (!res.ok) {
         setTokenError(data.error || "Geçersiz veya süresi dolmuş davetiye kodu.");
       } else {
-        setSuccessMessage(`Davetiye onaylandı! ${data.discountPercent ? `%${data.discountPercent} indiriminiz tanımlandı.` : ""}`);
+        setSuccessMessage("Davetiye onaylandı! Özel atölye fiyatları ve sipariş yetkiniz açıldı.");
         await refreshVipStatus();
         setTimeout(() => {
           setIsVipModalOpen(false);
@@ -98,7 +98,6 @@ export default function VipModal() {
               <p className="text-sm font-bold text-emerald-900">VIP Kulüp Üyeliğiniz Aktif!</p>
               <p className="text-xs text-emerald-700">
                 Tüm ürün fiyatları ve sipariş yetkisi hesabınıza tanımlanmıştır.
-                {vipSession.discountPercent ? ` (%${vipSession.discountPercent} Kulüp İndirimi)` : ""}
               </p>
             </div>
             <button

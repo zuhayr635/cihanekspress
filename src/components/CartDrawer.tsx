@@ -91,7 +91,7 @@ export default function CartDrawer() {
       )
       .join("\n\n");
 
-    const message = `*CIHANPOL RC ATELIER — ATÖLYE SİPARİŞ & TALEP LİSTESİ*\n\nMerhaba Cihan Usta, sitedeki katalog üzerinden aşağıdaki projeleri/parçaları seçtim:\n\n${itemList}\n\n─────────────────────\n*Ara Toplam:* ${subtotal.toLocaleString("tr-TR")} ₺\n${discountAmount > 0 ? `*Kupon/Kulüp İndirimi:* -${discountAmount.toLocaleString("tr-TR")} ₺\n` : ""}${bundleDiscount > 0 ? `*Set İndirimi (%5):* -${bundleDiscount.toLocaleString("tr-TR")} ₺\n` : ""}*Atölye Referans Toplamı:* ${total.toLocaleString("tr-TR")} ₺\n─────────────────────\n\nBu parçaların atölye teslimi / montaj durumu ve teslimat süresi hakkında görüşmek istiyorum.`;
+    const message = `*CIHANPOL RC ATELIER — ATÖLYE SİPARİŞ & TALEP LİSTESİ*\n\nMerhaba Cihan Usta, sitedeki katalog üzerinden aşağıdaki projeleri/parçaları seçtim:\n\n${itemList}\n\n─────────────────────\n*Ara Toplam:* ${subtotal.toLocaleString("tr-TR")} ₺\n*Atölye Referans Toplamı:* ${total.toLocaleString("tr-TR")} ₺\n─────────────────────\n\nBu parçaların atölye teslimi / montaj durumu ve teslimat süresi hakkında görüşmek istiyorum.`;
 
     return getWhatsAppUrl(storeSettings?.whatsappPhone, message);
   };
@@ -324,57 +324,6 @@ export default function CartDrawer() {
           {/* Alt Özet ve Aksiyonlar */}
           {items.length > 0 && (
             <div className="p-5 sm:p-6 bg-slate-50/90 border-t border-slate-200 space-y-4">
-              {/* 3. Paket / Set İndirimi Teşviki (Sepette 1 ürün varsa) */}
-              {items.length === 1 && (
-                <div className="p-2.5 bg-orange-50/80 border border-orange-200/80 rounded-xs text-[11px] font-mono text-orange-950 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#F27A1A] shrink-0" />
-                  <span>Sepete 1 parça daha ekleyin, <strong>%5 Set İndirimi</strong> anında kazanın! 🎯</span>
-                </div>
-              )}
-
-              {/* Kupon Alanı */}
-              <form onSubmit={handleCouponSubmit} className="flex gap-2">
-                <div className="relative flex-1">
-                  <Tag className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Atölye Kulüp Kodu"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xs focus:outline-none focus:border-slate-900 uppercase font-mono text-slate-900 placeholder:text-slate-400"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isApplying || !couponCode.trim()}
-                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs uppercase font-mono font-bold rounded-xs transition-colors disabled:opacity-50"
-                >
-                  Uygula
-                </button>
-              </form>
-
-              {appliedCoupon && (
-                <div className="flex items-center justify-between text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xs font-mono">
-                  <span>Kupon Aktif: {appliedCoupon}</span>
-                  <button
-                    onClick={removeCoupon}
-                    className="text-slate-500 hover:text-slate-900 text-[11px] underline"
-                  >
-                    Kaldır
-                  </button>
-                </div>
-              )}
-
-              {couponMsg && (
-                <p
-                  className={`text-xs font-mono ${
-                    couponMsg.type === "success" ? "text-emerald-600" : "text-red-500"
-                  }`}
-                >
-                  {couponMsg.text}
-                </p>
-              )}
-
               {/* Fiyat Detayları veya Davetiye Koruması */}
               {isSalesAllowed ? (
                 <>
@@ -383,25 +332,6 @@ export default function CartDrawer() {
                       <span>Parça / Malzeme Toplamı</span>
                       <span className="text-slate-900 font-bold">{subtotal.toLocaleString("tr-TR")} ₺</span>
                     </div>
-
-                    {discountAmount > 0 && (
-                      <div className="flex justify-between text-orange-600 font-bold">
-                        <span>
-                          {discountPercent > 0 ? `Kulüp İndirimi (%${discountPercent})` : "Özel İndirim"}
-                        </span>
-                        <span>-{discountAmount.toLocaleString("tr-TR")} ₺</span>
-                      </div>
-                    )}
-
-                    {bundleDiscount > 0 && (
-                      <div className="flex justify-between text-emerald-600 font-bold">
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>Çoklu Alım / Set İndirimi (%5)</span>
-                        </span>
-                        <span>-{bundleDiscount.toLocaleString("tr-TR")} ₺</span>
-                      </div>
-                    )}
 
                     <div className="flex justify-between">
                       <span>Atölye Teslim & Kargo</span>

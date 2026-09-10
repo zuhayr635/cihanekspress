@@ -146,7 +146,7 @@ export default async function RehberPage() {
               </h3>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                 <strong className="text-slate-900 font-bold">Katalog Modunda:</strong> Genel ziyaretçilere fiyatlar ve sepet gizlidir; ürünler bir sanat eseri ve teknik katalog gibi incelenir, WhatsApp ile bilgi alınır.<br />
-                <strong className="text-slate-900 font-bold">VIP Davetiye ile:</strong> Yöneticinin ilettiği özel linke tıklayan müşteride fiyatlar açılır ve müşteriye özel indirim (örn: %20) anında sepete tanımlanır.
+                <strong className="text-slate-900 font-bold">VIP Davetiye ile:</strong> Yöneticinin ilettiği özel linke tıklayan müşteride fiyatlar ve sipariş yetkisi anında tanımlanır.
               </p>
             </div>
 
@@ -248,7 +248,7 @@ export default async function RehberPage() {
                   1. Tek Kullanımlık VIP Link Üretimi
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Yönetici panelden müşteri adı, indirim oranı (%15, %20 vb.) ve süre belirleyerek tek tıkla özel link üretir.
+                  Yönetici panelden müşteri adı ve geçerlilik süresi belirleyerek tek tıkla özel link üretir.
                   Müşteri tıkladığı an link <strong className="text-slate-950 font-bold">&ldquo;USED&rdquo; (Kullanıldı)</strong> durumuna geçer ve o tarayıcıya kilitlenir. Başka birine devredilemez.
                 </p>
               </div>

@@ -46,14 +46,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     imageList[0] ||
     "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=800&q=80";
 
-  // Fiyat hesaplama
-  const rawPrice = product.salePrice || product.basePrice;
-  const vipDiscount = vipSession.discountPercent || 0;
-  const finalPrice = vipDiscount > 0 ? rawPrice * (1 - vipDiscount / 100) : rawPrice;
-  const hasDiscount = product.basePrice > finalPrice;
-  const discountPercent = hasDiscount
-    ? Math.round(((product.basePrice - finalPrice) / product.basePrice) * 100)
-    : 0;
+  // Fiyat hesaplama - İndirimler tamamen kaldırıldı
+  const finalPrice = product.basePrice;
+  const hasDiscount = false;
+  const discountPercent = 0;
 
   // Marka & Ölçek tespiti
   const isMicro =
@@ -240,13 +236,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </span>
               </div>
             ) : isSalesAllowed ? (
-              <>
-                {hasDiscount && (
-                  <span className="text-[11px] text-slate-400 line-through block font-medium">
-                    {product.basePrice.toLocaleString("tr-TR")} TL
-                  </span>
-                )}
-                <div className="flex items-baseline gap-1.5 flex-wrap">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
                   <span className="text-base sm:text-lg font-black text-[#F27A1A] tracking-tight">
                     {finalPrice.toLocaleString("tr-TR")} TL
                   </span>
@@ -256,7 +246,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </span>
                   )}
                 </div>
-              </>
             ) : (
               <div>
                 <span className="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider leading-none mb-1">

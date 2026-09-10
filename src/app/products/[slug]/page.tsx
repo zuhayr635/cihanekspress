@@ -194,9 +194,9 @@ export default function ProductDetailPage({
     (storeSettings?.storeMode === "INVITE_ONLY" && vipSession.isVip) ||
     vipSession.isVip;
 
-  const currentPrice = selectedVariant ? selectedVariant.price : product.salePrice || product.basePrice;
-  const vipDiscount = vipSession.discountPercent || 0;
-  const finalPrice = vipDiscount > 0 ? currentPrice * (1 - vipDiscount / 100) : currentPrice;
+  const currentPrice = selectedVariant ? selectedVariant.price : product.basePrice;
+  const vipDiscount = 0;
+  const finalPrice = currentPrice;
   const currentStock = selectedVariant ? selectedVariant.stock : product.stockQuantity;
 
   const handleAddToCart = () => {
@@ -378,28 +378,16 @@ export default function ProductDetailPage({
                   <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block mb-1">
                     Atölye Referans Değeri (Malzeme & İmalat)
                   </span>
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-mono text-3xl sm:text-4xl text-slate-950 font-black">
-                      {finalPrice.toLocaleString("tr-TR")} ₺
-                    </span>
-                    {storeSettings?.usdRate && storeSettings.usdRate > 0 && (
-                      <span className="text-xs font-bold text-slate-600 font-mono bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md self-center">
-                        (${(product.priceUsd ? Number(product.priceUsd) : (finalPrice / storeSettings.usdRate)).toFixed(2)} USD)
+                    <div className="flex items-baseline gap-3">
+                      <span className="font-mono text-3xl sm:text-4xl text-slate-950 font-black">
+                        {finalPrice.toLocaleString("tr-TR")} ₺
                       </span>
-                    )}
-                    {(vipDiscount > 0 || product.salePrice) && (
-                      <>
-                        <span className="text-base text-slate-400 line-through font-mono">
-                          {currentPrice.toLocaleString("tr-TR")} ₺
+                      {storeSettings?.usdRate && storeSettings.usdRate > 0 && (
+                        <span className="text-xs font-bold text-slate-600 font-mono bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md self-center">
+                          (${(product.priceUsd ? Number(product.priceUsd) : (finalPrice / storeSettings.usdRate)).toFixed(2)} USD)
                         </span>
-                        {vipDiscount > 0 && (
-                          <span className="px-2 py-0.5 bg-orange-600 text-white text-[10px] font-mono font-bold tracking-wider rounded-xs">
-                            % {vipDiscount} Kulüp İndirimi
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
+                      )}
+                    </div>
                   <p className="text-[11px] text-slate-600 font-sans mt-1.5 leading-relaxed font-normal">
                     Bu çalışma hobi atölyesi özel üretimidir. Siparişler doğrudan atölye istişaresi, özel montaj ve teslimat mutabakatı ile hazırlanır.
                   </p>
@@ -583,13 +571,11 @@ export default function ProductDetailPage({
               </a>
             </div>
 
-            {/* 2. Sıkça Birlikte Alınanlar & Set İndirimi Paketi */}
+            {/* 2. Birlikte Tercih Edilen Tamamlayıcı Parçalar */}
             {isSalesAllowed && related && related.length > 0 && (() => {
               const partner = related[0];
-              const partnerPrice = partner.salePrice || partner.basePrice;
-              const bundleRaw = finalPrice + partnerPrice;
-              const bundleSavings = Math.round(bundleRaw * 0.05);
-              const bundleFinal = bundleRaw - bundleSavings;
+              const partnerPrice = partner.basePrice;
+              const bundleTotal = finalPrice + partnerPrice;
 
               const handleAddBundle = () => {
                 handleAddToCart();
@@ -621,10 +607,10 @@ export default function ProductDetailPage({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-[#F27A1A]" />
-                      <span>Sıkça Birlikte Alınanlar</span>
+                      <span>Birlikte Tercih Edilen Tamamlayıcı Parça</span>
                     </span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-xs">
-                      %5 Set İndirimi
+                    <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-xs">
+                      Atölye Uyumu
                     </span>
                   </div>
 
@@ -646,11 +632,8 @@ export default function ProductDetailPage({
                         {partner.title}
                       </p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xs font-black text-[#F27A1A]">
-                          {bundleFinal.toLocaleString("tr-TR")} ₺
-                        </span>
-                        <span className="text-[10px] text-slate-400 line-through">
-                          {bundleRaw.toLocaleString("tr-TR")} ₺
+                        <span className="text-xs font-black text-slate-900">
+                          {bundleTotal.toLocaleString("tr-TR")} ₺
                         </span>
                       </div>
                     </div>
@@ -660,7 +643,7 @@ export default function ProductDetailPage({
                     onClick={handleAddBundle}
                     className="w-full py-2.5 bg-slate-900 hover:bg-[#F27A1A] text-white text-[11px] font-bold uppercase tracking-wider rounded-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>İki Parçayı Birlikte İndirimle Al</span>
+                    <span>İki Parçayı Birlikte Sepete Ekle</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

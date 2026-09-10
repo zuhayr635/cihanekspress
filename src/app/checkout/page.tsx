@@ -587,15 +587,6 @@ export default function CheckoutPage() {
                   <span className="text-slate-950 font-bold">{subtotal.toLocaleString("tr-TR")} ₺</span>
                 </div>
 
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-orange-600 font-bold">
-                    <span>
-                      {discountPercent > 0 ? `Kulüp İndirimi (%${discountPercent})` : "İndirim"}
-                    </span>
-                    <span>-{discountAmount.toLocaleString("tr-TR")} ₺</span>
-                  </div>
-                )}
-
                 {includeAssemblyService && (
                   <div className="flex justify-between text-orange-600 font-bold">
                     <span>Özel Montaj Hizmeti</span>

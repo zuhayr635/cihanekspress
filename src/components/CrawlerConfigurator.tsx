@@ -226,8 +226,8 @@ export default function CrawlerConfigurator() {
     selectedWheel.price +
     selectedAccessory.price;
 
-  const vipDiscount = vipSession.discountPercent || 0;
-  const finalTotal = vipDiscount > 0 ? baseTotal * (1 - vipDiscount / 100) : baseTotal;
+  const vipDiscount = 0;
+  const finalTotal = baseTotal;
 
   // Toplam Ağırlık ve CoG Hesaplaması
   const totalWeight =
@@ -613,23 +613,9 @@ export default function CrawlerConfigurator() {
                 </span>
                 {isSalesAllowed ? (
                   <div className="space-y-1">
-                    {vipDiscount > 0 ? (
-                      <div className="flex items-baseline gap-3">
-                        <span className="font-mono text-3xl font-extrabold text-white">
-                          {finalTotal.toLocaleString("tr-TR")} ₺
-                        </span>
-                        <span className="text-xs line-through text-stone-500 font-mono">
-                          {baseTotal.toLocaleString("tr-TR")} ₺
-                        </span>
-                        <span className="px-2 py-0.5 bg-amber-400 text-black text-[10px] font-mono font-bold rounded-xs">
-                          %{vipDiscount} İndirim
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="font-mono text-3xl font-extrabold text-white">
-                        {baseTotal.toLocaleString("tr-TR")} ₺
-                      </span>
-                    )}
+                    <span className="font-mono text-3xl font-extrabold text-white">
+                      {baseTotal.toLocaleString("tr-TR")} ₺
+                    </span>
                     <p className="text-[10px] text-stone-400 font-mono">
                       KDV dahildir. Ücretsiz sigortalı kargo ile gönderilir.
                     </p>

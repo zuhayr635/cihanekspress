@@ -117,7 +117,7 @@ export default function Header() {
             {isSalesAllowed ? (
               <span className="text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                👑 VIP Kulüp Üyeliği Aktif {vipSession.discountPercent ? `(%${vipSession.discountPercent} İndirim)` : ""}
+                👑 VIP Kulüp Üyeliği Aktif (Özel Atölye Yetkisi)
               </span>
             ) : (
               <div className="flex items-center gap-2">
@@ -546,7 +546,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
               className="block text-[#F27A1A] font-bold"
             >
-              ⚡ Flaş İndirimler
+              ⭐ Öne Çıkan Parçalar
             </Link>
             <Link
               href="/#vitrin"
