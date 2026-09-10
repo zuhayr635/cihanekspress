@@ -24,6 +24,10 @@ import {
   CheckCircle2,
   Lock,
   KeyRound,
+  SlidersHorizontal,
+  ArrowUpDown,
+  RotateCcw,
+  Check,
 } from "lucide-react";
 
 interface ProductItem {
@@ -117,7 +121,7 @@ const HERO_BANNERS = [
 ];
 
 export default function HomePage() {
-  const { storeSettings, isSalesAllowed, setIsVipModalOpen, vipSession } = useCart();
+  const { storeSettings, isSalesAllowed, setIsVipModalOpen, vipSession, recentlyViewed } = useCart();
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -125,6 +129,13 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [bannerIndex, setBannerIndex] = useState(0);
+
+  // 8. Çok Yönlü Katalog Filtreleri (Faceted Filter)
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [sortBy, setSortBy] = useState<string>("default");
+  const [showFacetedFilters, setShowFacetedFilters] = useState<boolean>(false);
 
   // Trendyol Geri Sayım Sayacı (Flaş İndirimler)
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 28, seconds: 45 });
@@ -169,26 +180,56 @@ export default function HomePage() {
 
   const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
 
-  // Filtreleme
-  const filteredProducts = products.filter((p) => {
-    const q = searchQuery.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      p.title.toLowerCase().includes(q) ||
-      (p.shortDescription && p.shortDescription.toLowerCase().includes(q)) ||
-      p.description.toLowerCase().includes(q);
+  // 8. Çok Yönlü Filtreleme ve Sıralama (Faceted Filtering)
+  const filteredProducts = products
+    .filter((p) => {
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        p.title.toLowerCase().includes(q) ||
+        (p.shortDescription && p.shortDescription.toLowerCase().includes(q)) ||
+        p.description.toLowerCase().includes(q);
 
-    if (activeTab === "deals") {
-      return matchesSearch && (p.salePrice || p.basePrice > 10000);
-    }
-    if (activeTab === "top") {
-      return matchesSearch && (p.isFeatured || p.title.toLowerCase().includes("şasi"));
-    }
-    if (activeTab === "micro") {
-      return matchesSearch && (p.title.includes("1/24") || p.title.includes("SCX24"));
-    }
-    return matchesSearch;
-  });
+      if (!matchesSearch) return false;
+
+      if (activeTab === "deals") {
+        if (!(p.salePrice || p.basePrice > 10000)) return false;
+      }
+      if (activeTab === "top") {
+        if (!(p.isFeatured || p.title.toLowerCase().includes("şasi"))) return false;
+      }
+      if (activeTab === "micro") {
+        if (!(p.title.includes("1/24") || p.title.includes("SCX24"))) return false;
+      }
+
+      const price = p.salePrice || p.basePrice;
+      if (minPrice && price < Number(minPrice)) return false;
+      if (maxPrice && price > Number(maxPrice)) return false;
+
+      if (inStockOnly) {
+        if ((p as any).stockQuantity !== undefined && (p as any).stockQuantity <= 0) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      const priceA = a.salePrice || a.basePrice;
+      const priceB = b.salePrice || b.basePrice;
+      if (sortBy === "price_asc") return priceA - priceB;
+      if (sortBy === "price_desc") return priceB - priceA;
+      if (sortBy === "featured") return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
+      return 0;
+    });
+
+  const hasActiveFilters = Boolean(minPrice || maxPrice || inStockOnly || sortBy !== "default");
+
+  const clearAllFilters = () => {
+    setMinPrice("");
+    setMaxPrice("");
+    setInStockOnly(false);
+    setSortBy("default");
+    setSearchQuery("");
+  };
 
   const flashDealProducts = products.slice(0, 4);
 
@@ -619,6 +660,73 @@ export default function HomePage() {
               </button>
             ))}
           </div>
+
+          {/* 8. Çok Yönlü Katalog Filtreleri (Faceted Filter Bar) */}
+          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Fiyat Aralığı */}
+              <div className="flex items-center gap-1.5 font-mono">
+                <span className="text-[11px] font-bold text-slate-500">Fiyat (₺):</span>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-20 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-900 focus:outline-none focus:border-[#F27A1A]"
+                />
+                <span className="text-slate-400">-</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-20 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-900 focus:outline-none focus:border-[#F27A1A]"
+                />
+              </div>
+
+              {/* Sadece Stoktakiler Butonu */}
+              <button
+                type="button"
+                onClick={() => setInStockOnly(!inStockOnly)}
+                className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  inStockOnly
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Check className={`w-3.5 h-3.5 ${inStockOnly ? "text-white" : "text-transparent"}`} />
+                <span>Hazır Stok</span>
+              </button>
+
+              {/* Sıfırla Butonu */}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Tüm filtreleri kaldır"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Sıfırla</span>
+                </button>
+              )}
+            </div>
+
+            {/* Sıralama Dropdown */}
+            <div className="flex items-center gap-1.5 font-mono">
+              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded px-2.5 py-1 text-xs text-slate-800 font-bold focus:outline-none focus:border-[#F27A1A] cursor-pointer"
+              >
+                <option value="default">Varsayılan Sıralama</option>
+                <option value="price_asc">Fiyat: Düşükten Yükseğe</option>
+                <option value="price_desc">Fiyat: Yüksekten Düşüğe</option>
+                <option value="featured">Öne Çıkan Projeler</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Ürün Listesi (Trendyol 4-5 Kolonlu Grid) */}
@@ -647,6 +755,56 @@ export default function HomePage() {
         )}
 
       </div>
+
+      {/* 10. SON GEZİLEN PARÇALAR (RECENTLY VIEWED) */}
+      {recentlyViewed && recentlyViewed.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-[#F27A1A]">
+                  <Timer className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-mono text-sm sm:text-base font-bold text-slate-900 uppercase">
+                    Son İncelediğiniz Parçalar
+                  </h3>
+                  <p className="text-[10px] font-mono text-slate-400">
+                    Daha önce göz gezdirdiğiniz parçalar ve şasiler
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {recentlyViewed.slice(0, 6).map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/products/${item.slug || item.id}`}
+                  className="group bg-slate-50 hover:bg-orange-50/50 p-2.5 rounded-lg border border-slate-200 hover:border-[#F27A1A]/40 transition-all flex flex-col justify-between"
+                >
+                  <div className="aspect-square relative rounded-md overflow-hidden bg-white mb-2 border border-slate-100">
+                    <Image
+                      src={item.imageUrl || "/cihanekspress-logo.png"}
+                      alt={item.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-mono font-bold text-slate-900 line-clamp-1 group-hover:text-[#F27A1A]">
+                      {item.title}
+                    </p>
+                    <p className="text-xs font-mono font-bold text-[#F27A1A] mt-1">
+                      {Number(item.price).toLocaleString("tr-TR")} ₺
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 6. KAT: RIG SİHİRBAZI & KONFİGÜRATÖR (#rig-builder) */}
       <div id="rig-builder" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">

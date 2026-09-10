@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useModules } from "@/lib/useModules";
@@ -33,13 +33,55 @@ export default function Header() {
     vipSession,
     isSalesAllowed,
     setIsVipModalOpen,
+    wishlist,
+    setIsWishlistOpen,
   } = useCart();
   const { isModuleActive } = useModules();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setAllProducts(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const searchResults =
+    searchQuery.trim().length >= 2
+      ? allProducts
+          .filter((p) => {
+            const q = searchQuery.toLowerCase();
+            return (
+              p.title?.toLowerCase().includes(q) ||
+              p.category?.toLowerCase().includes(q) ||
+              p.description?.toLowerCase().includes(q)
+            );
+          })
+          .slice(0, 5)
+      : [];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowSearchDropdown(false);
     if (!searchQuery.trim()) return;
     const el = document.getElementById("vitrin") || document.getElementById("tum-urunler");
     if (el) {
@@ -210,25 +252,78 @@ export default function Header() {
           </Link>
 
           {/* Trendyol Geniş Arama Çubuğu (Tablet & Masaüstü) */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex-1 max-w-2xl relative hidden sm:block"
-          >
-            <input
-              type="text"
-              placeholder="Aradığınız crawler şasisi, pirinç portal aks veya parçayı yazın..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#F3F3F3] hover:bg-[#EBEBEB] focus:bg-white text-slate-900 placeholder:text-slate-400 border border-transparent focus:border-[#F27A1A] rounded-md py-2.5 pl-4 pr-12 text-xs sm:text-sm transition-all focus:outline-none focus:ring-1 focus:ring-[#F27A1A]"
-            />
-            <button
-              type="submit"
-              className="absolute right-1.5 top-1.5 p-2 bg-[#F27A1A] hover:bg-[#E06A0A] text-white rounded-md transition-colors"
-              aria-label="Ara"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-          </form>
+          <div ref={searchContainerRef} className="flex-1 max-w-2xl relative hidden sm:block">
+            <form onSubmit={handleSearchSubmit} className="relative w-full">
+              <input
+                type="text"
+                placeholder="Aradığınız crawler şasisi, pirinç portal aks veya parçayı yazın..."
+                value={searchQuery}
+                onFocus={() => setShowSearchDropdown(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearchDropdown(true);
+                }}
+                className="w-full bg-[#F3F3F3] hover:bg-[#EBEBEB] focus:bg-white text-slate-900 placeholder:text-slate-400 border border-transparent focus:border-[#F27A1A] rounded-md py-2.5 pl-4 pr-12 text-xs sm:text-sm transition-all focus:outline-none focus:ring-1 focus:ring-[#F27A1A]"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1.5 p-2 bg-[#F27A1A] hover:bg-[#E06A0A] text-white rounded-md transition-colors"
+                aria-label="Ara"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </form>
+
+            {/* 9. Canlı Akıllı Arama Sonuçları Açılır Menüsü */}
+            {showSearchDropdown && searchQuery.trim().length >= 2 && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 overflow-hidden divide-y divide-slate-100">
+                <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                  <span>Hızlı Sonuçlar ({searchResults.length})</span>
+                  <span className="text-[10px] text-slate-400">Tıklayarak inceleyin</span>
+                </div>
+                {searchResults.length > 0 ? (
+                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                    {searchResults.map((prod) => (
+                      <Link
+                        key={prod.id}
+                        href={`/products/${prod.slug || prod.id}`}
+                        onClick={() => {
+                          setShowSearchDropdown(false);
+                          setSearchQuery("");
+                        }}
+                        className="flex items-center gap-3 p-3 hover:bg-orange-50/70 transition-colors group"
+                      >
+                        <div className="w-11 h-11 relative bg-slate-100 rounded-xs overflow-hidden shrink-0 border border-slate-200">
+                          <img
+                            src={prod.imageUrl || "/cihanekspress-logo.png"}
+                            alt={prod.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-mono font-bold text-slate-900 group-hover:text-[#F27A1A] truncate">
+                            {prod.title}
+                          </p>
+                          <span className="text-[10px] font-mono text-slate-500 uppercase">
+                            {prod.category || "Genel RC"}
+                          </span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-mono font-black text-[#F27A1A]">
+                            {Number(prod.price).toLocaleString("tr-TR")} ₺
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-xs font-mono text-slate-500">
+                    &quot;{searchQuery}&quot; ile eşleşen parça bulunamadı
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Sağ Aksiyonlar: Davetiye Butonu, Giriş Yap, Favorilerim, Sepetim */}
           <div className="flex items-center gap-1.5 sm:gap-4 flex-shrink-0">
@@ -266,17 +361,28 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* Favorilerim (Mobilde Hamburger Menüye Alındı) */}
-            <Link
-              href="/topluluk"
-              className="hidden md:flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group relative"
+            {/* 11. Favorilerim Butonu & Çekmecesi */}
+            <button
+              onClick={() => setIsWishlistOpen(true)}
+              className="flex items-center gap-1.5 text-slate-700 hover:text-[#F27A1A] transition-colors py-1 px-1 sm:px-2 rounded-md group relative cursor-pointer"
+              title="Favori Parçalarım"
+              aria-label="Favorilerim"
             >
-              <Heart className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
+              <div className="relative">
+                <Heart className="w-5 h-5 text-slate-700 group-hover:text-[#F27A1A] transition-colors" />
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center animate-in zoom-in">
+                    {wishlist.length}
+                  </span>
+                )}
+              </div>
               <div className="hidden xl:flex flex-col text-left">
                 <span className="text-xs font-bold leading-tight">Favorilerim</span>
-                <span className="text-[10px] text-slate-400">Kaydedilenler</span>
+                <span className="text-[10px] text-slate-400">
+                  {wishlist.length > 0 ? `${wishlist.length} Parça` : "Kaydedilenler"}
+                </span>
               </div>
-            </Link>
+            </button>
 
             {/* Sepetim Butonu (Mobilde Sağa Taşmayı Önleyen Kompakt Badge) */}
             <button
@@ -312,14 +418,18 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobil Özel Arama Çubuğu (Mobilde Sağa Kaymayı Engelleyen ve Erişimi Kolaylaştıran Satır) */}
-        <div className="sm:hidden px-3 pb-2.5 pt-0.5 border-t border-slate-100 bg-white">
+        {/* Mobil Özel Arama Çubuğu (Mobilde Sağa Kaymayı Engelleyen ve Canlı Arama Sunan Satır) */}
+        <div className="sm:hidden px-3 pb-2.5 pt-0.5 border-t border-slate-100 bg-white relative">
           <form onSubmit={handleSearchSubmit} className="relative w-full">
             <input
               type="text"
               placeholder="Crawler şasisi, pirinç aks veya parça ara..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setShowSearchDropdown(true)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSearchDropdown(true);
+              }}
               className="w-full bg-[#F3F3F3] hover:bg-[#EBEBEB] focus:bg-white text-slate-900 placeholder:text-slate-400 border border-transparent focus:border-[#F27A1A] rounded-lg py-2 pl-3.5 pr-10 text-xs transition-all focus:outline-none focus:ring-1 focus:ring-[#F27A1A]"
             />
             <button
@@ -330,6 +440,47 @@ export default function Header() {
               <Search className="w-3.5 h-3.5" />
             </button>
           </form>
+
+          {/* Mobil Canlı Arama Sonuçları */}
+          {showSearchDropdown && searchQuery.trim().length >= 2 && (
+            <div className="absolute top-full left-3 right-3 mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 overflow-hidden divide-y divide-slate-100">
+              {searchResults.length > 0 ? (
+                <div className="max-h-64 overflow-y-auto divide-y divide-slate-100">
+                  {searchResults.map((prod) => (
+                    <Link
+                      key={prod.id}
+                      href={`/products/${prod.slug || prod.id}`}
+                      onClick={() => {
+                        setShowSearchDropdown(false);
+                        setSearchQuery("");
+                      }}
+                      className="flex items-center gap-2.5 p-2.5 hover:bg-orange-50/70 transition-colors"
+                    >
+                      <div className="w-9 h-9 relative bg-slate-100 rounded-xs overflow-hidden shrink-0 border border-slate-200">
+                        <img
+                          src={prod.imageUrl || "/cihanekspress-logo.png"}
+                          alt={prod.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-mono font-bold text-slate-900 truncate">
+                          {prod.title}
+                        </p>
+                        <p className="text-[10px] font-mono text-[#F27A1A] font-bold">
+                          {Number(prod.price).toLocaleString("tr-TR")} ₺
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3 text-center text-xs font-mono text-slate-500">
+                  Sonuç bulunamadı
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 3. KAT: Trendyol Yatay Kategori ve Hızlı Linkler Barı */}
@@ -502,13 +653,22 @@ export default function Header() {
               >
                 <User className="w-4 h-4 text-slate-500" /> Giriş Yap / Üye Ol
               </Link>
-              <Link
-                href="/topluluk"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-slate-700 text-xs font-bold flex items-center gap-2 hover:text-[#F27A1A]"
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsWishlistOpen(true);
+                }}
+                className="text-slate-700 text-xs font-bold flex items-center justify-between w-full hover:text-[#F27A1A] cursor-pointer"
               >
-                <Heart className="w-4 h-4 text-slate-500" /> Favorilerim (Kaydedilenler)
-              </Link>
+                <span className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-slate-500" /> Favorilerim (Kaydedilenler)
+                </span>
+                {wishlist.length > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">
+                    {wishlist.length}
+                  </span>
+                )}
+              </button>
               <a
                 href={`https://wa.me/${whatsappPhone}?text=Merhaba%20Cihan%20Usta,%20katalog%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
                 target="_blank"

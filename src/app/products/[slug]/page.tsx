@@ -3,6 +3,7 @@
 import React, { useEffect, useState, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import ProductCard from "@/components/ProductCard";
 import {
@@ -16,6 +17,7 @@ import {
   MessageCircle,
   Sparkles,
   ArrowLeft,
+  ArrowRight,
   Plus,
   Minus,
   Wrench,
@@ -23,6 +25,8 @@ import {
   KeyRound,
   Play,
   Video,
+  Zap,
+  Heart,
 } from "lucide-react";
 
 interface VariantItem {
@@ -81,7 +85,16 @@ export default function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
-  const { addItem, vipSession, storeSettings, setIsVipModalOpen } = useCart();
+  const router = useRouter();
+  const {
+    addItem,
+    vipSession,
+    storeSettings,
+    setIsVipModalOpen,
+    addRecentlyViewed,
+    toggleWishlist,
+    isInWishlist,
+  } = useCart();
 
   const [product, setProduct] = useState<ProductData | null>(null);
   const [related, setRelated] = useState<ProductData[]>([]);
@@ -120,6 +133,17 @@ export default function ProductDetailPage({
               setSelectedImage(firstVariant.image);
             }
           }
+
+          // 10. Son Gezilenler Listesine Ekle
+          addRecentlyViewed({
+            id: data.product.id,
+            title: data.product.title,
+            slug: data.product.slug,
+            price: data.product.salePrice || data.product.basePrice,
+            imageUrl: images[0] || "/cihanekspress-logo.png",
+            category: data.product.category?.name || "RC Parça",
+            stock: data.product.stockQuantity,
+          });
         }
         if (data.relatedProducts) {
           setRelated(data.relatedProducts);
@@ -188,6 +212,15 @@ export default function ProductDetailPage({
       },
       quantity
     );
+  };
+
+  const handleExpressBuy = () => {
+    if (!isSalesAllowed) {
+      setIsVipModalOpen(true);
+      return;
+    }
+    handleAddToCart();
+    router.push("/checkout");
   };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -474,13 +507,50 @@ export default function ProductDetailPage({
                 </div>
 
                 {isSalesAllowed ? (
-                  <button
-                    onClick={handleAddToCart}
-                    className="flex-1 py-3.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white text-xs uppercase tracking-wider font-bold rounded-md transition-all flex items-center justify-center gap-2 shadow-xs"
-                  >
-                    <Wrench className="w-4 h-4 text-white" />
-                    <span>Talep Listesine Ekle</span>
-                  </button>
+                  <div className="flex-1 flex gap-2">
+                    <button
+                      onClick={handleAddToCart}
+                      className="flex-1 py-3.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white text-xs uppercase tracking-wider font-bold rounded-md transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      <Wrench className="w-4 h-4 text-white" />
+                      <span>Sepete Ekle</span>
+                    </button>
+                    {/* 5. Tek Tıkla Hemen Satın Al (Express Checkout) */}
+                    <button
+                      onClick={handleExpressBuy}
+                      className="flex-1 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs uppercase tracking-wider font-bold rounded-md transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                      title="Sepeti atlayarak doğrudan sipariş formuna git"
+                    >
+                      <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span>Hemen Al</span>
+                    </button>
+                    {/* 11. Favorilere Ekle / Çıkar */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        toggleWishlist({
+                          id: product.id,
+                          title: product.title,
+                          slug: product.slug,
+                          price: finalPrice,
+                          imageUrl: selectedImage || images[0],
+                          category: product.category?.name || "RC Parça",
+                          stock: product.stockQuantity,
+                        })
+                      }
+                      className={`p-3.5 rounded-md border transition-all cursor-pointer ${
+                        isInWishlist(product.id)
+                          ? "bg-red-50 border-red-200 text-red-600"
+                          : "bg-white border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200"
+                      }`}
+                      title={isInWishlist(product.id) ? "Favorilerden Çıkar" : "Favorilere Ekle"}
+                      aria-label="Favori"
+                    >
+                      <Heart
+                        className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-red-600" : ""}`}
+                      />
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => setIsVipModalOpen(true)}
@@ -505,6 +575,90 @@ export default function ProductDetailPage({
                 <span>{isSalesAllowed ? "WhatsApp İle Hemen Sipariş Ver & Danış" : "WhatsApp İle Atölye Bilgisi Al (Katalog)"}</span>
               </a>
             </div>
+
+            {/* 2. Sıkça Birlikte Alınanlar & Set İndirimi Paketi */}
+            {isSalesAllowed && related && related.length > 0 && (() => {
+              const partner = related[0];
+              const partnerPrice = partner.salePrice || partner.basePrice;
+              const bundleRaw = finalPrice + partnerPrice;
+              const bundleSavings = Math.round(bundleRaw * 0.05);
+              const bundleFinal = bundleRaw - bundleSavings;
+
+              const handleAddBundle = () => {
+                handleAddToCart();
+                let partnerImg = "/cihanekspress-logo.png";
+                try {
+                  const parsed = JSON.parse(partner.images);
+                  if (Array.isArray(parsed) && parsed.length > 0) partnerImg = parsed[0];
+                } catch {}
+
+                addItem({
+                  id: partner.id,
+                  title: partner.title,
+                  price: partnerPrice,
+                  imageUrl: partnerImg,
+                  category: partner.category?.name || "RC Parça",
+                  stock: partner.stockQuantity,
+                  maxStock: partner.stockQuantity,
+                });
+              };
+
+              let partnerImg = "/cihanekspress-logo.png";
+              try {
+                const parsed = JSON.parse(partner.images);
+                if (Array.isArray(parsed) && parsed.length > 0) partnerImg = parsed[0];
+              } catch {}
+
+              return (
+                <div className="p-4 bg-orange-50/60 border border-orange-200 rounded-lg space-y-3 font-mono">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-[#F27A1A]" />
+                      <span>Sıkça Birlikte Alınanlar</span>
+                    </span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-xs">
+                      %5 Set İndirimi
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 relative bg-white border border-slate-200 rounded-xs overflow-hidden shrink-0">
+                      <Image src={selectedImage || images[0]} alt={product.title} fill className="object-cover" />
+                    </div>
+                    <span className="text-slate-400 font-black text-sm">+</span>
+                    <div className="w-12 h-12 relative bg-white border border-slate-200 rounded-xs overflow-hidden shrink-0">
+                      <Image
+                        src={partnerImg}
+                        alt={partner.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold text-slate-900 truncate">
+                        {partner.title}
+                      </p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-black text-[#F27A1A]">
+                          {bundleFinal.toLocaleString("tr-TR")} ₺
+                        </span>
+                        <span className="text-[10px] text-slate-400 line-through">
+                          {bundleRaw.toLocaleString("tr-TR")} ₺
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleAddBundle}
+                    className="w-full py-2.5 bg-slate-900 hover:bg-[#F27A1A] text-white text-[11px] font-bold uppercase tracking-wider rounded-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>İki Parçayı Birlikte İndirimle Al</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* Atölye Güvence & Hobi Beyanı */}
             <div className="border-t border-slate-200 pt-5 space-y-2.5 text-xs text-slate-600 font-mono">

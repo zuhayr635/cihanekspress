@@ -9,8 +9,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Kupon kodu giriniz" }, { status: 400 });
     }
 
+    const cleanCode = code.trim().toUpperCase();
+    const cartSubtotal = Number(subtotal) || 0;
+
+    // Özel Terk Edilmiş Sepet Kurtarma Kuponu (%5 İndirim)
+    if (cleanCode === "SEPET5") {
+      const discountAmount = Math.round((cartSubtotal * 5) / 100);
+      return NextResponse.json({
+        success: true,
+        message: "%5 Terk Edilmiş Sepet Özel İndirimi Uygulandı!",
+        couponCode: "SEPET5",
+        discountAmount,
+      });
+    }
+
     const coupon = await prisma.coupon.findUnique({
-      where: { code: code.trim().toUpperCase() },
+      where: { code: cleanCode },
     });
 
     if (!coupon || !coupon.isActive) {
@@ -24,8 +38,6 @@ export async function POST(req: Request) {
     if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
       return NextResponse.json({ success: false, error: "Bu kuponun maksimum kullanım limitine ulaşılmıştır." }, { status: 400 });
     }
-
-    const cartSubtotal = Number(subtotal) || 0;
 
     if (coupon.minSpend && cartSubtotal < coupon.minSpend) {
       return NextResponse.json(

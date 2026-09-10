@@ -80,12 +80,15 @@ export interface IbanAccountData {
 
 export interface CartItem {
   id: string; // product id or product-variant composite id
-  productId: string;
+  productId?: string;
   variantId?: string;
   title: string;
   variantName?: string;
   price: number;
-  image: string;
+  image?: string;
+  imageUrl?: string;
+  category?: string;
+  stock?: number;
   quantity: number;
   maxStock: number;
 }

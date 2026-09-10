@@ -860,7 +860,7 @@ export default function AdminDashboardPage() {
   };
 
   // 8. ATÖLYE MONTAJ KANBANI & WHATSAPP ŞABLONLARI
-  const handleSendWhatsAppTemplate = (order: any, stage: "CONFIRM" | "ASSEMBLING" | "TESTING" | "SHIPPED") => {
+  const handleSendWhatsAppTemplate = (order: any, stage: "CONFIRM" | "ASSEMBLING" | "TESTING" | "SHIPPED" | "DELIVERED") => {
     const phone = order.customerPhone.replace(/[^0-9]/g, "");
     let message = "";
     if (stage === "CONFIRM") {
@@ -869,8 +869,10 @@ export default function AdminDashboardPage() {
       message = `Merhaba ${order.customerName}, #${order.orderNumber} siparişiniz şu an Cihan Usta'nın montaj masasında! Özel aks, şanzıman ve elektronik montajınız özenle yapılıyor.`;
     } else if (stage === "TESTING") {
       message = `Sayın ${order.customerName}, #${order.orderNumber} siparişinizin montajı bitti. Şu an kaya tırmanış parkurunda elektronik, servo ve süspansiyon test sürüşü yapılıyor!`;
-    } else {
+    } else if (stage === "SHIPPED") {
       message = `Müjde ${order.customerName}! #${order.orderNumber} siparişiniz testleri başarıyla geçti, özenle paketlendi ve kargoya verildi. Kargo takip kodunuz: ${order.trackingNumber || "Sistemde Güncelleniyor"}. Keyifli sürüşler dileriz!`;
+    } else if (stage === "DELIVERED") {
+      message = `Merhaba ${order.customerName}! #${order.orderNumber} siparişinizin teslimatı tamamlandı. Yeni RC parçalarınızın montaj ve rodaj sürecinde her zaman atölyemizden teknik danışmanlık alabilirsiniz. Keyifli tırmanışlar dileriz! 🧗`;
     }
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
@@ -2155,6 +2157,13 @@ export default function AdminDashboardPage() {
                             className="px-3 py-1 text-[11px] bg-[#25D366]/15 hover:bg-[#25D366]/25 text-emerald-900 border border-emerald-300 font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <span>📦 Kargolandı Mesajı</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSendWhatsAppTemplate(ord, "DELIVERED")}
+                            className="px-3 py-1 text-[11px] bg-[#25D366]/15 hover:bg-[#25D366]/25 text-emerald-900 border border-emerald-300 font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>🎉 Teslim Edildi Mesajı</span>
                           </button>
                         </div>
                       </div>

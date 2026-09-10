@@ -542,7 +542,7 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div key={item.id} className="pt-3 first:pt-0 flex gap-3">
                     <div className="relative w-12 h-16 bg-slate-50 rounded-xs overflow-hidden flex-shrink-0 border border-slate-200">
-                      <Image src={item.image} alt={item.title} fill className="object-cover" />
+                      <Image src={item.image || item.imageUrl || "/cihanekspress-logo.png"} alt={item.title} fill className="object-cover" />
                     </div>
                     <div className="flex-1 text-xs font-mono">
                       <h4 className="font-bold text-slate-950 line-clamp-1">{item.title}</h4>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
@@ -17,11 +17,15 @@ import {
   FileText,
   Lock,
   KeyRound,
+  Truck,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
 export default function CartDrawer() {
   const {
     items,
+    addItem,
     removeItem,
     updateQuantity,
     isCartOpen,
@@ -29,6 +33,7 @@ export default function CartDrawer() {
     subtotal,
     discountAmount,
     discountPercent,
+    bundleDiscount,
     shippingFee,
     total,
     appliedCoupon,
@@ -42,6 +47,22 @@ export default function CartDrawer() {
   const [couponCode, setCouponCode] = useState("");
   const [couponMsg, setCouponMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+  const [crossSellProducts, setCrossSellProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isCartOpen) return;
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          // Sepette olmayan ilk 3 ürünü öner
+          const inCartIds = new Set(items.map((i) => i.id));
+          const available = data.filter((p) => !inCartIds.has(p.id)).slice(0, 3);
+          setCrossSellProducts(available);
+        }
+      })
+      .catch(() => {});
+  }, [isCartOpen, items]);
 
   if (!isCartOpen) return null;
 
@@ -70,7 +91,7 @@ export default function CartDrawer() {
       )
       .join("\n\n");
 
-    const message = `*CIHANPOL RC ATELIER — ATÖLYE SİPARİŞ & TALEP LİSTESİ*\n\nMerhaba Cihan Usta, sitedeki katalog üzerinden aşağıdaki projeleri/parçaları seçtim:\n\n${itemList}\n\n─────────────────────\n*Ara Toplam:* ${subtotal.toLocaleString("tr-TR")} ₺\n${discountAmount > 0 ? `*İndirim:* -${discountAmount.toLocaleString("tr-TR")} ₺\n` : ""}*Atölye Referans Toplamı:* ${total.toLocaleString("tr-TR")} ₺\n─────────────────────\n\nBu parçaların atölye teslimi / montaj durumu ve teslimat süresi hakkında görüşmek istiyorum.`;
+    const message = `*CIHANPOL RC ATELIER — ATÖLYE SİPARİŞ & TALEP LİSTESİ*\n\nMerhaba Cihan Usta, sitedeki katalog üzerinden aşağıdaki projeleri/parçaları seçtim:\n\n${itemList}\n\n─────────────────────\n*Ara Toplam:* ${subtotal.toLocaleString("tr-TR")} ₺\n${discountAmount > 0 ? `*Kupon/Kulüp İndirimi:* -${discountAmount.toLocaleString("tr-TR")} ₺\n` : ""}${bundleDiscount > 0 ? `*Set İndirimi (%5):* -${bundleDiscount.toLocaleString("tr-TR")} ₺\n` : ""}*Atölye Referans Toplamı:* ${total.toLocaleString("tr-TR")} ₺\n─────────────────────\n\nBu parçaların atölye teslimi / montaj durumu ve teslimat süresi hakkında görüşmek istiyorum.`;
 
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   };
@@ -109,9 +130,42 @@ export default function CartDrawer() {
             </button>
           </div>
 
+          {/* 1. Kargo Bedava İlerleme Çubuğu */}
+          {(() => {
+            const freeThreshold = storeSettings?.freeShippingThreshold ?? 2000;
+            const remaining = Math.max(0, freeThreshold - subtotal);
+            const percent = Math.min(100, Math.round((subtotal / freeThreshold) * 100));
+            return (
+              <div className="px-5 py-3 bg-orange-50/50 border-b border-orange-100/80 space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  {remaining === 0 ? (
+                    <span className="text-emerald-700 font-bold flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5 text-emerald-600 animate-bounce" />
+                      <span>🎉 Tebrikler! Kargo BEDAVA</span>
+                    </span>
+                  ) : (
+                    <span className="text-slate-700 font-medium flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5 text-[#F27A1A]" />
+                      <span>Kargo Bedava için <strong>{remaining.toLocaleString("tr-TR")} ₺</strong> ekleyin</span>
+                    </span>
+                  )}
+                  <span className="text-[10px] font-bold text-slate-500">%{percent}</span>
+                </div>
+                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 rounded-full ${
+                      percent >= 100 ? "bg-emerald-500" : "bg-[#F27A1A]"
+                    }`}
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Hukuki Hobi Kalkanı Bilgilendirmesi */}
-          <div className="px-5 py-2.5 bg-orange-50 border-b border-orange-100 text-[11px] text-orange-950 font-mono flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-orange-600 flex-shrink-0" />
+          <div className="px-5 py-2.5 bg-slate-50 border-b border-slate-100 text-[11px] text-slate-600 font-mono flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#F27A1A] flex-shrink-0" />
             <span>Katalog Rezervasyonu: Birebir atölye istişaresiyle hazırlanır.</span>
           </div>
 
@@ -144,6 +198,7 @@ export default function CartDrawer() {
                     <Image
                       src={
                         item.image ||
+                        item.imageUrl ||
                         "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=400&q=80"
                       }
                       alt={item.title}
@@ -207,11 +262,76 @@ export default function CartDrawer() {
                 </div>
               ))
             )}
+
+            {/* 2. Çapraz Satış: Birlikte İyi Gider */}
+            {items.length > 0 && crossSellProducts.length > 0 && (
+              <div className="pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-[#F27A1A]" />
+                    <span>Birlikte İyi Gider</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">Atölye Önerisi</span>
+                </div>
+                <div className="space-y-2">
+                  {crossSellProducts.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xs hover:border-[#F27A1A]/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-10 h-10 relative bg-white rounded-xs overflow-hidden border border-slate-200 shrink-0">
+                          <Image
+                            src={p.imageUrl || "/cihanekspress-logo.png"}
+                            alt={p.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-mono font-bold text-slate-900 truncate">
+                            {p.title}
+                          </p>
+                          <p className="text-[11px] font-mono text-[#F27A1A] font-bold">
+                            {p.price.toLocaleString("tr-TR")} ₺
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() =>
+                          addItem({
+                            id: p.id,
+                            title: p.title,
+                            price: p.price,
+                            imageUrl: p.imageUrl,
+                            category: p.category,
+                            stock: p.stock ?? 99,
+                            maxStock: p.stock ?? 99,
+                          })
+                        }
+                        className="ml-2 px-2.5 py-1.5 bg-[#F27A1A] hover:bg-[#E06A0A] text-white text-[10px] font-mono font-bold rounded-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Ekle</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Alt Özet ve Aksiyonlar */}
           {items.length > 0 && (
             <div className="p-5 sm:p-6 bg-slate-50/90 border-t border-slate-200 space-y-4">
+              {/* 3. Paket / Set İndirimi Teşviki (Sepette 1 ürün varsa) */}
+              {items.length === 1 && (
+                <div className="p-2.5 bg-orange-50/80 border border-orange-200/80 rounded-xs text-[11px] font-mono text-orange-950 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#F27A1A] shrink-0" />
+                  <span>Sepete 1 parça daha ekleyin, <strong>%5 Set İndirimi</strong> anında kazanın! 🎯</span>
+                </div>
+              )}
+
               {/* Kupon Alanı */}
               <form onSubmit={handleCouponSubmit} className="flex gap-2">
                 <div className="relative flex-1">
@@ -270,6 +390,16 @@ export default function CartDrawer() {
                           {discountPercent > 0 ? `Kulüp İndirimi (%${discountPercent})` : "Özel İndirim"}
                         </span>
                         <span>-{discountAmount.toLocaleString("tr-TR")} ₺</span>
+                      </div>
+                    )}
+
+                    {bundleDiscount > 0 && (
+                      <div className="flex justify-between text-emerald-600 font-bold">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Çoklu Alım / Set İndirimi (%5)</span>
+                        </span>
+                        <span>-{bundleDiscount.toLocaleString("tr-TR")} ₺</span>
                       </div>
                     )}
 

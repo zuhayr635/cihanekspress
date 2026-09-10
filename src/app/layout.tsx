@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
+import WishlistDrawer from "@/components/WishlistDrawer";
+import ExitIntentModal from "@/components/ExitIntentModal";
 import AiCrawlerDoctor from "@/components/modules/AiCrawlerDoctor";
 import { CartProvider } from "@/lib/cart-context";
 
@@ -39,6 +41,8 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <CartDrawer />
+          <WishlistDrawer />
+          <ExitIntentModal />
           <AiCrawlerDoctor />
         </CartProvider>
       </body>

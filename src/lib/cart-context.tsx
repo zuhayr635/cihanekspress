@@ -15,6 +15,7 @@ interface CartContextType {
   subtotal: number;
   discountAmount: number;
   discountPercent: number;
+  bundleDiscount: number;
   shippingFee: number;
   total: number;
   appliedCoupon: string | null;
@@ -28,6 +29,14 @@ interface CartContextType {
   isVipModalOpen: boolean;
   setIsVipModalOpen: (open: boolean) => void;
   isSalesAllowed: boolean;
+  // Favori Listesi (Wishlist) & Son Gezilenler
+  wishlist: any[];
+  toggleWishlist: (product: any) => void;
+  isInWishlist: (productId: string) => boolean;
+  isWishlistOpen: boolean;
+  setIsWishlistOpen: (open: boolean) => void;
+  recentlyViewed: any[];
+  addRecentlyViewed: (product: any) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -41,6 +50,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [storeSettings, setStoreSettings] = useState<StoreSettingsData | null>(null);
   const [selectedVehicle, setSelectedVehicleState] = useState<string | null>(null);
   const [isVipModalOpen, setIsVipModalOpen] = useState(false);
+
+  // Favoriler (Wishlist) & Son Gezilenler
+  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
 
   const isSalesAllowed =
     !storeSettings?.panicMode &&
@@ -56,7 +70,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Yerel depolamadan sepeti yükle
+  // Favori Ekle / Kaldır
+  const toggleWishlist = (product: any) => {
+    if (!product || !product.id) return;
+    setWishlist((prev) => {
+      const exists = prev.some((p) => p.id === product.id);
+      const updated = exists ? prev.filter((p) => p.id !== product.id) : [...prev, product];
+      try {
+        localStorage.setItem("luxe_wishlist", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const isInWishlist = (productId: string) => {
+    return wishlist.some((p) => p.id === productId);
+  };
+
+  // Son Gezilenler
+  const addRecentlyViewed = (product: any) => {
+    if (!product || !product.id) return;
+    setRecentlyViewed((prev) => {
+      const filtered = prev.filter((p) => p.id !== product.id);
+      const updated = [product, ...filtered].slice(0, 10);
+      try {
+        localStorage.setItem("luxe_recently_viewed", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  // Yerel depolamadan sepet, favoriler ve son gezilenleri yükle
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem("luxe_cart");
@@ -66,6 +110,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const savedVehicle = localStorage.getItem("rc_selected_vehicle");
       if (savedVehicle) {
         setSelectedVehicleState(savedVehicle);
+      }
+      const savedWishlist = localStorage.getItem("luxe_wishlist");
+      if (savedWishlist) {
+        setWishlist(JSON.parse(savedWishlist));
+      }
+      const savedRecent = localStorage.getItem("luxe_recently_viewed");
+      if (savedRecent) {
+        setRecentlyViewed(JSON.parse(savedRecent));
       }
     } catch {
       // localStorage erişim hatası
@@ -176,10 +228,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const vipDiscountAmount = (subtotal * vipDiscountPercent) / 100;
   const discountAmount = Math.max(vipDiscountAmount, couponDiscount);
 
+  // 3. Paket / Set İndirimi: Sepette 2 veya daha fazla ürün varsa otomatik %5 Set İndirimi
+  const bundleDiscount = itemCount >= 2 ? Math.round(subtotal * 0.05) : 0;
+
   const freeThreshold = storeSettings?.freeShippingThreshold ?? 2000;
   const defaultFee = storeSettings?.defaultShippingFee ?? 95;
   const shippingFee = subtotal > 0 && subtotal < freeThreshold ? defaultFee : 0;
-  const total = Math.max(0, subtotal - discountAmount + shippingFee);
+  const total = Math.max(0, subtotal - discountAmount - bundleDiscount + shippingFee);
 
   return (
     <CartContext.Provider
@@ -195,6 +250,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         subtotal,
         discountAmount,
         discountPercent: vipDiscountPercent,
+        bundleDiscount,
         shippingFee,
         total,
         appliedCoupon,
@@ -208,6 +264,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isVipModalOpen,
         setIsVipModalOpen,
         isSalesAllowed,
+        wishlist,
+        toggleWishlist,
+        isInWishlist,
+        isWishlistOpen,
+        setIsWishlistOpen,
+        recentlyViewed,
+        addRecentlyViewed,
       }}
     >
       {children}
