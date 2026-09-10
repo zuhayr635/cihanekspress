@@ -58,6 +58,8 @@ interface ProductData {
   type: string;
   basePrice: number;
   salePrice: number | null;
+  priceUsd?: number | null;
+  salePriceUsd?: number | null;
   sku: string | null;
   stockQuantity: number;
   isFeatured: boolean;
@@ -380,6 +382,11 @@ export default function ProductDetailPage({
                     <span className="font-mono text-3xl sm:text-4xl text-slate-950 font-black">
                       {finalPrice.toLocaleString("tr-TR")} ₺
                     </span>
+                    {storeSettings?.usdRate && storeSettings.usdRate > 0 && (
+                      <span className="text-xs font-bold text-slate-600 font-mono bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md self-center">
+                        (${(product.priceUsd ? Number(product.priceUsd) : (finalPrice / storeSettings.usdRate)).toFixed(2)} USD)
+                      </span>
+                    )}
                     {(vipDiscount > 0 || product.salePrice) && (
                       <>
                         <span className="text-base text-slate-400 line-through font-mono">

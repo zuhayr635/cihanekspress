@@ -545,8 +545,11 @@ export default function AdminDashboardPage() {
         description: editingProduct.description || "",
         shortDescription: editingProduct.shortDescription || null,
         basePrice: Number(editingProduct.basePrice),
+        priceUsd: editingProduct.priceUsd ? Number(editingProduct.priceUsd) : null,
         salePrice: editingProduct.salePrice ? Number(editingProduct.salePrice) : null,
+        salePriceUsd: editingProduct.salePriceUsd ? Number(editingProduct.salePriceUsd) : null,
         costPrice: editingProduct.costPrice ? Number(editingProduct.costPrice) : null,
+        costPriceUsd: editingProduct.costPriceUsd ? Number(editingProduct.costPriceUsd) : null,
         compatibleModels: typeof editingProduct.compatibleModels === "string" && !editingProduct.compatibleModels.trim().startsWith("[")
           ? JSON.stringify(editingProduct.compatibleModels.split(",").map((s: string) => s.trim()).filter(Boolean))
           : editingProduct.compatibleModels,
@@ -677,9 +680,13 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...settings, usdRate: rate }),
       });
+      const data = await res.json();
       if (res.ok) {
         setSettings((prev: any) => ({ ...prev, usdRate: rate }));
-        showNotify("success", `✓ Dolar Kuru 1 USD = ${rate.toFixed(2)} ₺ olarak güncellendi.`);
+        showNotify("success", `✓ Dolar Kuru 1 USD = ${rate.toFixed(2)} ₺ olarak kaydedildi. Tüm ürünlerin TL fiyatları otomatik endekslendi! (${data.syncedProducts ?? "tüm"} ürün güncellendi)`);
+        refreshAllData();
+      } else {
+        showNotify("error", data.error || "Dolar kuru kaydedilemedi.");
       }
     } catch {
       showNotify("error", "Dolar kuru kaydedilemedi.");
@@ -2323,37 +2330,43 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                {/* 0.5 MANUEL DOLAR KURU (USD/TRY) YÖNETİMİ */}
-                <div className="p-6 bg-slate-50/70 border border-slate-200/80 rounded-2xl space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-emerald-600" />
-                        <span>Manuel Dolar Kuru (USD/TRY Belirleme)</span>
-                      </h3>
-                      <p className="text-[11px] text-slate-500 mt-1">
-                        Sitedeki tüm ürünlerin altında TL fiyatının yanında yaklaşık Dolar karşılığı gösterilir.
+                {/* 0.5 MANUEL DOLAR KURU (USD/TRY) YÖNETİMİ & OTOMATİK ENDEKSLEME */}
+                <div className="p-6 bg-linear-to-r from-emerald-950/15 via-emerald-900/5 to-transparent border border-emerald-500/30 rounded-2xl space-y-4 shadow-2xs">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-5 h-5 text-emerald-600" />
+                        <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                          Dolar Kuru & Otomatik Fiyat Endeksleme Motoru
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold">
+                          CANLI ENDEKS
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                        Buraya gireceğiniz 1 Dolar (USD) kuru ile sitedeki tüm ürünlerin TL satış fiyatları ve varyasyonları otomatik olarak güncellenir. Ürünleri dolar bazında fiyatlandırabilir ve kur değiştikçe tek tıkla tüm sitedeki TL fiyatlarını yeniden endeksleyebilirsiniz.
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <div className="relative">
                         <input
                           type="number"
                           step="0.01"
                           value={usdRateInput}
                           onChange={(e) => setUsdRateInput(e.target.value)}
-                          className="w-28 px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl font-mono text-slate-900 font-bold focus:border-[#F27A1A] focus:outline-none text-right pr-7"
+                          className="w-32 px-3.5 py-2.5 text-xs bg-white border border-emerald-300 rounded-xl font-mono text-emerald-950 font-bold focus:border-emerald-600 focus:outline-none text-right pr-8 shadow-2xs"
                         />
-                        <span className="absolute right-2.5 top-2 text-xs font-bold text-slate-400">₺</span>
+                        <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">₺</span>
                       </div>
                       <button
                         type="button"
                         onClick={handleSaveUsdRate}
                         disabled={isSavingUsdRate}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer"
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                       >
-                        {isSavingUsdRate ? "Kaydediliyor..." : "Kuru Kaydet"}
+                        <RefreshCw className={`w-3.5 h-3.5 ${isSavingUsdRate ? "animate-spin" : ""}`} />
+                        <span>{isSavingUsdRate ? "Endeksleniyor..." : "Kuru Kaydet & Tüm Fiyatları Güncelle"}</span>
                       </button>
                     </div>
                   </div>
@@ -3138,22 +3151,27 @@ export default function AdminDashboardPage() {
                               </span>
                             )}
                           </div>
-                          <p className="font-sans text-xs font-black text-[#F27A1A] mt-0.5">
-                            {p.basePrice.toLocaleString("tr-TR")} ₺{" "}
+                          <div className="flex items-center gap-2 flex-wrap font-sans text-xs mt-0.5">
+                            <span className="text-[11px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded shadow-2xs">
+                              ${(p.priceUsd ? Number(p.priceUsd) : (p.basePrice / (settings.usdRate || 38.5))).toFixed(2)} USD
+                            </span>
+                            <span className="font-black text-[#F27A1A]">
+                              {p.basePrice.toLocaleString("tr-TR")} ₺
+                            </span>
                             {p.salePrice && (
-                              <span className="line-through text-slate-400 font-normal ml-1">
+                              <span className="line-through text-slate-400 font-normal">
                                 {p.salePrice.toLocaleString("tr-TR")} ₺
                               </span>
                             )}
                             {p.costPrice && (
-                              <span className="text-slate-400 font-normal font-mono ml-2">
+                              <span className="text-slate-400 font-normal font-mono text-[11px]">
                                 (Maliyet: {p.costPrice.toLocaleString("tr-TR")} ₺)
                               </span>
                             )}
-                            <span className="font-mono text-slate-500 font-normal ml-2">
+                            <span className="font-mono text-slate-500 font-normal text-[11px]">
                               • Stok: <span className={`font-bold ${p.stockQuantity <= 3 ? "text-rose-600" : "text-slate-700"}`}>{p.stockQuantity}</span>
                             </span>
-                          </p>
+                          </div>
                         </div>
                       </div>
 
@@ -4412,79 +4430,187 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Fiyatlar, Stok ve Maliyet Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Taban Fiyat (TL) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    step="any"
-                    placeholder="32500"
-                    value={editingProduct.basePrice ?? ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, basePrice: e.target.value })}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
-                  />
+              {/* Dolar Kuru Endeksli Fiyatlar, Stok ve Maliyet Bölümü */}
+              <div className="p-4 bg-emerald-950/5 border border-emerald-500/30 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                    <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      Dolar Kuru Endeksli Fiyatlandırma
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold bg-emerald-600 text-white px-2.5 py-0.5 rounded-full">
+                    1 USD = {settings?.usdRate || 38.5} ₺
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    İndirimli Fiyat (TL)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
-                    placeholder="Opsiyonel"
-                    value={editingProduct.salePrice ?? ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value ? Number(e.target.value) : null })}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Dolar Fiyatı ($) -> TL Otomatik */}
+                  <div className="bg-white p-3 rounded-xl border border-emerald-300 shadow-2xs space-y-1.5">
+                    <label className="block text-xs font-bold text-emerald-900">
+                      Liste Fiyatı ($ USD) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        min={0}
+                        required
+                        placeholder="Örn: 890"
+                        value={
+                          editingProduct.priceUsd !== undefined && editingProduct.priceUsd !== null
+                            ? editingProduct.priceUsd
+                            : (editingProduct.basePrice ? (Number(editingProduct.basePrice) / (settings?.usdRate || 38.5)).toFixed(2) : "")
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const currentRate = settings?.usdRate && settings.usdRate > 0 ? settings.usdRate : 38.5;
+                          if (val === "") {
+                            setEditingProduct({ ...editingProduct, priceUsd: "", basePrice: "" });
+                          } else {
+                            const usdNum = parseFloat(val);
+                            const tlNum = Math.round(usdNum * currentRate);
+                            setEditingProduct({ ...editingProduct, priceUsd: val, basePrice: tlNum });
+                          }
+                        }}
+                        className="w-full pl-6 pr-3 py-1.5 text-xs bg-emerald-50/50 border border-emerald-200 rounded-lg focus:outline-none focus:border-emerald-600 font-mono font-black text-emerald-900"
+                      />
+                      <span className="absolute left-2 top-1.5 text-xs font-bold text-emerald-600">$</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                      <span>TL Karşılığı:</span>
+                      <span className="font-mono font-bold text-slate-900">{editingProduct.basePrice ? Number(editingProduct.basePrice).toLocaleString("tr-TR") : 0} ₺</span>
+                    </div>
+                  </div>
+
+                  {/* İndirimli Dolar Fiyatı ($) */}
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      İndirimli Fiyat ($ USD)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        min={0}
+                        placeholder="Opsiyonel"
+                        value={
+                          editingProduct.salePriceUsd !== undefined && editingProduct.salePriceUsd !== null
+                            ? editingProduct.salePriceUsd
+                            : (editingProduct.salePrice ? (Number(editingProduct.salePrice) / (settings?.usdRate || 38.5)).toFixed(2) : "")
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const currentRate = settings?.usdRate && settings.usdRate > 0 ? settings.usdRate : 38.5;
+                          if (val === "") {
+                            setEditingProduct({ ...editingProduct, salePriceUsd: null, salePrice: null });
+                          } else {
+                            const usdNum = parseFloat(val);
+                            const tlNum = Math.round(usdNum * currentRate);
+                            setEditingProduct({ ...editingProduct, salePriceUsd: val, salePrice: tlNum });
+                          }
+                        }}
+                        className="w-full pl-6 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#F27A1A] font-mono font-medium text-slate-800"
+                      />
+                      <span className="absolute left-2 top-1.5 text-xs font-bold text-slate-400">$</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                      <span>TL Karşılığı:</span>
+                      <span className="font-mono font-bold text-slate-700">{editingProduct.salePrice ? Number(editingProduct.salePrice).toLocaleString("tr-TR") : "-"} ₺</span>
+                    </div>
+                  </div>
+
+                  {/* Alış Maliyeti ($) */}
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Alış / Parça Maliyeti ($ USD)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        min={0}
+                        placeholder="Maliyet (COGS)"
+                        value={
+                          editingProduct.costPriceUsd !== undefined && editingProduct.costPriceUsd !== null
+                            ? editingProduct.costPriceUsd
+                            : (editingProduct.costPrice ? (Number(editingProduct.costPrice) / (settings?.usdRate || 38.5)).toFixed(2) : "")
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const currentRate = settings?.usdRate && settings.usdRate > 0 ? settings.usdRate : 38.5;
+                          if (val === "") {
+                            setEditingProduct({ ...editingProduct, costPriceUsd: null, costPrice: null });
+                          } else {
+                            const usdNum = parseFloat(val);
+                            const tlNum = Math.round(usdNum * currentRate);
+                            setEditingProduct({ ...editingProduct, costPriceUsd: val, costPrice: tlNum });
+                          }
+                        }}
+                        className="w-full pl-6 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#F27A1A] font-mono font-medium text-slate-800"
+                      />
+                      <span className="absolute left-2 top-1.5 text-xs font-bold text-slate-400">$</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                      <span>TL Karşılığı:</span>
+                      <span className="font-mono font-bold text-slate-700">{editingProduct.costPrice ? Number(editingProduct.costPrice).toLocaleString("tr-TR") : "-"} ₺</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Alış Maliyeti (₺)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
-                    placeholder="COGS"
-                    value={editingProduct.costPrice ?? ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, costPrice: e.target.value ? Number(e.target.value) : null })}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-medium text-slate-900"
-                  />
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Doğrudan TL Fiyatı Düzenle (₺)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      step="any"
+                      placeholder="TL cinsinden fiyat"
+                      value={editingProduct.basePrice ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const currentRate = settings?.usdRate && settings.usdRate > 0 ? settings.usdRate : 38.5;
+                        if (val === "") {
+                          setEditingProduct({ ...editingProduct, basePrice: "", priceUsd: "" });
+                        } else {
+                          const tlNum = parseFloat(val);
+                          const usdNum = Math.round((tlNum / currentRate) * 100) / 100;
+                          setEditingProduct({ ...editingProduct, basePrice: val, priceUsd: usdNum });
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Stok Adedi *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={editingProduct.stockQuantity ?? 0}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, stockQuantity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Stok Adedi *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={editingProduct.stockQuantity ?? 0}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, stockQuantity: Number(e.target.value) })}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                    />
+                  </div>
 
-                <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    SKU / Barkod
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="TRX4-01"
-                    value={editingProduct.sku || ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-mono text-slate-700"
-                  />
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      SKU / Barkod
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Örn: CP-CRW-01"
+                      value={editingProduct.sku || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#F27A1A] font-mono text-slate-900"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -4785,15 +4911,31 @@ export default function AdminDashboardPage() {
                               type="number"
                               min={0}
                               step="any"
-                              placeholder="Fiyat (TL)"
-                              value={v.price ?? ""}
+                              placeholder="Fiyat ($ USD)"
+                              value={
+                                v.priceUsd !== undefined && v.priceUsd !== null
+                                  ? v.priceUsd
+                                  : (v.price ? (Number(v.price) / (settings?.usdRate || 38.5)).toFixed(2) : "")
+                              }
                               onChange={(e) => {
+                                const val = e.target.value;
+                                const currentRate = settings?.usdRate && settings.usdRate > 0 ? settings.usdRate : 38.5;
                                 const updated = [...editingProduct.variants];
-                                updated[vIdx] = { ...updated[vIdx], price: Number(e.target.value) };
+                                if (val === "") {
+                                  updated[vIdx] = { ...updated[vIdx], priceUsd: "", price: 0 };
+                                } else {
+                                  const usdNum = parseFloat(val);
+                                  const tlNum = Math.round(usdNum * currentRate);
+                                  updated[vIdx] = { ...updated[vIdx], priceUsd: val, price: tlNum };
+                                }
                                 setEditingProduct({ ...editingProduct, variants: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#F27A1A] font-bold text-slate-900"
+                              className="w-full px-2.5 py-1.5 text-xs bg-emerald-50/70 border border-emerald-300 rounded-lg focus:outline-none focus:border-emerald-600 font-mono font-bold text-emerald-950"
+                              title="Dolar Fiyatı ($)"
                             />
+                            <div className="text-[9px] font-mono text-slate-500 text-right pr-1">
+                              {v.price ? Number(v.price).toLocaleString("tr-TR") : 0} ₺
+                            </div>
                           </div>
                           <div>
                             <input

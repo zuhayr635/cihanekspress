@@ -252,7 +252,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   </span>
                   {storeSettings?.usdRate && storeSettings.usdRate > 0 && (
                     <span className="text-[10px] font-bold text-slate-500 font-mono bg-slate-50 border border-slate-200 px-1 py-0.5 rounded">
-                      (~${(finalPrice / storeSettings.usdRate).toFixed(2)} USD)
+                      (${((product as any).priceUsd ? Number((product as any).priceUsd) : (finalPrice / storeSettings.usdRate)).toFixed(2)} USD)
                     </span>
                   )}
                 </div>

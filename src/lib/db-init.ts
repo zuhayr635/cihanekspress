@@ -40,6 +40,9 @@ export async function ensureInitialized() {
       const prodColNames = new Set(prodCols.map((c: any) => c.name));
       const productCols: [string, string][] = [
         ["costPrice", "REAL"],
+        ["priceUsd", "REAL"],
+        ["salePriceUsd", "REAL"],
+        ["costPriceUsd", "REAL"],
         ["videoUrl", "TEXT"],
         ["weight", "REAL"],
         ["dimensions", "TEXT"],
@@ -50,6 +53,26 @@ export async function ensureInitialized() {
           await prisma.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN ${col} ${def}`);
         }
       }
+
+      const varCols: any[] = await prisma.$queryRawUnsafe("PRAGMA table_info(ProductVariant)");
+      const varColNames = new Set(varCols.map((c: any) => c.name));
+      if (!varColNames.has("priceUsd")) {
+        await prisma.$executeRawUnsafe("ALTER TABLE ProductVariant ADD COLUMN priceUsd REAL");
+      }
+
+      // Dolar fiyatı henüz atanmamış ürünlere mevcut TL fiyat ve kur üzerinden ilk dolar fiyatını ata
+      try {
+        await prisma.$executeRawUnsafe(`
+          UPDATE Product 
+          SET priceUsd = ROUND(basePrice / 38.5, 2)
+          WHERE priceUsd IS NULL OR priceUsd <= 0
+        `);
+        await prisma.$executeRawUnsafe(`
+          UPDATE ProductVariant 
+          SET priceUsd = ROUND(price / 38.5, 2)
+          WHERE priceUsd IS NULL OR priceUsd <= 0
+        `);
+      } catch {}
 
       await prisma.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS IbanAccount (

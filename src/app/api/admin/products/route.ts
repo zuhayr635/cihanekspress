@@ -21,6 +21,9 @@ export async function POST(req: Request) {
       basePrice,
       salePrice,
       costPrice,
+      priceUsd,
+      salePriceUsd,
+      costPriceUsd,
       compatibleModels,
       sku,
       stockQuantity,
@@ -30,8 +33,36 @@ export async function POST(req: Request) {
       variants,
     } = body;
 
-    if (!title || !basePrice) {
+    if (!title || (!basePrice && !priceUsd)) {
       return NextResponse.json({ error: "Başlık ve fiyat zorunludur" }, { status: 400 });
+    }
+
+    const storeSettings = await prisma.storeSetting.findUnique({ where: { id: "default" } });
+    const currentRate = storeSettings?.usdRate && storeSettings.usdRate > 0 ? storeSettings.usdRate : 38.5;
+
+    let finalBasePrice = Number(basePrice) || 0;
+    let finalPriceUsd = priceUsd !== undefined && priceUsd !== null && priceUsd !== "" ? Number(priceUsd) : null;
+
+    if (finalPriceUsd && finalPriceUsd > 0) {
+      finalBasePrice = Math.round(finalPriceUsd * currentRate);
+    } else if (finalBasePrice > 0) {
+      finalPriceUsd = Math.round((finalBasePrice / currentRate) * 100) / 100;
+    }
+
+    let finalSalePrice = salePrice ? Number(salePrice) : null;
+    let finalSalePriceUsd = salePriceUsd !== undefined && salePriceUsd !== null && salePriceUsd !== "" ? Number(salePriceUsd) : null;
+    if (finalSalePriceUsd && finalSalePriceUsd > 0) {
+      finalSalePrice = Math.round(finalSalePriceUsd * currentRate);
+    } else if (finalSalePrice && finalSalePrice > 0) {
+      finalSalePriceUsd = Math.round((finalSalePrice / currentRate) * 100) / 100;
+    }
+
+    let finalCostPrice = costPrice ? Number(costPrice) : null;
+    let finalCostPriceUsd = costPriceUsd !== undefined && costPriceUsd !== null && costPriceUsd !== "" ? Number(costPriceUsd) : null;
+    if (finalCostPriceUsd && finalCostPriceUsd > 0) {
+      finalCostPrice = Math.round(finalCostPriceUsd * currentRate);
+    } else if (finalCostPrice && finalCostPrice > 0) {
+      finalCostPriceUsd = Math.round((finalCostPrice / currentRate) * 100) / 100;
     }
 
     const finalSlug =
@@ -56,9 +87,12 @@ export async function POST(req: Request) {
         images: imagesJson,
         videoUrl: videoUrl || null,
         type: type || "SIMPLE",
-        basePrice: Number(basePrice),
-        salePrice: salePrice ? Number(salePrice) : null,
-        costPrice: costPrice ? Number(costPrice) : null,
+        basePrice: finalBasePrice,
+        priceUsd: finalPriceUsd,
+        salePrice: finalSalePrice,
+        salePriceUsd: finalSalePriceUsd,
+        costPrice: finalCostPrice,
+        costPriceUsd: finalCostPriceUsd,
         compatibleModels: compatibleModels ? (typeof compatibleModels === "string" ? compatibleModels : JSON.stringify(compatibleModels)) : "[]",
         sku: sku || null,
         stockQuantity: Number(stockQuantity) || 10,
@@ -72,12 +106,21 @@ export async function POST(req: Request) {
     if (variants && Array.isArray(variants) && variants.length > 0) {
       for (const v of variants) {
         if (!v.name) continue;
+        let vPrice = Number(v.price) || finalBasePrice;
+        let vPriceUsd = v.priceUsd !== undefined && v.priceUsd !== null && v.priceUsd !== "" ? Number(v.priceUsd) : null;
+        if (vPriceUsd && vPriceUsd > 0) {
+          vPrice = Math.round(vPriceUsd * currentRate);
+        } else if (vPrice > 0) {
+          vPriceUsd = Math.round((vPrice / currentRate) * 100) / 100;
+        }
+
         await prisma.productVariant.create({
           data: {
             productId: product.id,
             name: v.name,
             sku: v.sku || null,
-            price: Number(v.price) || Number(basePrice),
+            price: vPrice,
+            priceUsd: vPriceUsd,
             stock: Number(v.stock) ?? 5,
             image: v.image || null,
             attributes: typeof v.attributes === "string" ? v.attributes : JSON.stringify(v.attributes || {}),
@@ -116,6 +159,9 @@ export async function PUT(req: Request) {
       basePrice,
       salePrice,
       costPrice,
+      priceUsd,
+      salePriceUsd,
+      costPriceUsd,
       compatibleModels,
       sku,
       stockQuantity,
@@ -126,6 +172,34 @@ export async function PUT(req: Request) {
 
     if (!id) {
       return NextResponse.json({ error: "Ürün ID gereklidir" }, { status: 400 });
+    }
+
+    const storeSettings = await prisma.storeSetting.findUnique({ where: { id: "default" } });
+    const currentRate = storeSettings?.usdRate && storeSettings.usdRate > 0 ? storeSettings.usdRate : 38.5;
+
+    let finalBasePrice = basePrice !== undefined && basePrice !== null && basePrice !== "" ? Number(basePrice) : undefined;
+    let finalPriceUsd = priceUsd !== undefined && priceUsd !== null && priceUsd !== "" ? Number(priceUsd) : undefined;
+
+    if (finalPriceUsd !== undefined && finalPriceUsd > 0) {
+      finalBasePrice = Math.round(finalPriceUsd * currentRate);
+    } else if (finalBasePrice !== undefined && finalBasePrice > 0) {
+      finalPriceUsd = Math.round((finalBasePrice / currentRate) * 100) / 100;
+    }
+
+    let finalSalePrice: number | null | undefined = salePrice !== undefined ? (salePrice ? Number(salePrice) : null) : undefined;
+    let finalSalePriceUsd: number | null | undefined = salePriceUsd !== undefined ? (salePriceUsd ? Number(salePriceUsd) : null) : undefined;
+    if (typeof finalSalePriceUsd === "number" && finalSalePriceUsd > 0) {
+      finalSalePrice = Math.round(finalSalePriceUsd * currentRate);
+    } else if (typeof finalSalePrice === "number" && finalSalePrice > 0) {
+      finalSalePriceUsd = Math.round((finalSalePrice / currentRate) * 100) / 100;
+    }
+
+    let finalCostPrice: number | null | undefined = costPrice !== undefined ? (costPrice ? Number(costPrice) : null) : undefined;
+    let finalCostPriceUsd: number | null | undefined = costPriceUsd !== undefined ? (costPriceUsd ? Number(costPriceUsd) : null) : undefined;
+    if (typeof finalCostPriceUsd === "number" && finalCostPriceUsd > 0) {
+      finalCostPrice = Math.round(finalCostPriceUsd * currentRate);
+    } else if (typeof finalCostPrice === "number" && finalCostPrice > 0) {
+      finalCostPriceUsd = Math.round((finalCostPrice / currentRate) * 100) / 100;
     }
 
     const imagesJson = images !== undefined
@@ -144,9 +218,12 @@ export async function PUT(req: Request) {
         shortDescription,
         images: imagesJson,
         videoUrl: videoUrl !== undefined ? (videoUrl || null) : undefined,
-        basePrice: basePrice ? Number(basePrice) : undefined,
-        salePrice: salePrice !== undefined ? (salePrice ? Number(salePrice) : null) : undefined,
-        costPrice: costPrice !== undefined ? (costPrice ? Number(costPrice) : null) : undefined,
+        basePrice: finalBasePrice,
+        priceUsd: finalPriceUsd,
+        salePrice: finalSalePrice,
+        salePriceUsd: finalSalePriceUsd,
+        costPrice: finalCostPrice,
+        costPriceUsd: finalCostPriceUsd,
         compatibleModels: compatibleModels !== undefined ? (typeof compatibleModels === "string" ? compatibleModels : JSON.stringify(compatibleModels)) : undefined,
         sku: sku !== undefined ? sku : undefined,
         stockQuantity: stockQuantity !== undefined ? Number(stockQuantity) : undefined,
@@ -163,12 +240,21 @@ export async function PUT(req: Request) {
 
       for (const v of variants) {
         if (!v.name) continue;
+        let vPrice = Number(v.price) || (finalBasePrice || updated.basePrice);
+        let vPriceUsd = v.priceUsd !== undefined && v.priceUsd !== null && v.priceUsd !== "" ? Number(v.priceUsd) : null;
+        if (vPriceUsd && vPriceUsd > 0) {
+          vPrice = Math.round(vPriceUsd * currentRate);
+        } else if (vPrice > 0) {
+          vPriceUsd = Math.round((vPrice / currentRate) * 100) / 100;
+        }
+
         await prisma.productVariant.create({
           data: {
             productId: id,
             name: v.name,
             sku: v.sku || null,
-            price: Number(v.price) || Number(basePrice || updated.basePrice),
+            price: vPrice,
+            priceUsd: vPriceUsd,
             stock: Number(v.stock) ?? 5,
             image: v.image || null,
             attributes: typeof v.attributes === "string" ? v.attributes : JSON.stringify(v.attributes || {}),

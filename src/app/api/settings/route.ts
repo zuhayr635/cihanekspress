@@ -227,7 +227,58 @@ export async function PUT(req: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, settings: updated });
+    let syncedProductCount = 0;
+    if (body.usdRate !== undefined && Number(body.usdRate) > 0) {
+      const newRate = Number(body.usdRate);
+      const allProducts = await prisma.product.findMany({
+        include: { variants: true },
+      });
+
+      for (const p of allProducts) {
+        let pUsd = p.priceUsd;
+        // Eğer ürünün dolar fiyatı henüz yoksa, eski kura göre dolar fiyatını tespit et
+        if (!pUsd || pUsd <= 0) {
+          const fallbackRate = updated.usdRate > 0 ? updated.usdRate : 38.5;
+          pUsd = Math.round((p.basePrice / fallbackRate) * 100) / 100;
+        }
+
+        const newBasePrice = Math.round(pUsd * newRate);
+        const newSalePrice = p.salePriceUsd && p.salePriceUsd > 0
+          ? Math.round(p.salePriceUsd * newRate)
+          : (p.salePrice ? Math.round((p.salePrice / (updated.usdRate || 38.5)) * newRate) : null);
+        const newCostPrice = p.costPriceUsd && p.costPriceUsd > 0
+          ? Math.round(p.costPriceUsd * newRate)
+          : (p.costPrice ? Math.round((p.costPrice / (updated.usdRate || 38.5)) * newRate) : null);
+
+        await prisma.product.update({
+          where: { id: p.id },
+          data: {
+            priceUsd: pUsd,
+            basePrice: newBasePrice,
+            salePrice: newSalePrice,
+            costPrice: newCostPrice,
+          },
+        });
+
+        for (const v of p.variants) {
+          let vUsd = v.priceUsd;
+          if (!vUsd || vUsd <= 0) {
+            const fallbackRate = updated.usdRate > 0 ? updated.usdRate : 38.5;
+            vUsd = Math.round((v.price / fallbackRate) * 100) / 100;
+          }
+          await prisma.productVariant.update({
+            where: { id: v.id },
+            data: {
+              priceUsd: vUsd,
+              price: Math.round(vUsd * newRate),
+            },
+          });
+        }
+        syncedProductCount++;
+      }
+    }
+
+    return NextResponse.json({ success: true, settings: updated, syncedProducts: syncedProductCount });
   } catch (err) {
     console.error("Settings update error:", err);
     return NextResponse.json({ error: "Ayarlar güncellenemedi" }, { status: 500 });

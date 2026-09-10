@@ -105,6 +105,7 @@ export interface ProductVariantItem {
   name: string;
   sku?: string | null;
   price: number;
+  priceUsd?: number | null;
   stock: number;
   image?: string | null;
   attributes?: string;
@@ -122,6 +123,9 @@ export interface ProductItem {
   basePrice: number;
   salePrice?: number | null;
   costPrice?: number | null;
+  priceUsd?: number | null;
+  salePriceUsd?: number | null;
+  costPriceUsd?: number | null;
   sku?: string | null;
   stockQuantity: number;
   isFeatured?: boolean;

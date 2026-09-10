@@ -94,6 +94,9 @@ model Product {
   basePrice        Float
   salePrice        Float?
   costPrice        Float?           // Alış / Parça Maliyeti (COGS Kârlılık Hesabı)
+  priceUsd         Float?           // Dolar Bazlı Liste Fiyatı ($ USD)
+  salePriceUsd     Float?           // Dolar Bazlı İndirimli Fiyat ($ USD)
+  costPriceUsd     Float?           // Dolar Bazlı Maliyet ($ USD)
   sku              String?
   stockQuantity    Int              @default(10)
   manageStock      Boolean          @default(true)
@@ -122,6 +125,7 @@ model ProductVariant {
   name       String   // e.g. "Siyah / M"
   sku        String?
   price      Float
+  priceUsd   Float?   // Dolar Bazlı Varyant Fiyatı ($ USD)
   stock      Int      @default(5)
   attributes String   @default("{}") // JSON: { "Renk": "Siyah", "Beden": "M" }
   image      String?
