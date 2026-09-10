@@ -3,9 +3,12 @@
 import React, { useState } from "react";
 import { Building2, Users, CheckCircle2, ShieldAlert, Send, ArrowRight, MessageCircle } from "lucide-react";
 import { useModules } from "@/lib/useModules";
+import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function B2BQuotePage() {
   const { isModuleActive } = useModules();
+  const { storeSettings } = useCart();
   const [formData, setFormData] = useState({
     companyName: "",
     contactName: "",
@@ -112,7 +115,10 @@ export default function B2BQuotePage() {
               </p>
               <div className="pt-4">
                 <a
-                  href={`https://wa.me/905551234567?text=Merhaba,%20B2B%20teklif%20talebinde%20bulundum.%20Firma/Kulüp:%20${encodeURIComponent(formData.companyName)}`}
+                  href={getWhatsAppUrl(
+                    storeSettings?.whatsappPhone,
+                    `Merhaba, B2B teklif talebinde bulundum. Firma/Kulüp: ${formData.companyName}`
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-black text-xs font-bold uppercase rounded hover:bg-[#20bd5a] transition-colors"

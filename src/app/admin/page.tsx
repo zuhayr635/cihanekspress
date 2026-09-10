@@ -62,6 +62,7 @@ import {
   Video,
   Image as ImageIcon,
 } from "lucide-react";
+import { formatWhatsAppNumber, getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -695,6 +696,36 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // 2.5. WHATSAPP HATTI GÜNCELLEME (TÜM SİTEDE ENDEKSLİ)
+  const [isSavingWhatsApp, setIsSavingWhatsApp] = useState(false);
+  const handleSaveWhatsAppPhone = async (phoneToSave?: string) => {
+    const rawPhone = phoneToSave !== undefined ? phoneToSave : (settings?.whatsappPhone || "");
+    const formatted = formatWhatsAppNumber(rawPhone);
+    setIsSavingWhatsApp(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...settings, whatsappPhone: rawPhone }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSettings((prev: any) => ({ ...prev, whatsappPhone: rawPhone }));
+        showNotify(
+          "success",
+          `✓ WhatsApp Danışma Hattı güncellendi! Sitedeki tüm butonlar ve sayfalar wa.me/${formatted} numarasına bağlandı.`
+        );
+        refreshAllData();
+      } else {
+        showNotify("error", data.error || "WhatsApp numarası kaydedilemedi.");
+      }
+    } catch {
+      showNotify("error", "WhatsApp numarası kaydedilemedi.");
+    } finally {
+      setIsSavingWhatsApp(false);
+    }
+  };
+
   // 3. VIP RADAR: TOKEN İPTAL & KALICI SİLME
   const handleRevokeInvite = async (id: string) => {
     try {
@@ -1199,6 +1230,27 @@ export default function AdminDashboardPage() {
               className="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-0.5 rounded cursor-pointer transition-colors"
             >
               {isSavingUsdRate ? "..." : "Uygula"}
+            </button>
+          </div>
+
+          {/* WhatsApp Usta Hattı Hızlı Düzenleyici */}
+          <div className="hidden xl:flex items-center gap-1.5 bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-lg shadow-2xs">
+            <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+            <span className="text-[11px] text-slate-300 font-medium">WhatsApp:</span>
+            <input
+              type="text"
+              value={settings?.whatsappPhone || ""}
+              onChange={(e) => setSettings((prev: any) => ({ ...prev, whatsappPhone: e.target.value }))}
+              placeholder="+90 530..."
+              className="w-28 bg-slate-900 text-white font-mono text-xs px-1.5 py-0.5 rounded border border-slate-600 focus:border-emerald-500 focus:outline-none"
+              title="Sitedeki tüm WhatsApp butonlarının bağlandığı telefon numarası"
+            />
+            <button
+              onClick={() => handleSaveWhatsAppPhone()}
+              disabled={isSavingWhatsApp}
+              className="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-0.5 rounded cursor-pointer transition-colors"
+            >
+              {isSavingWhatsApp ? "..." : "Kaydet"}
             </button>
           </div>
 
@@ -2369,6 +2421,79 @@ export default function AdminDashboardPage() {
                         <span>{isSavingUsdRate ? "Endeksleniyor..." : "Kuru Kaydet & Tüm Fiyatları Güncelle"}</span>
                       </button>
                     </div>
+                  </div>
+                </div>
+
+                {/* 0.6 WHATSAPP USTA HATTI & DANIŞMA NUMARASI YÖNETİMİ (TÜM SİTEYİ GÜNCELLER) */}
+                <div className="p-6 bg-linear-to-r from-emerald-950/20 via-emerald-900/10 to-transparent border border-emerald-500/40 rounded-2xl space-y-4 shadow-xs">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
+                          <MessageCircle className="w-4 h-4 fill-emerald-600 text-white" />
+                        </div>
+                        <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                          WhatsApp Usta Hattı & Doğrudan İletişim Numarası
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold">
+                          TÜM SİTEDE GEÇERLİ
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                        Buraya gireceğiniz telefon numarası sitedeki <strong>TÜM</strong> WhatsApp butonlarını, üst menüyü (Header), alt bilgi alanını (Footer), ürün kartlarını, detay sayfalarını, sepeti, VIP davetiye taleplerini ve sipariş onay ekranlarını anında bu hatta bağlar.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={settings.whatsappPhone}
+                          onChange={(e) => setSettings({ ...settings, whatsappPhone: e.target.value })}
+                          placeholder="+90 530 478 49 44 veya 05304784944"
+                          className="w-full sm:w-64 px-3.5 py-2.5 text-xs bg-white border border-emerald-300 rounded-xl font-mono text-emerald-950 font-bold focus:border-emerald-600 focus:outline-none shadow-2xs"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSaveWhatsAppPhone()}
+                        disabled={isSavingWhatsApp}
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                      >
+                        <Check className={`w-3.5 h-3.5 ${isSavingWhatsApp ? "animate-spin" : ""}`} />
+                        <span>{isSavingWhatsApp ? "Kaydediliyor..." : "Numarayı Kaydet & Uygula"}</span>
+                      </button>
+
+                      <a
+                        href={getWhatsAppUrl(settings.whatsappPhone, "Merhaba Cihan Usta, WhatsApp hattı test mesajıdır.")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5 text-center"
+                        title="Bu numarayı yeni sekmede açarak test edin"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Hattı Test Et</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-700">Aktif WhatsApp Bağlantısı:</span>
+                      <code className="bg-white/80 px-2 py-0.5 rounded border border-emerald-200 font-mono text-emerald-800 font-bold">
+                        https://wa.me/{formatWhatsAppNumber(settings.whatsappPhone)}
+                      </code>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer text-slate-700 font-medium">
+                      <input
+                        type="checkbox"
+                        checked={settings.whatsappOrderEnabled}
+                        onChange={(e) => setSettings({ ...settings, whatsappOrderEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span>Sitede Doğrudan WhatsApp ile Sipariş Butonları Açık Olsun</span>
+                    </label>
                   </div>
                 </div>
 

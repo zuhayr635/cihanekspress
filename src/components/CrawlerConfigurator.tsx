@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 import {
   Wrench,
   Compass,
@@ -277,8 +278,7 @@ export default function CrawlerConfigurator() {
     "-----------------------------\n" +
     "Bu kurulumun montajı ve şasi uyumluluğu hakkında detaylı bilgi rica ediyorum.";
 
-  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567";
-  const whatsappUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(buildConfigText);
+  const whatsappUrl = getWhatsAppUrl(storeSettings?.whatsappPhone, buildConfigText);
 
   const handleAddAllToCart = () => {
     if (!isSalesAllowed) return;

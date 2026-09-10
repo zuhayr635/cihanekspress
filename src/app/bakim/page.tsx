@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Wrench, CheckCircle2, ShieldCheck, Clock, MessageCircle, Sparkles, Flame } from "lucide-react";
 import { useModules } from "@/lib/useModules";
+import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface ServicePack {
   id: string;
@@ -75,6 +77,7 @@ const SERVICE_PACKS: ServicePack[] = [
 
 export default function MaintenancePage() {
   const { isModuleActive } = useModules();
+  const { storeSettings } = useCart();
 
   if (!isModuleActive("maintenance_packs")) {
     return (
@@ -151,7 +154,10 @@ export default function MaintenancePage() {
                 </div>
 
                 <a
-                  href={`https://wa.me/905551234567?text=Merhaba,%20${encodeURIComponent(pack.name)}%20için%20atölyenizden%20servis%20randevusu%20almak%20istiyorum.`}
+                  href={getWhatsAppUrl(
+                    storeSettings?.whatsappPhone,
+                    `Merhaba, ${pack.name} için atölyenizden servis randevusu almak istiyorum.`
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-black font-mono text-xs font-bold uppercase tracking-wider rounded flex items-center justify-center gap-2 transition-colors shadow-[0_0_15px_rgba(37,211,102,0.3)]"

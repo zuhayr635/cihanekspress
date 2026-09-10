@@ -1,8 +1,18 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { MessageCircle, ShieldCheck, Truck, Wrench, Heart, Lock, HelpCircle } from "lucide-react";
+import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function Footer() {
+  const { storeSettings } = useCart();
+  const whatsappUrl = getWhatsAppUrl(
+    storeSettings?.whatsappPhone,
+    "Merhaba Cihan Usta, cihanekspress.com hakkında bilgi almak istiyorum."
+  );
+
   return (
     <footer className="bg-white text-slate-700 border-t border-slate-200 mt-auto">
       {/* 1. KAT: Trendyol Güven Rozetleri */}
@@ -73,7 +83,7 @@ export default function Footer() {
 
             <div className="pt-2">
               <a
-                href="https://wa.me/905304784944?text=Merhaba%20Cihan%20Usta,%20cihanekspress.com%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum."
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs"

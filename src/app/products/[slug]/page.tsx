@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 import ProductCard from "@/components/ProductCard";
 import {
   ShoppingBag,
@@ -250,10 +251,9 @@ export default function ProductDetailPage({
   };
 
   const getDirectWhatsAppUrl = () => {
-    const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567";
     const variantTxt = selectedVariant ? ` (Seçenek: ${selectedVariant.name})` : "";
     const msg = `Merhaba, ${product.title}${variantTxt} parçası/aracı hakkında teknik bilgi almak ve sipariş vermek istiyorum.`;
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    return getWhatsAppUrl(storeSettings?.whatsappPhone, msg);
   };
 
   return (

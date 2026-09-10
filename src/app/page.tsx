@@ -6,6 +6,7 @@ import Image from "next/image";
 import ProductCard from "@/components/ProductCard";
 import CrawlerConfigurator from "@/components/CrawlerConfigurator";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 import {
   Shield,
   ArrowRight,
@@ -178,7 +179,10 @@ export default function HomePage() {
     loadData();
   }, [selectedCategory]);
 
-  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
+  const whatsappUrl = getWhatsAppUrl(
+    storeSettings?.whatsappPhone,
+    "Merhaba Cihan Usta, sitedeki kampanya hakkında bilgi almak istiyorum."
+  );
 
   // 8. Çok Yönlü Filtreleme ve Sıralama (Faceted Filtering)
   const filteredProducts = products
@@ -367,7 +371,7 @@ export default function HomePage() {
                       </button>
                     )}
                     <a
-                      href={`https://wa.me/${phone}?text=Merhaba%20Cihan%20Usta,%20sitedeki%20kampanya%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
+                      href={whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-md transition-all flex items-center gap-1.5 shadow-sm"

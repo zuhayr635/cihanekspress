@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { KeyRound, X, CheckCircle2, Shield, MessageCircle } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function VipModal() {
   const { isVipModalOpen, setIsVipModalOpen, vipSession, refreshVipStatus, storeSettings } = useCart();
@@ -13,7 +14,10 @@ export default function VipModal() {
 
   if (!isVipModalOpen) return null;
 
-  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
+  const whatsappUrl = getWhatsAppUrl(
+    storeSettings?.whatsappPhone,
+    "Merhaba Cihan Usta, cihanekspress.com için VIP davetiye kodu talep ediyorum."
+  );
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,7 +148,7 @@ export default function VipModal() {
 
             <div className="pt-2 text-center border-t border-slate-100">
               <a
-                href={`https://wa.me/${phone}?text=Merhaba%20Cihan%20Usta,%20cihanekspress.com%20i%C3%A7in%20VIP%20davetiye%20kodu%20talep%20ediyorum.`}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-800 font-bold hover:underline"

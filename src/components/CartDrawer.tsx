@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 import {
   X,
   Plus,
@@ -83,7 +84,6 @@ export default function CartDrawer() {
 
   // WhatsApp Sipariş & Atölye Talep Mesajı Oluşturucu
   const getWhatsAppOrderUrl = () => {
-    const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567";
     const itemList = items
       .map(
         (i, idx) =>
@@ -93,7 +93,7 @@ export default function CartDrawer() {
 
     const message = `*CIHANPOL RC ATELIER — ATÖLYE SİPARİŞ & TALEP LİSTESİ*\n\nMerhaba Cihan Usta, sitedeki katalog üzerinden aşağıdaki projeleri/parçaları seçtim:\n\n${itemList}\n\n─────────────────────\n*Ara Toplam:* ${subtotal.toLocaleString("tr-TR")} ₺\n${discountAmount > 0 ? `*Kupon/Kulüp İndirimi:* -${discountAmount.toLocaleString("tr-TR")} ₺\n` : ""}${bundleDiscount > 0 ? `*Set İndirimi (%5):* -${bundleDiscount.toLocaleString("tr-TR")} ₺\n` : ""}*Atölye Referans Toplamı:* ${total.toLocaleString("tr-TR")} ₺\n─────────────────────\n\nBu parçaların atölye teslimi / montaj durumu ve teslimat süresi hakkında görüşmek istiyorum.`;
 
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    return getWhatsAppUrl(storeSettings?.whatsappPhone, message);
   };
 
   return (

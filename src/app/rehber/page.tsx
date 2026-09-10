@@ -22,6 +22,8 @@ import {
   Sparkles,
   ExternalLink,
 } from "lucide-react";
+import prisma from "@/lib/prisma";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export const metadata = {
   title: "Sistem ve Çalışma Rehberi | CIHANPOL RC CRAWLER LAB",
@@ -29,7 +31,13 @@ export const metadata = {
     "Özel yapım RC crawler atölyesi, parça uyumluluk filtresi, rig builder, VIP davetiye motoru ve yönetici paneli kullanım kılavuzu.",
 };
 
-export default function RehberPage() {
+export default async function RehberPage() {
+  const settings = await prisma.storeSetting.findFirst();
+  const whatsappUrl = getWhatsAppUrl(
+    settings?.whatsappPhone,
+    "Merhaba, CIHANPOL RC Crawler sistemi hakkında bilgi almak istiyorum."
+  );
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-24">
       {/* Header Banner */}
@@ -334,7 +342,7 @@ export default function RehberPage() {
           </p>
           <div className="pt-2">
             <a
-              href="https://wa.me/905551234567?text=Merhaba,%20CIHANPOL%20RC%20Crawler%20sistemi%20hakkında%20bilgi%20almak%20istiyorum."
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-mono font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-emerald-700 transition-colors shadow-sm"

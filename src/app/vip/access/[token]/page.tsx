@@ -4,6 +4,7 @@ import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { KeyRound, CheckCircle2, XCircle, ArrowRight, Sparkles, ShieldAlert } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function VipAccessPage({
   params,
@@ -11,7 +12,7 @@ export default function VipAccessPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = use(params);
-  const { refreshVipStatus } = useCart();
+  const { refreshVipStatus, storeSettings } = useCart();
 
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
   const [errorMessage, setErrorMessage] = useState("");
@@ -147,7 +148,10 @@ export default function VipAccessPage({
                 Kataloğa Dön
               </Link>
               <a
-                href="https://wa.me/905551234567?text=Merhaba,%20davetiye%20bağlantım%20hakkında%20destek%20almak%20istiyorum."
+                href={getWhatsAppUrl(
+                  storeSettings?.whatsappPhone,
+                  "Merhaba, davetiye bağlantım hakkında destek almak istiyorum."
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 py-3 bg-[#25D366] text-black text-xs uppercase tracking-wider font-semibold rounded-sm hover:bg-[#20bd5a] transition-colors"

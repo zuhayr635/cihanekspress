@@ -23,6 +23,7 @@ interface CartContextType {
   removeCoupon: () => void;
   vipSession: VipSessionData;
   storeSettings: StoreSettingsData | null;
+  refreshStoreSettings: () => Promise<void>;
   refreshVipStatus: () => Promise<void>;
   selectedVehicle: string | null;
   setSelectedVehicle: (v: string | null) => void;
@@ -258,6 +259,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removeCoupon,
         vipSession,
         storeSettings,
+        refreshStoreSettings: fetchStoreSettings,
         refreshVipStatus,
         selectedVehicle,
         setSelectedVehicle,

@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 import {
   CheckCircle2,
   Copy,
@@ -68,6 +70,7 @@ export default function OrderSuccessPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const { storeSettings } = useCart();
   const [order, setOrder] = useState<OrderData | null>(null);
   const [assignedIban, setAssignedIban] = useState<BankAccount | null>(null);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -376,7 +379,10 @@ export default function OrderSuccessPage({
                 </p>
               </div>
               <a
-                href={`https://wa.me/905551234567?text=${encodeURIComponent(`Merhaba, ${order.orderNumber} kodlu siparişim için ödeme odası süresi doldu. Yeni IBAN bilgisi alabilir miyim?`)}`}
+                href={getWhatsAppUrl(
+                  storeSettings?.whatsappPhone,
+                  `Merhaba, ${order.orderNumber} kodlu siparişim için ödeme odası süresi doldu. Yeni IBAN bilgisi alabilir miyim?`
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold uppercase tracking-wider rounded-xs transition-colors shadow-sm"

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 import {
   Building2,
   MessageCircle,
@@ -178,7 +179,6 @@ export default function CheckoutPage() {
   }
 
   // Doğrudan WhatsApp Hızlı Sipariş URL'i
-  const phone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567";
   const getDirectWhatsAppUrl = () => {
     const itemList = items
       .map(
@@ -189,7 +189,7 @@ export default function CheckoutPage() {
 
     const msg = `*CIHANPOL RC ATELIER — ATÖLYE SİPARİŞİ*\n\n*İletişim:* ${customerName || "İsimsiz Müşteri"} (${customerPhone || "Tel Belirtilmedi"})\n*Konum:* ${city}${district ? ` / ${district}` : ""}\n\n*Seçilen Parçalar / Projeler:*\n${itemList}\n${includeAssemblyService ? `\n⚙️ *Özel Atölye Montajı ve Test:* Dahil (+750 ₺)\n` : ""}\n*Atölye Referans Toplamı:* ${finalOrderTotal.toLocaleString("tr-TR")} ₺\n\nBu siparişin tedariği, montajı ve teslimatı hakkında görüşmek istiyorum.`;
 
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    return getWhatsAppUrl(storeSettings?.whatsappPhone, msg);
   };
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
@@ -251,7 +251,7 @@ export default function CheckoutPage() {
             .join("\n");
 
           const msg = `*CIHANPOL RC ATELIER - SİPARİŞ KODU: ${data.order.orderNumber}*\n\n*Müşteri:* ${customerName} (${customerPhone})\n*Adres:* ${shippingAddress}, ${city}\n\n*Sipariş Edilen Parçalar:*\n${itemList}\n\n*Toplam Referans Tutar:* ${data.order.total.toLocaleString("tr-TR")} ₺\n\nSipariş talebim sisteme kaydedildi, teyit etmek istiyorum.`;
-          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+          window.open(getWhatsAppUrl(storeSettings?.whatsappPhone, msg), "_blank");
         }
 
         router.push(`/order-success/${data.order.orderNumber}`);

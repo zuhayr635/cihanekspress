@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingCart, Check, MessageCircle, Star, Truck, Lock, KeyRound } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface ProductCardProps {
   product: {
@@ -123,13 +124,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   // WhatsApp Doğrudan Sipariş Bağlantısı
-  const directWhatsAppUrl = `https://wa.me/${
-    storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905551234567"
-  }?text=${encodeURIComponent(
+  const directWhatsAppUrl = getWhatsAppUrl(
+    storeSettings?.whatsappPhone,
     `Merhaba, sitenizdeki "${product.title}" hakkında bilgi almak istiyorum.${
       isSalesAllowed ? ` Fiyat: ${finalPrice.toLocaleString("tr-TR")} TL` : ""
     }`
-  )}`;
+  );
 
   // Değerlendirme & Yorum
   const rating = 4.8 + ((product.title.length % 3) * 0.1);

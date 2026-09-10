@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import VehicleSelector from "@/components/VehicleSelector";
 import VipModal from "@/components/VipModal";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function Header() {
   const {
@@ -89,7 +90,8 @@ export default function Header() {
     }
   };
 
-  const whatsappPhone = storeSettings?.whatsappPhone?.replace(/[^0-9]/g, "") || "905304784944";
+  const whatsappPhone = storeSettings?.whatsappPhone;
+  const whatsappUrl = getWhatsAppUrl(whatsappPhone, "Merhaba Cihan Usta, katalog hakkında bilgi almak istiyorum.");
   const logoUrl = storeSettings?.logoUrl || "/cihanekspress-logo.png";
   const brandMode = storeSettings?.headerBrandMode || "BOTH";
   const primaryText = storeSettings?.headerPrimaryText || "cihan";
@@ -136,7 +138,7 @@ export default function Header() {
 
           <div className="flex items-center gap-5 text-slate-600">
             <a
-              href={`https://wa.me/${whatsappPhone}?text=Merhaba%20Cihan%20Usta,%20katalog%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#F27A1A] transition-colors flex items-center gap-1.5 font-medium"
@@ -670,7 +672,7 @@ export default function Header() {
                 )}
               </button>
               <a
-                href={`https://wa.me/${whatsappPhone}?text=Merhaba%20Cihan%20Usta,%20katalog%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.`}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileMenuOpen(false)}
